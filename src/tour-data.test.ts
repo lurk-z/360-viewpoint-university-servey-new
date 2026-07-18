@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import { messages } from './i18n';
 import {
+  getInfoHotspots,
   getNavigationHotspots,
   getScene,
   getSceneAssetUrls,
@@ -77,6 +78,23 @@ describe('tour configuration', () => {
       }
     }
     expect(existsSync(resolve(process.cwd(), 'public', tourMap.image.slice(1)))).toBe(true);
+  });
+
+  it('supports multiple localized images in every information hotspot', () => {
+    for (const scene of tourScenes) {
+      for (const hotspot of getInfoHotspots(scene)) {
+        expect(hotspot.images?.length, `${hotspot.id} needs a multi-image gallery`).toBeGreaterThanOrEqual(2);
+        for (const image of hotspot.images ?? []) {
+          expect(image.src).toMatch(/^\/mainimages\//);
+          expect(image.src).not.toMatch(/^\/tour\/(?:pano|thumbs)\//);
+          expect(existsSync(resolve(process.cwd(), 'public', image.src.slice(1))), `${image.src} is missing`).toBe(true);
+          for (const locale of locales) {
+            expect(image.alt[locale].trim()).not.toBe('');
+            if (image.caption) expect(image.caption[locale].trim()).not.toBe('');
+          }
+        }
+      }
+    }
   });
 
   it('keeps generated tile dimensions and manifest hashes in sync', async () => {

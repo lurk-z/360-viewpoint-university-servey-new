@@ -154,7 +154,6 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const createArrowElement = (link: { nodeId: string }): HTMLElement => {
       const target = getScene(link.nodeId as SceneId);
-      const targetIndex = tourScenes.findIndex((scene) => scene.id === target.id) + 1;
       const targetTitle = localize(target.title, callbacksRef.current.locale);
       const button = document.createElement('button');
       button.type = 'button';
@@ -171,16 +170,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       path.setAttribute('d', 'M12 20V5m0 0-6 6m6-6 6 6');
       svg.append(path);
       icon.append(svg);
-
-      const number = document.createElement('span');
-      number.className = 'tour-arrow__number';
-      number.textContent = String(targetIndex);
-      number.setAttribute('aria-hidden', 'true');
-
-      const label = document.createElement('span');
-      label.className = 'tour-arrow__label';
-      label.textContent = targetTitle;
-      button.append(icon, number, label);
+      button.append(icon);
       return button;
     };
 
@@ -221,7 +211,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           arrowStyle: {
             element: createArrowElement,
             className: 'tour-arrow-marker',
-            size: { width: 190, height: 64 }
+            size: { width: 54, height: 54 }
           },
           getLinkTooltip: (_content, link) => {
             const target = getScene(link.nodeId as SceneId);
@@ -321,8 +311,6 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       const target = getScene(targetId);
       const targetTitle = localize(target.title, locale);
       button.setAttribute('aria-label', goToScene(locale, targetTitle));
-      const label = button.querySelector<HTMLElement>('.tour-arrow__label');
-      if (label) label.textContent = targetTitle;
     });
   }, [locale]);
 

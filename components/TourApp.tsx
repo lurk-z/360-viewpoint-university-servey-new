@@ -317,12 +317,22 @@ export default function TourApp() {
         </nav>
       </main>
 
-      <ModalDialog open={dialog === 'info'} titleId="info-dialog-title" onClose={closeDialog}>
+      <ModalDialog open={dialog === 'info'} titleId="info-dialog-title" wide onClose={closeDialog}>
         {selectedInfo ? <>
           <p className="eyebrow">{message(locale, 'infoPoint')}</p>
           <h2 id="info-dialog-title">{localize(selectedInfo.title, locale)}</h2>
           <p className="scene-alt-title">{localize(selectedInfo.title, alternativeLocale)}</p>
           <p className="dialog-description">{localize(selectedInfo.description, locale)}</p>
+          {selectedInfo.images?.length ? (
+            <div className="info-gallery">
+              {selectedInfo.images.map((image, index) => (
+                <figure key={`${image.src}-${index}`}>
+                  <img src={image.src} alt={localize(image.alt, locale)} loading="lazy" />
+                  {image.caption ? <figcaption>{localize(image.caption, locale)}</figcaption> : null}
+                </figure>
+              ))}
+            </div>
+          ) : null}
         </> : null}
       </ModalDialog>
 

@@ -105,10 +105,18 @@ export interface SceneHotspot extends HotspotBase {
   readonly target: SceneId;
 }
 
+export interface InfoImage {
+  readonly src: string;
+  readonly alt: LocalizedText;
+  readonly caption?: LocalizedText;
+}
+
 export interface InfoHotspot extends HotspotBase {
   readonly type: 'info';
   readonly title: LocalizedText;
   readonly description: LocalizedText;
+  /** One or more supporting images shown in the centered information gallery. */
+  readonly images?: readonly InfoImage[];
 }
 
 export type Hotspot = SceneHotspot | InfoHotspot;
@@ -181,7 +189,19 @@ export const tourScenes = [
         description: {
           th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
           en: 'The KMUTNB landmark identifies the main entrance to the Prachinburi campus.'
-        }
+        },
+        images: [
+          {
+            src: tourMedia.entrance.tiledPanorama.baseUrl,
+            alt: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'Front view of the university landmark' },
+            caption: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'University landmark' }
+          },
+          {
+            src: tourMedia.entranceRoad.tiledPanorama.baseUrl,
+            alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
+            caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
+          }
+        ]
       }
     ]
   },
@@ -240,7 +260,19 @@ export const tourScenes = [
         description: {
           th: 'อนุสรณ์เป็นหนึ่งในจุดสำคัญของพื้นที่ลานภายในมหาวิทยาลัย',
           en: 'The memorial is one of the notable landmarks in the campus plaza.'
-        }
+        },
+        images: [
+          {
+            src: tourMedia.memorial.tiledPanorama.baseUrl,
+            alt: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' },
+            caption: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' }
+          },
+          {
+            src: tourMedia.memorialPlaza.tiledPanorama.baseUrl,
+            alt: { th: 'ลานบริเวณอนุสรณ์', en: 'Plaza surrounding the memorial' },
+            caption: { th: 'ลานอนุสรณ์', en: 'Memorial plaza' }
+          }
+        ]
       }
     ]
   },
@@ -283,7 +315,19 @@ export const tourScenes = [
         description: {
           th: 'อาคารบริการและที่พักภายในมหาวิทยาลัยซึ่งตั้งอยู่ใกล้ถนนสายหลักของวิทยาเขต',
           en: 'A campus accommodation and service building near the main internal road.'
-        }
+        },
+        images: [
+          {
+            src: tourMedia.vallayaHotel.tiledPanorama.baseUrl,
+            alt: { th: 'อาคารโรงแรมวไลยอลงกรณ์', en: 'Vallayalangkorn Hotel building' },
+            caption: { th: 'อาคารโรงแรม', en: 'Hotel building' }
+          },
+          {
+            src: tourMedia.campusRoad1.tiledPanorama.baseUrl,
+            alt: { th: 'ถนนใกล้อาคารโรงแรม', en: 'Road near the hotel building' },
+            caption: { th: 'ถนนสายหลักใกล้อาคาร', en: 'Nearby main road' }
+          }
+        ]
       }
     ]
   },
@@ -359,7 +403,19 @@ export const tourScenes = [
         description: {
           th: 'อาคารสำหรับการเรียน การทำกิจกรรม และการให้บริการภายในมหาวิทยาลัย',
           en: 'A campus building supporting learning, activities and university services.'
-        }
+        },
+        images: [
+          {
+            src: tourMedia.campusBuilding1.tiledPanorama.baseUrl,
+            alt: { th: 'อาคารภายในวิทยาเขตจุดที่ 1', en: 'Campus building point 1' },
+            caption: { th: 'มุมหน้าอาคาร', en: 'Building view' }
+          },
+          {
+            src: tourMedia.campusRoad4.tiledPanorama.baseUrl,
+            alt: { th: 'ถนนทางแยกใกล้อาคารจุดที่ 1', en: 'Road junction near building point 1' },
+            caption: { th: 'ทางเข้าจากถนนสายหลัก', en: 'Approach from the main road' }
+          }
+        ]
       }
     ]
   },
@@ -385,7 +441,19 @@ export const tourScenes = [
         description: {
           th: 'อาคารสำหรับรองรับการเรียนรู้และกิจกรรมของนักศึกษาและบุคลากร',
           en: 'A building supporting learning and activities for students and staff.'
-        }
+        },
+        images: [
+          {
+            src: tourMedia.campusBuilding2.tiledPanorama.baseUrl,
+            alt: { th: 'อาคารภายในวิทยาเขตจุดที่ 2', en: 'Campus building point 2' },
+            caption: { th: 'มุมหน้าอาคาร', en: 'Building view' }
+          },
+          {
+            src: tourMedia.campusRoad4.tiledPanorama.baseUrl,
+            alt: { th: 'ถนนทางแยกใกล้อาคารจุดที่ 2', en: 'Road junction near building point 2' },
+            caption: { th: 'ทางเข้าจากถนนสายหลัก', en: 'Approach from the main road' }
+          }
+        ]
       }
     ]
   },
@@ -459,7 +527,19 @@ export const tourScenes = [
         description: {
           th: 'อาคารและลานอเนกประสงค์บริเวณส่วนปลายของเส้นทางเยี่ยมชมวิทยาเขต',
           en: 'A campus building and open activity area at the end of the visitor route.'
-        }
+        },
+        images: [
+          {
+            src: tourMedia.campusBuilding3.tiledPanorama.baseUrl,
+            alt: { th: 'อาคารบริเวณปลายเส้นทาง', en: 'Building at the end of the route' },
+            caption: { th: 'อาคารปลายเส้นทาง', en: 'Route-end building' }
+          },
+          {
+            src: tourMedia.campusRoad7.tiledPanorama.baseUrl,
+            alt: { th: 'ถนนใกล้อาคารปลายเส้นทาง', en: 'Road near the route-end building' },
+            caption: { th: 'ทางแยกก่อนถึงอาคาร', en: 'Junction before the building' }
+          }
+        ]
       }
     ]
   }
@@ -552,6 +632,24 @@ export function validateTour(): readonly string[] {
       }
       if (hotspot.type === 'scene' && !sceneIds.includes(hotspot.target)) {
         errors.push(`Scene ${scene.id} links to missing scene ${hotspot.target}`);
+      }
+      if (hotspot.type === 'info') {
+        for (const image of hotspot.images ?? []) {
+          if (!image.src.startsWith('/mainimages/')) {
+            errors.push(`Info hotspot ${hotspot.id} must use /mainimages media: ${image.src}`);
+          }
+          if (image.src.includes('/tour/pano') || image.src.includes('/tour/thumbs')) {
+            errors.push(`Info hotspot ${hotspot.id} references legacy tour media: ${image.src}`);
+          }
+          for (const locale of locales) {
+            if (!image.alt[locale].trim()) {
+              errors.push(`Info hotspot ${hotspot.id} image is missing ${locale} alternative text`);
+            }
+            if (image.caption && !image.caption[locale].trim()) {
+              errors.push(`Info hotspot ${hotspot.id} image is missing ${locale} caption`);
+            }
+          }
+        }
       }
     }
   }
