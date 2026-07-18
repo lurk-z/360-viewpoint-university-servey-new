@@ -1,530 +1,213 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="user-scalable=no, initial-scale=1, width=device-width, viewport-fit=cover">
-<title>Virtual Open House KMUTNB — วิทยาเขตปราจีนบุรี</title>
-<meta name="description" content="ทัวร์เสมือนจริง 360 องศา การเยี่ยมชมมหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี แบบ Open House ออนไลน์">
-<link rel="stylesheet" href="lib/pannellum.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --orange:#F26A1B; --orange-2:#FF8A3D; --orange-deep:#D4540A; --orange-soft:#FFEEDF;
-    --cream:#FFF8F2; --white:#ffffff;
-    --ink:#241a12; --ink-soft:#6f6256; --ink-faint:#9a8d80;
-    --panel:rgba(255,255,255,.92); --line:rgba(36,26,18,.10);
-    --radius:18px; --radius-sm:12px;
-    --shadow:0 10px 34px rgba(120,70,20,.18); --shadow-sm:0 4px 14px rgba(120,70,20,.12);
-    --font:'Sora','IBM Plex Sans Thai',system-ui,sans-serif;
-    --font-th:'IBM Plex Sans Thai',system-ui,sans-serif;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;width:100%;overflow:hidden;background:var(--cream);font-family:var(--font);color:var(--ink);position:fixed;-webkit-font-smoothing:antialiased}
-  #panorama{position:absolute;inset:0;width:100%;height:100%;z-index:0}
-  button{font-family:inherit;cursor:pointer}
-  .hidden{display:none!important}
-
-  #intro{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    background:radial-gradient(130% 120% at 50% -10%,#fff 0%,var(--cream) 45%,#ffe9d6 100%);transition:opacity .7s ease;text-align:center;padding:24px}
-  #intro.done{opacity:0;pointer-events:none}
-  .intro-logo{display:flex;align-items:center;gap:14px;margin-bottom:26px}
-  .intro-logo .mark{width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,var(--orange),var(--orange-2));
-    display:grid;place-items:center;box-shadow:var(--shadow);color:#fff}
-  .intro-logo .mark svg{width:32px;height:32px}
-  .intro-logo .txt{text-align:left}
-  .intro-logo .txt b{display:block;font-size:18px;font-weight:700;letter-spacing:-.01em}
-  .intro-logo .txt span{display:block;font-size:12px;color:var(--ink-soft);font-family:var(--font-th)}
-  .intro-badge{font-size:12px;letter-spacing:.32em;color:var(--orange-deep);text-transform:uppercase;font-weight:600;margin-bottom:14px}
-  #intro h1{font-size:clamp(30px,5.5vw,62px);margin:0 0 12px;font-weight:800;line-height:1.04;letter-spacing:-.02em;color:var(--ink)}
-  #intro h1 em{font-style:normal;background:linear-gradient(90deg,var(--orange),var(--orange-deep));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  #intro .sub{color:var(--ink-soft);font-family:var(--font-th);font-size:clamp(14px,2.2vw,17px);max-width:600px;margin:0 auto;line-height:1.65}
-  .loader{margin-top:34px;width:210px;height:5px;border-radius:5px;background:rgba(242,106,27,.18);overflow:hidden}
-  .loader>i{display:block;height:100%;width:32%;border-radius:5px;background:linear-gradient(90deg,var(--orange),var(--orange-2));animation:slide 1.2s ease-in-out infinite}
-  @keyframes slide{0%{margin-left:-32%}100%{margin-left:100%}}
-  .enter-btn{margin-top:30px;border:0;background:linear-gradient(135deg,var(--orange),var(--orange-deep));color:#fff;
-    padding:15px 38px;border-radius:40px;font-size:16px;font-weight:700;letter-spacing:.01em;box-shadow:var(--shadow);
-    opacity:0;transform:translateY(8px);transition:.4s;display:inline-flex;gap:10px;align-items:center}
-  .enter-btn.ready{opacity:1;transform:none}
-  .enter-btn:hover{filter:brightness(1.05);transform:translateY(-2px);box-shadow:0 14px 38px rgba(212,84,10,.34)}
-  .intro-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:11.5px;color:var(--ink-faint);font-family:var(--font-th);padding:0 20px}
-
-  .topbar{position:absolute;top:0;left:0;right:0;z-index:30;display:flex;align-items:center;gap:14px;
-    padding:14px 18px;background:linear-gradient(180deg,rgba(255,248,242,.92),rgba(255,248,242,0));pointer-events:none}
-  .topbar>*{pointer-events:auto}
-  .brand{display:flex;align-items:center;gap:11px;min-width:0;background:var(--panel);backdrop-filter:blur(14px);
-    border:1px solid var(--line);border-radius:40px;padding:7px 16px 7px 8px;box-shadow:var(--shadow-sm)}
-  .logo{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;
-    background:linear-gradient(135deg,var(--orange),var(--orange-2));box-shadow:var(--shadow-sm);color:#fff}
-  .logo svg{width:22px;height:22px}
-  .brand-txt{min-width:0}
-  .brand-txt b{display:block;font-size:14px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
-  .brand-txt span{display:block;font-size:10.5px;color:var(--ink-soft);font-family:var(--font-th);white-space:nowrap}
-  .spacer{flex:1}
-  .chip{display:flex;align-items:center;gap:2px;background:var(--panel);backdrop-filter:blur(14px);
-    border:1px solid var(--line);border-radius:30px;padding:4px;box-shadow:var(--shadow-sm)}
-  .chip button{border:0;background:transparent;color:var(--ink-soft);padding:8px 13px;border-radius:24px;font-size:13px;font-weight:600;transition:.2s}
-  .chip button.on{background:linear-gradient(135deg,var(--orange),var(--orange-deep));color:#fff}
-  .icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(14px);
-    color:var(--orange-deep);display:grid;place-items:center;box-shadow:var(--shadow-sm);transition:.2s}
-  .icon-btn:hover{background:var(--orange);color:#fff;transform:translateY(-1px)}
-  .icon-btn svg{width:20px;height:20px}
-
-  .scene-info{position:absolute;left:18px;top:80px;z-index:25;max-width:340px;
-    background:var(--panel);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:var(--radius);
-    padding:20px;box-shadow:var(--shadow);transition:.45s cubic-bezier(.2,.8,.2,1)}
-  .scene-info.collapsed{transform:translateX(calc(-100% - 30px));opacity:0}
-  .scene-info .kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--orange-deep);font-weight:700;background:var(--orange-soft);padding:5px 11px;border-radius:20px}
-  .scene-info h2{margin:12px 0 3px;font-size:23px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
-  .scene-info h2 .en{display:block;font-size:13px;color:var(--ink-soft);font-weight:500;margin-top:3px;font-family:var(--font)}
-  .scene-info p{margin:11px 0 0;font-size:13.5px;line-height:1.65;color:var(--ink-soft);font-family:var(--font-th)}
-  .scene-meta{display:flex;gap:7px;margin-top:15px;flex-wrap:wrap}
-  .tag{font-size:11px;padding:5px 11px;border-radius:20px;background:#fff;border:1px solid var(--line);color:var(--ink-soft);font-family:var(--font-th)}
-  .si-close{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);
-    background:#fff;color:var(--ink-soft);font-size:15px;line-height:1;display:grid;place-items:center;transition:.2s}
-  .si-close:hover{background:var(--orange-soft);color:var(--orange-deep)}
-
-  .rail{position:absolute;right:18px;top:50%;transform:translateY(-50%);z-index:25;display:flex;flex-direction:column;gap:8px}
-  .rail button{width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--panel);
-    backdrop-filter:blur(14px);color:var(--ink);display:grid;place-items:center;box-shadow:var(--shadow-sm);transition:.2s}
-  .rail button:hover{background:var(--orange);color:#fff;transform:scale(1.06);border-color:transparent}
-  .rail button.on{background:linear-gradient(135deg,var(--orange),var(--orange-deep));color:#fff;border-color:transparent}
-  .rail svg{width:22px;height:22px}
-
-  .minimap{position:absolute;right:18px;bottom:160px;z-index:25;width:186px;
-    background:var(--panel);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:var(--radius);
-    padding:13px;box-shadow:var(--shadow);transition:.4s}
-  .minimap.collapsed{transform:translateY(20px) scale(.92);opacity:0;pointer-events:none}
-  .minimap h4{margin:0 0 9px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
-  .minimap svg{width:100%;height:auto;display:block}
-  .mm-node{cursor:pointer}
-  .mm-node circle{fill:#fff;stroke:rgba(36,26,18,.2);stroke-width:1.5;transition:.25s}
-  .mm-node text{fill:var(--ink-soft);font-size:8px;font-family:var(--font);font-weight:700;transition:.25s}
-  .mm-node:hover circle{fill:var(--orange-soft);stroke:var(--orange)}
-  .mm-node.active circle{fill:url(#mmgrad);stroke:#fff;stroke-width:2;r:9}
-  .mm-node.active text{fill:#fff}
-  .mm-edge{stroke:rgba(36,26,18,.16);stroke-width:1.5;stroke-dasharray:3 3}
-
-  .thumbbar{position:absolute;left:0;right:0;bottom:0;z-index:28;
-    display:flex;gap:12px;align-items:flex-end;justify-content:center;flex-wrap:nowrap;
-    padding:16px 18px 20px;background:linear-gradient(0deg,rgba(255,248,242,.95),rgba(255,248,242,0));
-    overflow-x:auto;scrollbar-width:none}
-  .thumbbar::-webkit-scrollbar{display:none}
-  .thumb{position:relative;flex:0 0 auto;width:152px;height:88px;border-radius:14px;overflow:hidden;
-    border:2px solid #fff;box-shadow:var(--shadow-sm);transition:.25s;background:#eee}
-  .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:.4s}
-  .thumb .cap{position:absolute;left:0;right:0;bottom:0;padding:16px 9px 7px;font-size:12px;font-weight:600;text-align:left;color:#fff;
-    background:linear-gradient(0deg,rgba(30,15,5,.85),transparent);font-family:var(--font-th)}
-  .thumb .cap small{display:block;font-size:9.5px;color:rgba(255,255,255,.78);font-weight:500;font-family:var(--font)}
-  .thumb .num{position:absolute;top:7px;left:7px;width:20px;height:20px;border-radius:6px;background:rgba(242,106,27,.92);color:#fff;
-    font-size:11px;display:grid;place-items:center;font-weight:700}
-  .thumb:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-  .thumb:hover img{transform:scale(1.08)}
-  .thumb.active{border-color:var(--orange);box-shadow:0 0 0 3px rgba(242,106,27,.28),var(--shadow)}
-
-  .custom-hotspot{transform:translate(-50%,-50%)}
-  .hs-dot{display:block;width:36px;height:36px;border-radius:50%;position:relative;
-    background:linear-gradient(135deg,rgba(242,106,27,.92),rgba(212,84,10,.92));border:3px solid #fff;
-    box-shadow:0 4px 16px rgba(160,70,10,.55);transition:.25s}
-  .hs-dot::before{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
-    animation:pulse 2s ease-out infinite}
-  .custom-hotspot.scene .hs-dot::after{content:"";position:absolute;top:50%;left:50%;width:11px;height:11px;
-    transform:translate(-60%,-50%) rotate(45deg);border-top:3px solid #fff;border-right:3px solid #fff}
-  .custom-hotspot.info .hs-dot{background:linear-gradient(135deg,#fff,#fff)}
-  .custom-hotspot.info .hs-dot::after{content:"i";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    font-style:italic;font-weight:700;font-size:19px;color:var(--orange-deep);font-family:Georgia,serif}
-  @keyframes pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(1.85);opacity:0}}
-  .custom-hotspot:hover .hs-dot{transform:scale(1.15)}
-  .hs-label{position:absolute;left:50%;top:-14px;transform:translate(-50%,-100%);
-    background:#fff;border:1px solid var(--line);border-radius:11px;padding:8px 13px;white-space:nowrap;
-    box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;margin-top:-6px}
-  .hs-label b{display:block;font-size:13px;font-family:var(--font-th);color:var(--ink)}
-  .hs-label i{display:block;font-size:10.5px;color:var(--ink-faint);font-style:normal}
-  .custom-hotspot:hover .hs-label{opacity:1;top:-18px}
-
-  .modal{position:absolute;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:24px;
-    background:rgba(60,35,10,.4);backdrop-filter:blur(5px)}
-  .modal.show{display:flex}
-  .modal-card{max-width:460px;width:100%;background:#fff;border-radius:22px;
-    padding:28px;box-shadow:0 30px 70px rgba(80,40,10,.4);transform:translateY(14px);animation:rise .35s forwards;
-    max-height:86vh;overflow:auto}
-  @keyframes rise{to{transform:none}}
-  .modal-card .kicker{display:inline-block;color:var(--orange-deep);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
-    background:var(--orange-soft);padding:5px 11px;border-radius:20px}
-  .modal-card h3{margin:13px 0 4px;font-size:23px;font-weight:700;letter-spacing:-.01em}
-  .modal-card .en{color:var(--ink-faint);font-size:13px;margin-bottom:13px}
-  .modal-card p{font-size:14px;line-height:1.72;color:var(--ink-soft);font-family:var(--font-th);margin:0}
-  .modal-card .x{margin-top:22px;width:100%;border:0;padding:13px;border-radius:13px;font-weight:700;color:#fff;font-size:15px;
-    background:linear-gradient(135deg,var(--orange),var(--orange-deep))}
-  .info-row{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-family:var(--font-th)}
-  .info-row:first-of-type{border-top:0}
-  .info-row .k{flex:0 0 96px;font-size:12.5px;color:var(--ink-faint);font-weight:600}
-  .info-row .v{font-size:13.5px;color:var(--ink);line-height:1.55}
-  .about-obj{margin:4px 0 0;padding-left:18px;font-family:var(--font-th);font-size:13.5px;color:var(--ink-soft);line-height:1.7}
-  .about-obj li{margin:3px 0}
-
-  .hint{position:absolute;left:50%;top:78px;transform:translateX(-50%);z-index:24;
-    background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:30px;
-    padding:9px 18px;font-size:12.5px;color:var(--ink-soft);box-shadow:var(--shadow-sm);display:flex;gap:8px;align-items:center;
-    font-family:var(--font-th);transition:.5s}
-  .hint svg{color:var(--orange)}
-  .hint.gone{opacity:0;transform:translateX(-50%) translateY(-8px)}
-
-  @media (max-width:760px){
-    .scene-info{max-width:none;left:12px;right:12px;top:72px}
-    .minimap{display:none}
-    .rail{right:12px;gap:6px}
-    .rail button{width:42px;height:42px}
-    .thumb{width:124px;height:72px}
-    .brand-txt span{display:none}
-  }
-</style>
-</head>
-<body>
-
-<div id="panorama"></div>
-
-<div id="intro">
-  <div class="intro-logo">
-    <div class="mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#9a3412" />
+    <meta
+      name="description"
+      content="ทัวร์เสมือนจริง 360 องศา Virtual Open House มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี"
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Virtual Open House KMUTNB · Prachinburi</title>
+  </head>
+  <body>
+    <div class="skip-links">
+      <a href="#tour-viewer" data-i18n="skipViewer">ข้ามไปยังภาพ 360</a>
+      <a href="#scene-selector" data-i18n="skipScenes">ข้ามไปยังรายการฉาก</a>
     </div>
-    <div class="txt"><b>KMUTNB</b><span>วิทยาเขตปราจีนบุรี</span></div>
-  </div>
-  <div class="intro-badge">Virtual Open House &middot; 360&deg;</div>
-  <h1>เยี่ยมชม<em>มหาวิทยาลัย</em><br>แบบเสมือนจริง</h1>
-  <p class="sub" id="introSub">สำรวจบรรยากาศอาคารและพื้นที่ของคณะเทคโนโลยีและการจัดการอุตสาหกรรม มจพ. วิทยาเขตปราจีนบุรี แบบ 360 องศา ลากเพื่อมองรอบทิศ และคลิกจุดเชื่อมเพื่อเดินทางระหว่างฉาก</p>
-  <div class="loader" id="loader"><i></i></div>
-  <button class="enter-btn" id="enterBtn">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    <span id="enterTxt">เริ่มเยี่ยมชม</span>
-  </button>
-  <div class="intro-foot" id="introFoot">โครงงานพิเศษ &middot; คณะเทคโนโลยีและการจัดการอุตสาหกรรม &middot; จัดทำโดย ศุภกร สุขปัทม์</div>
-</div>
 
-<div class="topbar">
-  <div class="brand">
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+    <div id="app" class="app" data-status="loading">
+      <header class="app-header">
+        <a class="brand" href="#tour-viewer" aria-label="Virtual Open House KMUTNB">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" /></svg>
+          </span>
+          <span class="brand__copy">
+            <strong>Virtual Open House</strong>
+            <span id="brand-subtitle">KMUTNB วิทยาเขตปราจีนบุรี</span>
+          </span>
+        </a>
+
+        <div class="header-actions">
+          <button id="about-button" class="header-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span data-i18n="aboutButton">ข้อมูลโครงงาน</span>
+          </button>
+          <div class="language-switch" role="group" aria-label="ภาษา">
+            <button id="lang-th" type="button" aria-pressed="true">ไทย</button>
+            <button id="lang-en" type="button" aria-pressed="false">EN</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="tour-layout">
+        <section class="viewer-shell" aria-labelledby="scene-title">
+          <div
+            id="tour-viewer"
+            class="tour-viewer"
+            tabindex="0"
+            role="region"
+            aria-label="ภาพพาโนรามา 360 องศา"
+            aria-describedby="viewer-help"
+          ></div>
+          <div class="viewer-vignette" aria-hidden="true"></div>
+
+          <section id="scene-panel" class="scene-panel" aria-labelledby="scene-title">
+            <div class="scene-panel__heading">
+              <p id="scene-counter" class="eyebrow">ฉากที่ 1 จาก 4</p>
+              <button id="hide-info-button" class="close-icon" type="button" aria-label="ซ่อนข้อมูลฉาก">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+              </button>
+            </div>
+            <h1 id="scene-title">ทางเข้าอาคารคณะ</h1>
+            <p id="scene-alt-title" class="scene-alt-title">Faculty Entrance</p>
+            <p id="scene-description" class="scene-description"></p>
+            <div id="scene-tags" class="tag-list" aria-label="ป้ายกำกับ"></div>
+            <div class="scene-actions">
+              <div>
+                <h2 id="destinations-heading">ไปยังฉาก</h2>
+                <div id="scene-links" class="compact-actions"></div>
+              </div>
+              <div id="info-actions-group">
+                <h2 id="information-heading">จุดข้อมูล</h2>
+                <div id="info-links" class="compact-actions"></div>
+              </div>
+            </div>
+          </section>
+
+          <p id="viewer-help" class="viewer-help">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11V7a4 4 0 0 1 8 0v4M5 11h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/></svg>
+            <span>ลากเพื่อมองรอบทิศ · ใช้ปุ่มด้านขวาเพื่อควบคุม</span>
+          </p>
+
+          <div class="control-rail" role="toolbar" aria-label="ควบคุมภาพ 360">
+            <button id="rotate-button" type="button" aria-pressed="false" data-tooltip="หมุนอัตโนมัติ">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v4h-4"/></svg>
+            </button>
+            <button id="zoom-in-button" type="button" data-tooltip="ซูมเข้า">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M21 21l-4.3-4.3"/></svg>
+            </button>
+            <button id="zoom-out-button" type="button" data-tooltip="ซูมออก">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M21 21l-4.3-4.3"/></svg>
+            </button>
+            <button id="reset-button" type="button" data-tooltip="รีเซ็ตมุมมอง">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 9 9M3 12V7M3 12h5"/></svg>
+            </button>
+            <button id="fullscreen-button" type="button" aria-pressed="false" data-tooltip="เต็มจอ">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg>
+            </button>
+            <button id="map-button" type="button" data-tooltip="แผนผังเส้นทาง">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>
+            </button>
+            <button id="show-info-button" type="button" aria-pressed="true" data-tooltip="ข้อมูลฉาก">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h6"/></svg>
+            </button>
+          </div>
+
+          <div id="scene-loader" class="scene-loader" role="status" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="scene-loader-text">กำลังโหลดฉาก…</span>
+          </div>
+
+          <section id="intro" class="intro" aria-labelledby="intro-title">
+            <div class="intro__card">
+              <div class="intro__brand" aria-hidden="true">
+                <span class="brand__mark brand__mark--large">
+                  <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" /></svg>
+                </span>
+              </div>
+              <p id="intro-eyebrow" class="eyebrow">Virtual Open House · 360°</p>
+              <h2 id="intro-title">เยี่ยมชมมหาวิทยาลัยแบบเสมือนจริง</h2>
+              <p id="intro-description">
+                สำรวจอาคารและพื้นที่ของ มจพ. วิทยาเขตปราจีนบุรี ผ่านภาพพาโนรามา 360 องศา
+              </p>
+              <div id="initial-loading" class="initial-loading" role="status" aria-live="polite">
+                <progress id="load-progress" max="100" value="0"></progress>
+                <span id="load-status">กำลังเตรียมฉากแรก…</span>
+              </div>
+              <div id="load-error" class="load-error" role="alert" hidden>
+                <strong id="load-error-title">ไม่สามารถโหลดภาพ 360 ได้</strong>
+                <span id="load-error-description">กรุณาลองอีกครั้ง หรือเปิดทัวร์แบบข้อความ</span>
+                <button id="retry-button" class="secondary-button" type="button">ลองอีกครั้ง</button>
+              </div>
+              <div class="intro__actions">
+                <button id="start-button" class="primary-button" type="button" disabled>
+                  <span>เริ่มเยี่ยมชม</span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
+                <button id="text-tour-button" class="secondary-button" type="button">ทัวร์แบบข้อความ</button>
+              </div>
+            </div>
+          </section>
+
+          <div id="live-status" class="sr-only" role="status" aria-live="polite"></div>
+        </section>
+
+        <nav id="scene-selector" class="scene-strip" aria-label="เลือกฉาก">
+          <div class="scene-strip__heading">
+            <div>
+              <p class="eyebrow" data-i18n="exploreEyebrow">สำรวจพื้นที่</p>
+              <h2 data-i18n="exploreTitle">เลือกฉากที่ต้องการเยี่ยมชม</h2>
+            </div>
+            <button id="text-tour-secondary-button" class="text-button" type="button">ดูข้อมูลทั้งหมด</button>
+          </div>
+          <div id="scene-list" class="scene-list"></div>
+        </nav>
+      </main>
     </div>
-    <div class="brand-txt">
-      <b>Virtual Open House</b>
-      <span id="brandSub">KMUTNB วิทยาเขตปราจีนบุรี</span>
-    </div>
-  </div>
-  <div class="spacer"></div>
-  <button class="icon-btn" onclick="openAbout()" title="ข้อมูลโครงงาน">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
-  </button>
-  <div class="chip lang-toggle">
-    <button id="thBtn" class="on" onclick="setLang('th')">ไทย</button>
-    <button id="enBtn" onclick="setLang('en')">EN</button>
-  </div>
-</div>
 
-<div class="scene-info" id="sceneInfo">
-  <button class="si-close" onclick="toggleInfo()" title="ซ่อน/แสดง">&times;</button>
-  <div class="kicker" id="siKicker">ฉากที่ 1 / 4</div>
-  <h2 id="siTitle">&mdash;<span class="en" id="siTitleEn">&mdash;</span></h2>
-  <p id="siDesc">&mdash;</p>
-  <div class="scene-meta" id="siTags"></div>
-</div>
+    <dialog id="info-dialog" class="app-dialog" aria-labelledby="info-dialog-title">
+      <div class="dialog-card">
+        <button class="dialog-close close-icon" type="button" aria-label="ปิด">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+        <p id="info-dialog-kicker" class="eyebrow">จุดข้อมูล</p>
+        <h2 id="info-dialog-title"></h2>
+        <p id="info-dialog-alt-title" class="scene-alt-title"></p>
+        <p id="info-dialog-description" class="dialog-description"></p>
+      </div>
+    </dialog>
 
-<div class="hint" id="hint">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11V6a3 3 0 0 1 6 0v5M5 11h14v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/></svg>
-  <span id="hintTxt">ลากเมาส์เพื่อมองรอบทิศ &middot; คลิกจุดสีส้มเพื่อเปลี่ยนฉาก</span>
-</div>
+    <dialog id="map-dialog" class="app-dialog app-dialog--wide" aria-labelledby="map-dialog-title">
+      <div class="dialog-card">
+        <button class="dialog-close close-icon" type="button" aria-label="ปิด">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+        <p class="eyebrow" data-i18n="mapEyebrow">เส้นทางทัวร์</p>
+        <h2 id="map-dialog-title">แผนผังฉาก</h2>
+        <p id="map-description" class="dialog-description">เลือกจุดเพื่อเดินทางไปยังฉากนั้น</p>
+        <div id="route-map" class="route-map"></div>
+      </div>
+    </dialog>
 
-<div class="rail">
-  <button id="rotBtn" onclick="toggleRotate()" title="หมุนอัตโนมัติ">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v4h-4"/></svg>
-  </button>
-  <button onclick="zoom(-1)" title="ซูมเข้า">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M21 21l-4.3-4.3"/></svg>
-  </button>
-  <button onclick="zoom(1)" title="ซูมออก">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M21 21l-4.3-4.3"/></svg>
-  </button>
-  <button onclick="resetView()" title="รีเซ็ตมุมมอง">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 1 9 9M3 12V7M3 12h5"/></svg>
-  </button>
-  <button id="fsBtn" onclick="toggleFs()" title="เต็มจอ">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg>
-  </button>
-  <button id="mapBtn" class="on" onclick="toggleMap()" title="แผนผัง">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>
-  </button>
-</div>
+    <dialog id="about-dialog" class="app-dialog" aria-labelledby="about-dialog-title">
+      <div class="dialog-card">
+        <button class="dialog-close close-icon" type="button" aria-label="ปิด">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+        <p class="eyebrow" data-i18n="aboutEyebrow">ข้อมูลโครงงาน</p>
+        <h2 id="about-dialog-title">Virtual Open House KMUTNB</h2>
+        <p id="about-description" class="dialog-description"></p>
+        <dl id="project-facts" class="project-facts"></dl>
+        <h3 id="objectives-title">วัตถุประสงค์หลัก</h3>
+        <ul id="objectives-list" class="objective-list"></ul>
+        <p id="privacy-note" class="privacy-note"></p>
+      </div>
+    </dialog>
 
-<div class="minimap" id="minimap">
-  <h4 id="mapTitle">แผนผังเส้นทาง</h4>
-  <svg viewBox="0 0 160 140" id="mapSvg">
-    <defs><linearGradient id="mmgrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#F26A1B"/><stop offset="1" stop-color="#FF8A3D"/></linearGradient></defs>
-    <line class="mm-edge" x1="40" y1="34" x2="120" y2="34"/>
-    <line class="mm-edge" x1="40" y1="34" x2="40" y2="104"/>
-    <line class="mm-edge" x1="120" y1="34" x2="120" y2="104"/>
-    <line class="mm-edge" x1="40" y1="104" x2="120" y2="104"/>
-    <line class="mm-edge" x1="40" y1="34" x2="120" y2="104"/>
-    <g class="mm-node" data-scene="entrance" onclick="goScene('entrance')"><circle cx="40" cy="34" r="7"/><text x="40" y="20" text-anchor="middle">1</text></g>
-    <g class="mm-node" data-scene="balcony" onclick="goScene('balcony')"><circle cx="120" cy="34" r="7"/><text x="120" y="20" text-anchor="middle">2</text></g>
-    <g class="mm-node" data-scene="bicycle" onclick="goScene('bicycle')"><circle cx="40" cy="104" r="7"/><text x="40" y="124" text-anchor="middle">3</text></g>
-    <g class="mm-node" data-scene="room" onclick="goScene('room')"><circle cx="120" cy="104" r="7"/><text x="120" y="124" text-anchor="middle">4</text></g>
-  </svg>
-</div>
+    <dialog id="text-tour-dialog" class="app-dialog app-dialog--wide" aria-labelledby="text-tour-title">
+      <div class="dialog-card">
+        <button class="dialog-close close-icon" type="button" aria-label="ปิด">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+        <p class="eyebrow" data-i18n="textTourEyebrow">ทางเลือกที่เข้าถึงได้</p>
+        <h2 id="text-tour-title">ทัวร์แบบข้อความ</h2>
+        <p id="text-tour-description" class="dialog-description"></p>
+        <div id="text-tour-content" class="text-tour-content"></div>
+      </div>
+    </dialog>
 
-<div class="thumbbar" id="thumbbar"></div>
-
-<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-card">
-    <div class="kicker">Point of Interest</div>
-    <h3 id="mTitle">&mdash;</h3>
-    <div class="en" id="mTitleEn">&mdash;</div>
-    <p id="mDesc">&mdash;</p>
-    <button class="x" onclick="closeModal()" id="mClose">ปิด</button>
-  </div>
-</div>
-
-<div class="modal" id="about" onclick="if(event.target===this)closeAbout()">
-  <div class="modal-card">
-    <div class="kicker" id="abKicker">ข้อมูลโครงงาน</div>
-    <h3 id="abTitle">การเยี่ยมชมมหาวิทยาลัย KMUTNB ออนไลน์</h3>
-    <div class="en" id="abTitleEn">Virtual Open House KMUTNB &middot; วิทยาเขตปราจีนบุรี</div>
-    <p id="abDesc" style="margin-bottom:16px"></p>
-    <div id="abFacts"></div>
-    <p id="abObjLabel" style="margin:18px 0 6px;font-weight:700;color:var(--ink)"></p>
-    <ul class="about-obj" id="abObj"></ul>
-    <button class="x" onclick="closeAbout()" id="abClose">ปิด</button>
-  </div>
-</div>
-
-<script src="lib/pannellum.js"></script>
-<script>
-var SCENES = {
-  entrance:{
-    n:1, file:'tour/pano/entrance.jpg', yaw:118, pitch:-2,
-    th:'ทางเข้าอาคารคณะ', en:'Faculty Entrance',
-    descTh:'โถงทางเดินหน้าอาคารคณะพร้อมประตูกระจกบานใหญ่เปิดออกสู่ลานด้านนอก จุดเริ่มต้นของการเยี่ยมชม มองเห็นผนังสีส้มอันเป็นเอกลักษณ์และทางเดินปูกระเบื้องที่นำไปสู่พื้นที่ต่าง ๆ ของคณะ',
-    descEn:'The front corridor of the faculty building with large glass doors opening to the courtyard, the starting point of the tour, featuring the signature orange wall and tiled walkway.',
-    tagsTh:['ทางเข้า','ประตูหลัก','โถงทางเดิน'], tagsEn:['Entrance','Main door','Corridor'],
-    hotspots:[
-      {type:'scene',to:'balcony',yaw:-30,pitch:-4},
-      {type:'scene',to:'bicycle',yaw:150,pitch:-6},
-      {type:'scene',to:'room',yaw:-95,pitch:-2},
-      {type:'info',yaw:60,pitch:-2,th:'ประตูกระจกทางออก',en:'Glass exit door',
-        dTh:'ประตูกระจกบานเลื่อนเชื่อมต่อระหว่างโถงภายในกับลานด้านนอกของอาคารคณะ',
-        dEn:'Sliding glass doors connecting the interior hall to the outdoor area of the faculty building.'}
-    ]
-  },
-  balcony:{
-    n:2, file:'tour/pano/balcony.jpg', yaw:0, pitch:-2,
-    th:'ระเบียงและบันได', en:'Walkway & Stairway',
-    descTh:'ระเบียงทางเดินพร้อมบันไดเชื่อมระหว่างชั้น ราวระแนงไม้กั้นมองเห็นวิวอาคารข้างเคียงและพื้นที่สีเขียวภายในวิทยาเขตปราจีนบุรี',
-    descEn:'A walkway balcony with a stairway linking floors. Wooden slat railings frame views of neighbouring buildings and the greenery of the Prachinburi campus.',
-    tagsTh:['ระเบียง','บันได','เชื่อมชั้น'], tagsEn:['Balcony','Stairs','Between floors'],
-    hotspots:[
-      {type:'scene',to:'entrance',yaw:170,pitch:-4},
-      {type:'scene',to:'bicycle',yaw:70,pitch:-6},
-      {type:'info',yaw:-60,pitch:0,th:'ราวระแนงไม้',en:'Wooden screen railing',
-        dTh:'ราวกันตกออกแบบเป็นระแนงไม้แนวนอน ช่วยระบายอากาศและให้แสงธรรมชาติส่องผ่าน',
-        dEn:'A horizontal wooden-slat safety railing that allows ventilation and natural light through.'}
-    ]
-  },
-  bicycle:{
-    n:3, file:'tour/pano/bicycle.jpg', yaw:90, pitch:-4,
-    th:'ลานจอดจักรยาน', en:'Bicycle Parking',
-    descTh:'ลานจอดจักรยานใต้หลังคาริมอาคารคณะ ใกล้กับผนังสีส้มและหน้าต่างบานเลื่อน เป็นจุดบริการสำหรับนักศึกษาและบุคลากรที่เดินทางด้วยจักรยาน',
-    descEn:'A covered bicycle parking bay alongside the faculty building, near the orange wall and sliding windows, a service point for students and staff who commute by bicycle.',
-    tagsTh:['ที่จอด','จักรยาน','กลางแจ้ง'], tagsEn:['Parking','Bicycle','Open-air'],
-    hotspots:[
-      {type:'scene',to:'entrance',yaw:-110,pitch:-4},
-      {type:'scene',to:'balcony',yaw:200,pitch:-4},
-      {type:'info',yaw:20,pitch:-2,th:'จุดจอดจักรยานนักศึกษา',en:'Student bicycle racks',
-        dTh:'ราวจอดจักรยานมีหลังคาคลุมกันแดดกันฝน รองรับการเดินทางที่เป็นมิตรกับสิ่งแวดล้อม',
-        dEn:'Sheltered bicycle racks protecting from sun and rain, supporting eco-friendly commuting.'}
-    ]
-  },
-  room:{
-    n:4, file:'tour/pano/room.jpg', yaw:0, pitch:0,
-    th:'พื้นที่ภายในอาคาร', en:'Indoor Space',
-    descTh:'พื้นที่ภายในอาคารคณะที่ใช้สำหรับจัดเก็บอุปกรณ์และเป็นพื้นที่ทำงาน สะท้อนการใช้งานจริงของพื้นที่ภายในวิทยาเขต',
-    descEn:'An indoor space within the faculty building used for storage and work, reflecting the real day-to-day use of campus areas.',
-    tagsTh:['ภายใน','พื้นที่ทำงาน','จัดเก็บ'], tagsEn:['Indoor','Workspace','Storage'],
-    hotspots:[
-      {type:'scene',to:'entrance',yaw:0,pitch:0},
-      {type:'info',yaw:120,pitch:0,th:'พื้นที่จัดเก็บ',en:'Storage area',
-        dTh:'มุมจัดเก็บอุปกรณ์และเครื่องใช้ภายในอาคาร สะท้อนการใช้งานพื้นที่จริงของคณะ',
-        dEn:'A corner for storing equipment and supplies, reflecting real use of the faculty space.'}
-    ]
-  }
-};
-var ORDER=['entrance','balcony','bicycle','room'];
-var THUMB={entrance:'tour/thumbs/thumb-entrance.jpg',balcony:'tour/thumbs/thumb-balcony.jpg',bicycle:'tour/thumbs/thumb-bicycle.jpg',room:'tour/thumbs/thumb-room.jpg'};
-
-var lang='th', viewer=null, current='entrance', rotating=true;
-
-function buildScenes(){
-  var out={};
-  ORDER.forEach(function(id){
-    var s=SCENES[id];
-    var hs=s.hotspots.map(function(h){
-      var base={pitch:h.pitch,yaw:h.yaw,cssClass:'custom-hotspot '+(h.type==='scene'?'scene':'info'),
-        createTooltipFunc:hsTip,
-        createTooltipArgs:{kind:h.type,th:h.type==='scene'?SCENES[h.to].th:h.th,en:h.type==='scene'?SCENES[h.to].en:h.en}};
-      if(h.type==='scene'){base.type='scene';base.sceneId=h.to;}
-      else{base.type='info';base.clickHandlerFunc=openModal;base.clickHandlerArgs=h;}
-      return base;
-    });
-    out[id]={type:'equirectangular',panorama:s.file,hfov:110,minHfov:55,maxHfov:120,
-      yaw:s.yaw,pitch:s.pitch,hotSpots:hs};
-  });
-  return out;
-}
-function hsTip(div,args){
-  div.classList.add('custom-hotspot',args.kind==='scene'?'scene':'info');
-  var dot=document.createElement('span');dot.className='hs-dot';div.appendChild(dot);
-  var lab=document.createElement('div');lab.className='hs-label';
-  lab.innerHTML='<b>'+args.th+'</b><i>'+args.en+'</i>';div.appendChild(lab);
-  div.style.width='36px';div.style.height='36px';
-}
-
-function initViewer(){
-  viewer=pannellum.viewer('panorama',{
-    default:{firstScene:'entrance',sceneFadeDuration:900,autoLoad:true,showControls:false,
-      compass:true,northOffset:0,hfov:110,autoRotate:-2,autoRotateInactivityDelay:8000},
-    scenes:buildScenes()
-  });
-  viewer.on('scenechange',function(id){current=id;syncUI();});
-  viewer.on('load',function(){current=viewer.getScene();syncUI();});
-  syncUI();
-}
-
-var T={
-  th:{sub:'KMUTNB วิทยาเขตปราจีนบุรี',enter:'เริ่มเยี่ยมชม',
-    introSub:'สำรวจบรรยากาศอาคารและพื้นที่ของคณะเทคโนโลยีและการจัดการอุตสาหกรรม มจพ. วิทยาเขตปราจีนบุรี แบบ 360 องศา ลากเพื่อมองรอบทิศ และคลิกจุดเชื่อมเพื่อเดินทางระหว่างฉาก',
-    foot:'โครงงานพิเศษ · คณะเทคโนโลยีและการจัดการอุตสาหกรรม · จัดทำโดย ศุภกร สุขปัทม์',
-    hint:'ลากเมาส์เพื่อมองรอบทิศ · คลิกจุดสีส้มเพื่อเปลี่ยนฉาก',map:'แผนผังเส้นทาง',close:'ปิด',of:'ฉากที่',
-    abKicker:'ข้อมูลโครงงาน',
-    abDesc:'การพัฒนา "มหาวิทยาลัยเสมือนจริง" ในรูปแบบ Open House ออนไลน์ ของมหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี เพื่อเป็นช่องทางประชาสัมพันธ์ที่เข้าถึงง่าย ลดข้อจำกัดด้านเวลาและสถานที่ ให้นักเรียน ผู้ปกครอง และผู้สนใจ ได้สัมผัสบรรยากาศของมหาวิทยาลัยได้ทุกที่ทุกเวลา',
-    abObjLabel:'วัตถุประสงค์หลัก',
-    abObj:['จำลองบรรยากาศมหาวิทยาลัยแบบ Open House บนแพลตฟอร์มออนไลน์','เป็นสื่อกลางประชาสัมพันธ์ข้อมูลหลักสูตร อาคารสถานที่ และกิจกรรม','ลดข้อจำกัดด้านเวลาและสถานที่ของผู้ที่เดินทางมาไม่ได้','สร้างสื่อที่เข้าถึงง่ายและตรงกับพฤติกรรมของเยาวชนยุคดิจิทัล'],
-    facts:[['คณะ','เทคโนโลยีและการจัดการอุตสาหกรรม'],['วิทยาเขต','ปราจีนบุรี · มจพ.'],['จัดทำโดย','นายศุภกร สุขปัทม์'],['อาจารย์ที่ปรึกษา','รศ.ดร.ยุพิน สรรพคุณ']]},
-  en:{sub:'KMUTNB Prachinburi Campus',enter:'Start Tour',
-    introSub:'Explore the buildings and spaces of the Faculty of Industrial Technology and Management, KMUTNB Prachinburi Campus, in 360 degrees. Drag to look around and click the linked points to move between scenes.',
-    foot:'Special Project · Faculty of Industrial Technology and Management · by Supakorn Sukapat',
-    hint:'Drag to look around · click the orange points to change scene',map:'Route map',close:'Close',of:'Scene',
-    abKicker:'About the Project',
-    abDesc:'A virtual "Open House" of King Mongkut’s University of Technology North Bangkok, Prachinburi Campus, built as an accessible online channel that removes the limits of time and place, letting students, parents and visitors experience the campus atmosphere anytime, anywhere.',
-    abObjLabel:'Main Objectives',
-    abObj:['Recreate the campus Open House atmosphere on an online platform','Serve as a channel to promote programs, facilities and activities','Remove time and travel limits for those who cannot visit in person','Provide an accessible medium suited to today’s digital generation'],
-    facts:[['Faculty','Industrial Technology & Management'],['Campus','Prachinburi · KMUTNB'],['By','Supakorn Sukapat'],['Advisor','Assoc. Prof. Dr. Yupin Sappakhun']]}
-};
-function syncUI(){
-  var s=SCENES[current],t=T[lang];
-  document.getElementById('siKicker').textContent=t.of+' '+s.n+' / 4';
-  document.getElementById('siTitle').firstChild.textContent=(lang==='th'?s.th:s.en);
-  document.getElementById('siTitleEn').textContent=(lang==='th'?s.en:s.th);
-  document.getElementById('siDesc').textContent=(lang==='th'?s.descTh:s.descEn);
-  var tags=(lang==='th'?s.tagsTh:s.tagsEn).map(function(x){return '<span class="tag">'+x+'</span>'}).join('');
-  document.getElementById('siTags').innerHTML=tags;
-  document.querySelectorAll('.thumb').forEach(function(el){el.classList.toggle('active',el.dataset.scene===current)});
-  document.querySelectorAll('.mm-node').forEach(function(el){el.classList.toggle('active',el.dataset.scene===current)});
-}
-function buildThumbs(){
-  var bar=document.getElementById('thumbbar');bar.innerHTML='';
-  ORDER.forEach(function(id){
-    var s=SCENES[id];
-    var d=document.createElement('button');d.className='thumb';d.dataset.scene=id;
-    d.onclick=function(){goScene(id)};
-    d.innerHTML='<span class="num">'+s.n+'</span><img src="'+THUMB[id]+'" alt="'+s.en+'">'+
-      '<span class="cap" data-th="'+s.th+'" data-en="'+s.en+'"></span>';
-    bar.appendChild(d);
-  });
-  refreshThumbCaps();
-}
-function refreshThumbCaps(){
-  document.querySelectorAll('.thumb .cap').forEach(function(c){
-    c.innerHTML=(lang==='th'?c.dataset.th:c.dataset.en)+'<small>'+(lang==='th'?c.dataset.en:c.dataset.th)+'</small>';
-  });
-}
-
-function goScene(id){if(!viewer){current=id;return;}if(id!==viewer.getScene()){viewer.loadScene(id);current=id;syncUI();}}
-function setLang(l){
-  lang=l;
-  document.getElementById('thBtn').classList.toggle('on',l==='th');
-  document.getElementById('enBtn').classList.toggle('on',l==='en');
-  document.documentElement.lang=l;
-  var t=T[l];
-  document.getElementById('brandSub').textContent=t.sub;
-  document.getElementById('enterTxt').textContent=t.enter;
-  document.getElementById('introSub').textContent=t.introSub;
-  document.getElementById('introFoot').textContent=t.foot;
-  document.getElementById('hintTxt').textContent=t.hint;
-  document.getElementById('mapTitle').textContent=t.map;
-  document.getElementById('mClose').textContent=t.close;
-  document.getElementById('abClose').textContent=t.close;
-  document.getElementById('abKicker').textContent=t.abKicker;
-  refreshThumbCaps();syncUI();
-}
-function toggleRotate(){
-  rotating=!rotating;
-  document.getElementById('rotBtn').classList.toggle('on',rotating);
-  if(rotating)viewer.startAutoRotate(-2);else viewer.stopAutoRotate();
-}
-function zoom(d){viewer.setHfov(Math.min(120,Math.max(55,viewer.getHfov()+d*12)),300);}
-function resetView(){var s=SCENES[current];viewer.setPitch(s.pitch,500);viewer.setYaw(s.yaw,500);viewer.setHfov(110,500);}
-function toggleFs(){
-  var el=document.documentElement;
-  if(!document.fullscreenElement){(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}
-  else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
-}
-function toggleInfo(){document.getElementById('sceneInfo').classList.toggle('collapsed');}
-function toggleMap(){
-  var m=document.getElementById('minimap');m.classList.toggle('collapsed');
-  document.getElementById('mapBtn').classList.toggle('on',!m.classList.contains('collapsed'));
-}
-function openModal(e,h){
-  document.getElementById('mTitle').textContent=(lang==='th'?h.th:h.en);
-  document.getElementById('mTitleEn').textContent=(lang==='th'?h.en:h.th);
-  document.getElementById('mDesc').textContent=(lang==='th'?h.dTh:h.dEn);
-  document.getElementById('modal').classList.add('show');
-}
-function closeModal(){document.getElementById('modal').classList.remove('show');}
-function openAbout(){
-  var t=T[lang];
-  document.getElementById('abDesc').textContent=t.abDesc;
-  document.getElementById('abObjLabel').textContent=t.abObjLabel;
-  document.getElementById('abObj').innerHTML=t.abObj.map(function(x){return '<li>'+x+'</li>'}).join('');
-  document.getElementById('abFacts').innerHTML=t.facts.map(function(f){
-    return '<div class="info-row"><div class="k">'+f[0]+'</div><div class="v">'+f[1]+'</div></div>'}).join('');
-  document.getElementById('about').classList.add('show');
-}
-function closeAbout(){document.getElementById('about').classList.remove('show');}
-
-buildThumbs();
-window.addEventListener('load',function(){
-  initViewer();
-  setTimeout(function(){
-    document.getElementById('loader').classList.add('hidden');
-    document.getElementById('enterBtn').classList.add('ready');
-  },1200);
-});
-document.getElementById('enterBtn').addEventListener('click',function(){
-  document.getElementById('intro').classList.add('done');
-  setTimeout(function(){document.getElementById('hint').classList.remove('gone');},400);
-  setTimeout(function(){document.getElementById('hint').classList.add('gone');},9000);
-});
-document.addEventListener('fullscreenchange',function(){
-  document.getElementById('fsBtn').classList.toggle('on',!!document.fullscreenElement);
-});
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){closeModal();closeAbout();}
-  var i=ORDER.indexOf(current);
-  if(e.key==='ArrowRight')goScene(ORDER[(i+1)%ORDER.length]);
-  if(e.key==='ArrowLeft')goScene(ORDER[(i-1+ORDER.length)%ORDER.length]);
-});
-</script>
-</body>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
