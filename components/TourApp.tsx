@@ -50,6 +50,7 @@ export default function TourApp() {
   const [dialog, setDialog] = useState<DialogName>(null);
   const [selectedInfo, setSelectedInfo] = useState<InfoHotspot | null>(null);
   const [announcement, setAnnouncement] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const scene = getScene(currentSceneId);
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
@@ -57,6 +58,10 @@ export default function TourApp() {
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -154,7 +159,7 @@ export default function TourApp() {
           </button>
           <div className="language-switch" role="group" aria-label={message(locale, 'languageLabel')}>
             <button type="button" aria-pressed={locale === 'th'} onClick={() => setLocale('th')}>ไทย</button>
-            <button type="button" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>EN</button>
+            <button type="button" aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>En</button>
           </div>
         </div>
       </header>
@@ -186,7 +191,11 @@ export default function TourApp() {
             inert={!sceneInfoVisible ? true : undefined}
           >
             <div className="scene-panel__heading">
-              <p className="eyebrow">{sceneCounter(locale, tourScenes.findIndex((item) => item.id === scene.id) + 1, tourScenes.length)}</p>
+              <p className="eyebrow">
+                {isHydrated
+                  ? sceneCounter(locale, tourScenes.findIndex((item) => item.id === scene.id) + 1, tourScenes.length)
+                  : sceneCounter(locale, 1, 4)}
+              </p>
               <button className="close-icon" type="button" aria-label={message(locale, 'hideInfo')} onClick={() => setSceneInfoVisible(false)}>
                 <Icon><path d="m6 6 12 12M18 6 6 18" /></Icon>
               </button>

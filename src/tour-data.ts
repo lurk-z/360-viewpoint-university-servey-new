@@ -6,11 +6,12 @@ const entranceThumbnail = '/tour/thumbs/thumb-entrance.jpg';
 const balconyThumbnail = '/tour/thumbs/thumb-balcony.jpg';
 const bicycleThumbnail = '/tour/thumbs/thumb-bicycle.jpg';
 const roomThumbnail = '/tour/thumbs/thumb-room.jpg';
+const University_page = '/public/mainimages/set1-1.jpg';
 
 export const locales = ['th', 'en'] as const;
 export type Locale = (typeof locales)[number];
 
-export const sceneIds = ['entrance', 'balcony', 'bicycle', 'room'] as const;
+export const sceneIds = ['entrance', 'balcony', 'bicycle', 'room', 'University'] as const;
 export type SceneId = (typeof sceneIds)[number];
 
 export type LocalizedText = Readonly<Record<Locale, string>>;
@@ -188,6 +189,39 @@ export const tourScenes = [
       { id: 'room-to-entrance', type: 'scene', target: 'entrance', yaw: 0, pitch: 0 },
       {
         id: 'room-storage',
+        type: 'info',
+        yaw: 120,
+        pitch: 0,
+        title: { th: 'พื้นที่จัดเก็บ', en: 'Storage area' },
+        description: {
+          th: 'มุมจัดเก็บอุปกรณ์และเครื่องใช้ภายในอาคาร สะท้อนการใช้งานพื้นที่ของคณะ',
+          en: 'A corner used to store equipment and supplies for everyday faculty activities.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'University',
+    panorama: University_page,
+    thumbnail: University_page,
+    title: {
+      th: 'พื้นที่ภายในอาคาร',
+      en: 'Indoor Space'
+    },
+    description: {
+      th: 'พื้นที่ภายในอาคารสำหรับจัดเก็บอุปกรณ์และทำงาน แสดงตัวอย่างการใช้งานพื้นที่จริงภายในวิทยาเขต',
+      en: 'An indoor work and storage area showing an example of how campus spaces are used day to day.'
+    },
+    tags: {
+      th: ['ภายใน', 'พื้นที่ทำงาน', 'จัดเก็บ'],
+      en: ['Indoor', 'Workspace', 'Storage']
+    },
+    initialView: { yaw: 0, pitch: 0, zoom: 22 },
+    mapPosition: { x: 76, y: 76 },
+    hotspots: [
+      { id: 'University-to-entrance', type: 'scene', target: 'entrance', yaw: 0, pitch: 0 },
+      {
+        id: 'University-storage',
         type: 'info',
         yaw: 120,
         pitch: 0,

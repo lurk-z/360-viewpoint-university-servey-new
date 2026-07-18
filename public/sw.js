@@ -10,7 +10,8 @@ const TOUR_ASSETS = [
   '/tour/thumbs/thumb-entrance.jpg',
   '/tour/thumbs/thumb-balcony.jpg',
   '/tour/thumbs/thumb-bicycle.jpg',
-  '/tour/thumbs/thumb-room.jpg'
+  '/tour/thumbs/thumb-room.jpg',
+  '/public/mainimages/set1-1.jpg'
 ];
 
 self.addEventListener('install', (event) => {

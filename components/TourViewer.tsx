@@ -147,7 +147,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       );
       const icon = document.createElement('span');
       icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = '→';
+      icon.textContent = '→'; // arrow icon
       button.append(icon);
       return button;
     };
