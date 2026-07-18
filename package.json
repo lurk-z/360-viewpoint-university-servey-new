@@ -10,18 +10,22 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 8360",
+    "generate:tiles": "node scripts/generate-panorama-tiles.mjs",
     "typecheck": "tsc --noEmit --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:workers": "node --check public/sw.js && node --check scripts/generate-panorama-tiles.mjs",
     "check:legacy": "node scripts/check-legacy.mjs",
-    "check": "npm run typecheck && npm run test && npm run check:legacy && npm run build"
+    "check": "npm run typecheck && npm run test && npm run check:workers && npm run check:legacy && npm run build"
   },
   "dependencies": {
     "@photo-sphere-viewer/autorotate-plugin": "5.14.3",
     "@photo-sphere-viewer/core": "5.14.3",
+    "@photo-sphere-viewer/equirectangular-tiles-adapter": "5.14.3",
     "@photo-sphere-viewer/markers-plugin": "5.14.3",
     "@photo-sphere-viewer/virtual-tour-plugin": "5.14.3",
     "@tailwindcss/postcss": "4.3.3",
+    "leaflet": "1.9.4",
     "next": "16.2.10",
     "react": "19.2.7",
     "react-dom": "19.2.7",
@@ -29,9 +33,11 @@
     "zustand": "5.0.14"
   },
   "devDependencies": {
+    "@types/leaflet": "1.9.21",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "sharp": "0.34.5",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },

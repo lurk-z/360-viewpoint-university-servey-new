@@ -1,6 +1,25 @@
+export const panoramaTileConfig = {
+  width: 7680,
+  height: 3840,
+  cols: 8,
+  rows: 4,
+  tileSize: 960,
+  baseWidth: 2048,
+  baseHeight: 1024
+} as const;
+
+export interface TiledPanoramaMedia {
+  readonly width: number;
+  readonly cols: number;
+  readonly rows: number;
+  readonly baseUrl: string;
+  readonly tileUrlPattern: string;
+}
+
 export interface SceneMedia {
-  readonly panorama: string;
-  readonly thumbnail: string;
+  /** Original 7680×3840 source. It is preserved and is not loaded by the viewer. */
+  readonly sourcePanorama: string;
+  readonly tiledPanorama: TiledPanoramaMedia;
 }
 
 /**
@@ -11,27 +30,43 @@ function mainImage(fileName: string): string {
   return `/mainimages/${fileName}`;
 }
 
+function tiledMainImage(fileName: string): SceneMedia {
+  const stem = fileName.replace(/\.jpe?g$/i, '');
+  const tileRoot = `tiles/${stem}`;
+  return {
+    sourcePanorama: mainImage(fileName),
+    tiledPanorama: {
+      width: panoramaTileConfig.width,
+      cols: panoramaTileConfig.cols,
+      rows: panoramaTileConfig.rows,
+      baseUrl: mainImage(`${tileRoot}/base.jpg`),
+      tileUrlPattern: mainImage(`${tileRoot}/tile-{col}-{row}.jpg`)
+    }
+  };
+}
+
+export const tourMap = {
+  image: mainImage('map/mainmap.png'),
+  width: 1150,
+  height: 577
+} as const;
+
 export const tourMedia = {
-  entrance: {
-    panorama: '/tour/pano/entrance.jpg',
-    thumbnail: '/tour/thumbs/thumb-entrance.jpg'
-  },
-  balcony: {
-    panorama: '/tour/pano/balcony.jpg',
-    thumbnail: '/tour/thumbs/thumb-balcony.jpg'
-  },
-  bicycle: {
-    panorama: '/tour/pano/bicycle.jpg',
-    thumbnail: '/tour/thumbs/thumb-bicycle.jpg'
-  },
-  room: {
-    panorama: '/tour/pano/room.jpg',
-    thumbnail: '/tour/thumbs/thumb-room.jpg'
-  },
-  university: {
-    panorama: mainImage('temp1.jpg'),
-    thumbnail: mainImage('temp1.jpg')
-  }
+  entrance: tiledMainImage('temp1.jpg'),
+  entranceRoad: tiledMainImage('temp1-2.jpg'),
+  memorialPlaza: tiledMainImage('temp1-3.jpg'),
+  memorial: tiledMainImage('temp1-3-1.jpg'),
+  campusRoad1: tiledMainImage('temp1-4.jpg'),
+  vallayaHotel: tiledMainImage('temp1-4-1.jpg'),
+  campusRoad2: tiledMainImage('temp1-4.5.jpg'),
+  campusRoad3: tiledMainImage('temp1-4.9.jpg'),
+  campusRoad4: tiledMainImage('temp1-5.jpg'),
+  campusBuilding1: tiledMainImage('temp1-5-1.jpg'),
+  campusBuilding2: tiledMainImage('temp1-5-2.jpg'),
+  campusRoad5: tiledMainImage('temp2-1.jpg'),
+  campusRoad6: tiledMainImage('temp2-2.jpg'),
+  campusRoad7: tiledMainImage('temp2-3.jpg'),
+  campusBuilding3: tiledMainImage('temp2-4.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -43,20 +78,26 @@ export const sceneIds: readonly SceneId[] = Object.keys(tourMedia) as SceneId[];
 export type LocalizedText = Readonly<Record<Locale, string>>;
 
 export interface InitialView {
+  /** Degrees. Numeric values are converted to a `deg` string at the viewer boundary. */
   readonly yaw: number;
+  /** Degrees. Numeric values are converted to a `deg` string at the viewer boundary. */
   readonly pitch: number;
   readonly zoom: number;
 }
 
 export interface MapPosition {
+  /** Horizontal pixel coordinate on tourMap.image. */
   readonly x: number;
+  /** Vertical pixel coordinate from the top of tourMap.image. */
   readonly y: number;
 }
 
 interface HotspotBase {
-  readonly id: string;
+  /** Degrees. */
   readonly yaw: number;
+  /** Degrees. */
   readonly pitch: number;
+  readonly id: string;
 }
 
 export interface SceneHotspot extends HotspotBase {
@@ -74,8 +115,8 @@ export type Hotspot = SceneHotspot | InfoHotspot;
 
 export interface TourScene {
   readonly id: SceneId;
-  readonly panorama: string;
-  readonly thumbnail: string;
+  readonly sourcePanorama: string;
+  readonly tiledPanorama: TiledPanoramaMedia;
   readonly title: LocalizedText;
   readonly description: LocalizedText;
   readonly tags: Readonly<Record<Locale, readonly string[]>>;
@@ -89,168 +130,335 @@ export interface SceneEdge {
   readonly to: SceneId;
 }
 
+/** Converts the degree values stored in tour data to Photo Sphere Viewer angle syntax. */
+export function toDegrees(value: number): string {
+  if (!Number.isFinite(value)) {
+    throw new Error(`Invalid angle: ${value}`);
+  }
+  return `${Object.is(value, -0) ? 0 : value}deg`;
+}
+
+export function panoramaTileUrl(media: TiledPanoramaMedia, col: number, row: number): string {
+  if (!Number.isInteger(col) || col < 0 || col >= media.cols) {
+    throw new Error(`Invalid panorama tile column: ${col}`);
+  }
+  if (!Number.isInteger(row) || row < 0 || row >= media.rows) {
+    throw new Error(`Invalid panorama tile row: ${row}`);
+  }
+  return media.tileUrlPattern.replace('{col}', String(col)).replace('{row}', String(row));
+}
+
+export function getSceneAssetUrls(scene: TourScene): readonly string[] {
+  const assets = [scene.tiledPanorama.baseUrl];
+  for (let row = 0; row < scene.tiledPanorama.rows; row += 1) {
+    for (let col = 0; col < scene.tiledPanorama.cols; col += 1) {
+      assets.push(panoramaTileUrl(scene.tiledPanorama, col, row));
+    }
+  }
+  return assets;
+}
+
 export const tourScenes = [
   {
     id: 'entrance',
     ...tourMedia.entrance,
-    title: {
-      th: 'ทางเข้าอาคารคณะ',
-      en: 'Faculty Entrance'
-    },
+    title: { th: 'ลานหน้ามหาวิทยาลัย', en: 'University Front Plaza' },
     description: {
-      th: 'โถงทางเดินหน้าอาคารคณะพร้อมประตูกระจกบานใหญ่ เปิดออกสู่ลานด้านนอกและเชื่อมต่อไปยังพื้นที่ต่าง ๆ ของคณะ',
-      en: 'The faculty entrance corridor opens to the courtyard through large glass doors and connects visitors to the surrounding campus spaces.'
+      th: 'จุดต้อนรับบริเวณป้าย KMUTNB ด้านหน้ามหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี',
+      en: 'The KMUTNB landmark welcomes visitors at the front of the Prachinburi campus.'
     },
-    tags: {
-      th: ['ทางเข้า', 'ประตูหลัก', 'โถงทางเดิน'],
-      en: ['Entrance', 'Main door', 'Corridor']
-    },
-    initialView: { yaw: 118, pitch: -2, zoom: 22 },
-    mapPosition: { x: 24, y: 26 },
-    hotspots: [
-      { id: 'entrance-to-balcony', type: 'scene', target: 'balcony', yaw: -30, pitch: -4 },
-      { id: 'entrance-to-bicycle', type: 'scene', target: 'bicycle', yaw: 150, pitch: -6 },
-      { id: 'entrance-to-room', type: 'scene', target: 'room', yaw: -95, pitch: -2 },
-      { id: 'entrance-to-university', type: 'scene', target: 'university', yaw: 20, pitch: -2 },
-      {
-        id: 'entrance-glass-door',
-        type: 'info',
-        yaw: 60,
-        pitch: -2,
-        title: { th: 'ประตูกระจกทางออก', en: 'Glass exit door' },
-        description: {
-          th: 'ประตูกระจกบานเลื่อนเชื่อมต่อระหว่างโถงภายในกับลานด้านนอกของอาคารคณะ',
-          en: 'Sliding glass doors connect the interior hall to the outdoor faculty courtyard.'
-        }
-      }
-    ]
-  },
-  {
-    id: 'balcony',
-    ...tourMedia.balcony,
-    title: {
-      th: 'ระเบียงและบันได',
-      en: 'Walkway & Stairway'
-    },
-    description: {
-      th: 'ระเบียงทางเดินพร้อมบันไดเชื่อมระหว่างชั้น ราวระแนงเปิดรับแสงธรรมชาติและมองเห็นอาคารข้างเคียงภายในวิทยาเขต',
-      en: 'A balcony walkway and stairway link the floors, with open slatted rails framing natural light and views across the campus.'
-    },
-    tags: {
-      th: ['ระเบียง', 'บันได', 'เชื่อมชั้น'],
-      en: ['Balcony', 'Stairs', 'Between floors']
-    },
-    initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 76, y: 26 },
-    hotspots: [
-      { id: 'balcony-to-entrance', type: 'scene', target: 'entrance', yaw: 170, pitch: -4 },
-      { id: 'balcony-to-bicycle', type: 'scene', target: 'bicycle', yaw: 70, pitch: -6 },
-      {
-        id: 'balcony-wooden-screen',
-        type: 'info',
-        yaw: -60,
-        pitch: 0,
-        title: { th: 'ราวระแนงไม้', en: 'Wooden screen railing' },
-        description: {
-          th: 'ราวกันตกแบบระแนงแนวนอนช่วยระบายอากาศและเปิดให้แสงธรรมชาติส่องผ่าน',
-          en: 'Horizontal slats provide a safety barrier while allowing airflow and natural light through.'
-        }
-      }
-    ]
-  },
-  {
-    id: 'bicycle',
-    ...tourMedia.bicycle,
-    title: {
-      th: 'ลานจอดจักรยาน',
-      en: 'Bicycle Parking'
-    },
-    description: {
-      th: 'พื้นที่จอดจักรยานใต้หลังคาริมอาคาร อยู่ใกล้ทางเดินหลักและให้บริการนักศึกษาและบุคลากรที่เดินทางด้วยจักรยาน',
-      en: 'A covered bicycle parking area beside the main walkway serves students and staff who commute by bicycle.'
-    },
-    tags: {
-      th: ['ที่จอด', 'จักรยาน', 'กึ่งกลางแจ้ง'],
-      en: ['Parking', 'Bicycle', 'Semi-outdoor']
-    },
-    initialView: { yaw: 90, pitch: -4, zoom: 22 },
-    mapPosition: { x: 24, y: 76 },
-    hotspots: [
-      { id: 'bicycle-to-entrance', type: 'scene', target: 'entrance', yaw: -110, pitch: -4 },
-      { id: 'bicycle-to-balcony', type: 'scene', target: 'balcony', yaw: 200, pitch: -4 },
-      {
-        id: 'bicycle-racks',
-        type: 'info',
-        yaw: 20,
-        pitch: -2,
-        title: { th: 'จุดจอดจักรยานนักศึกษา', en: 'Student bicycle racks' },
-        description: {
-          th: 'ราวจอดจักรยานมีหลังคาคลุมเพื่อช่วยป้องกันแดดและฝน รองรับการเดินทางที่เป็นมิตรต่อสิ่งแวดล้อม',
-          en: 'Sheltered bicycle racks offer protection from sun and rain while supporting lower-impact travel.'
-        }
-      }
-    ]
-  },
-  {
-    id: 'room',
-    ...tourMedia.room,
-    title: {
-      th: 'พื้นที่ภายในอาคาร',
-      en: 'Indoor Space'
-    },
-    description: {
-      th: 'พื้นที่ภายในอาคารสำหรับจัดเก็บอุปกรณ์และทำงาน แสดงตัวอย่างการใช้งานพื้นที่จริงภายในวิทยาเขต',
-      en: 'An indoor work and storage area showing an example of how campus spaces are used day to day.'
-    },
-    tags: {
-      th: ['ภายใน', 'พื้นที่ทำงาน', 'จัดเก็บ'],
-      en: ['Indoor', 'Workspace', 'Storage']
-    },
+    tags: { th: ['ทางเข้า', 'ป้ายมหาวิทยาลัย', 'กลางแจ้ง'], en: ['Entrance', 'Landmark', 'Outdoor'] },
     initialView: { yaw: 0, pitch: 0, zoom: 22 },
-    mapPosition: { x: 76, y: 76 },
+    mapPosition: { x: 360, y: 290 },
     hotspots: [
-      { id: 'room-to-entrance', type: 'scene', target: 'entrance', yaw: 0, pitch: 0 },
+      { id: 'entrance-to-road', type: 'scene', target: 'entranceRoad', yaw: 100, pitch: -3 },
       {
-        id: 'room-storage',
-        type: 'info',
-        yaw: 120,
-        pitch: 0,
-        title: { th: 'พื้นที่จัดเก็บ', en: 'Storage area' },
-        description: {
-          th: 'มุมจัดเก็บอุปกรณ์และเครื่องใช้ภายในอาคาร สะท้อนการใช้งานพื้นที่ของคณะ',
-          en: 'A corner used to store equipment and supplies for everyday faculty activities.'
-        }
-      }
-    ]
-  },
-  {
-    id: 'university',
-    ...tourMedia.university,
-    title: {
-      th: 'ลานหน้ามหาวิทยาลัย',
-      en: 'University Front Plaza'
-    },
-    description: {
-      th: 'ลานด้านหน้ามหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี พร้อมป้ายมหาวิทยาลัยและพื้นที่สวนโดยรอบ',
-      en: 'The front plaza of King Mongkut’s University of Technology North Bangkok, Prachinburi Campus, with its landmark sign and surrounding garden.'
-    },
-    tags: {
-      th: ['ลานมหาวิทยาลัย', 'ป้ายมหาวิทยาลัย', 'พื้นที่กลางแจ้ง'],
-      en: ['University plaza', 'Landmark', 'Outdoor']
-    },
-    initialView: { yaw: 0, pitch: 0, zoom: 22 },
-    mapPosition: { x: 50, y: 76 },
-    hotspots: [
-      { id: 'university-to-entrance', type: 'scene', target: 'entrance', yaw: 0, pitch: 0 },
-      {
-        id: 'university-landmark',
+        id: 'entrance-landmark-info',
         type: 'info',
         yaw: 0,
-        pitch: 4,
+        pitch: 1,
         title: { th: 'ป้ายมหาวิทยาลัย', en: 'KMUTNB landmark' },
         description: {
           th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
-          en: 'The KMUTNB landmark welcomes visitors at the entrance to the Prachinburi Campus.'
+          en: 'The KMUTNB landmark identifies the main entrance to the Prachinburi campus.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'entranceRoad',
+    ...tourMedia.entranceRoad,
+    title: { th: 'ถนนบริเวณประตูทางเข้า', en: 'Entrance Road' },
+    description: {
+      th: 'ถนนและพื้นที่หน้าประตูมหาวิทยาลัยซึ่งเชื่อมต่อจากจุดต้อนรับเข้าสู่ถนนภายในวิทยาเขต',
+      en: 'The road by the campus gate connects the front landmark to the internal campus route.'
+    },
+    tags: { th: ['ถนน', 'ประตูทางเข้า', 'เส้นทาง'], en: ['Road', 'Gate', 'Route'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 330, y: 320 },
+    hotspots: [
+      { id: 'road-to-entrance', type: 'scene', target: 'entrance', yaw: 170, pitch: -3 },
+      { id: 'road-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'memorialPlaza',
+    ...tourMedia.memorialPlaza,
+    title: { th: 'ลานอนุสรณ์', en: 'Memorial Plaza' },
+    description: {
+      th: 'พื้นที่ลานกลางแจ้งและสวนริมถนนภายในวิทยาเขต เชื่อมต่อไปยังอนุสรณ์และเส้นทางส่วนถัดไป',
+      en: 'An open plaza and garden beside the campus road, connecting to the memorial and the next route segment.'
+    },
+    tags: { th: ['ลาน', 'สวน', 'อนุสรณ์'], en: ['Plaza', 'Garden', 'Memorial'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 22 },
+    mapPosition: { x: 290, y: 340 },
+    hotspots: [
+      { id: 'plaza-to-road', type: 'scene', target: 'entranceRoad', yaw: 175, pitch: -3 },
+      { id: 'plaza-to-memorial', type: 'scene', target: 'memorial', yaw: -55, pitch: -2 },
+      { id: 'plaza-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 15, pitch: -3 }
+    ]
+  },
+  {
+    id: 'memorial',
+    ...tourMedia.memorial,
+    title: { th: 'จุดอนุสรณ์ภายในวิทยาเขต', en: 'Campus Memorial' },
+    description: {
+      th: 'จุดอนุสรณ์ในพื้นที่ลานกลางแจ้งของวิทยาเขต เป็นจุดแยกจากเส้นทางหลักและสามารถย้อนกลับไปยังลานได้',
+      en: 'A campus memorial in the open plaza, reached from and connected back to the main route.'
+    },
+    tags: { th: ['อนุสรณ์', 'จุดสำคัญ', 'กลางแจ้ง'], en: ['Memorial', 'Landmark', 'Outdoor'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 270, y: 350 },
+    hotspots: [
+      { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -3 },
+      {
+        id: 'memorial-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 5,
+        title: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' },
+        description: {
+          th: 'อนุสรณ์เป็นหนึ่งในจุดสำคัญของพื้นที่ลานภายในมหาวิทยาลัย',
+          en: 'The memorial is one of the notable landmarks in the campus plaza.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'campusRoad1',
+    ...tourMedia.campusRoad1,
+    title: { th: 'ถนนภายในวิทยาเขต จุดที่ 1', en: 'Campus Road Point 1' },
+    description: {
+      th: 'จุดเริ่มต้นของเส้นทางถนนภายในวิทยาเขต พร้อมทางแยกไปยังอาคารบริการที่อยู่ใกล้เคียง',
+      en: 'The first internal road point, with a nearby branch to a campus service building.'
+    },
+    tags: { th: ['ถนน', 'ทางเดิน', 'จุดที่ 1'], en: ['Road', 'Walkway', 'Point 1'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 255, y: 370 },
+    hotspots: [
+      { id: 'campus-road-1-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -3 },
+      { id: 'campus-road-1-to-hotel', type: 'scene', target: 'vallayaHotel', yaw: -70, pitch: -2 },
+      { id: 'campus-road-1-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'vallayaHotel',
+    ...tourMedia.vallayaHotel,
+    title: { th: 'โรงแรมวไลยอลงกรณ์', en: 'Vallayalangkorn Hotel' },
+    description: {
+      th: 'อาคารโรงแรมวไลยอลงกรณ์ภายในวิทยาเขต เป็นจุดแยกที่เชื่อมกลับไปยังถนนเส้นหลัก',
+      en: 'Vallayalangkorn Hotel is a campus building located just off the main internal road.'
+    },
+    tags: { th: ['โรงแรม', 'อาคาร', 'จุดบริการ'], en: ['Hotel', 'Building', 'Service'] },
+    initialView: { yaw: 0, pitch: 1, zoom: 24 },
+    mapPosition: { x: 215, y: 385 },
+    hotspots: [
+      { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -3 },
+      {
+        id: 'hotel-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 4,
+        title: { th: 'อาคารโรงแรมวไลยอลงกรณ์', en: 'Vallayalangkorn Hotel building' },
+        description: {
+          th: 'อาคารบริการและที่พักภายในมหาวิทยาลัยซึ่งตั้งอยู่ใกล้ถนนสายหลักของวิทยาเขต',
+          en: 'A campus accommodation and service building near the main internal road.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'campusRoad2',
+    ...tourMedia.campusRoad2,
+    title: { th: 'ถนนภายในวิทยาเขต จุดที่ 2', en: 'Campus Road Point 2' },
+    description: {
+      th: 'ทางเดินและถนนภายในมหาวิทยาลัยที่เชื่อมต่อระหว่างกลุ่มอาคารและพื้นที่สีเขียว',
+      en: 'A campus road and walkway connecting nearby buildings and green spaces.'
+    },
+    tags: { th: ['ถนน', 'ทางเดิน', 'จุดที่ 2'], en: ['Road', 'Walkway', 'Point 2'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 270, y: 405 },
+    hotspots: [
+      { id: 'campus-road-2-to-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -3 },
+      { id: 'campus-road-2-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad3',
+    ...tourMedia.campusRoad3,
+    title: { th: 'ถนนภายในวิทยาเขต จุดที่ 3', en: 'Campus Road Point 3' },
+    description: {
+      th: 'จุดถนนหน้าอาคารและแนวต้นไม้ในวิทยาเขต เชื่อมต่อเส้นทางไปยังพื้นที่ส่วนถัดไป',
+      en: 'A tree-lined road point near campus buildings leading to the next part of the route.'
+    },
+    tags: { th: ['ถนน', 'อาคาร', 'จุดที่ 3'], en: ['Road', 'Buildings', 'Point 3'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 295, y: 425 },
+    hotspots: [
+      { id: 'campus-road-3-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 180, pitch: -3 },
+      { id: 'campus-road-3-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad4',
+    ...tourMedia.campusRoad4,
+    title: { th: 'ถนนภายในวิทยาเขต จุดที่ 4', en: 'Campus Road Point 4' },
+    description: {
+      th: 'ถนนบริเวณกลุ่มอาคารภายในวิทยาเขต มีทางแยกไปยังอาคารใกล้เคียงสองจุด',
+      en: 'A road point in the campus building zone with branches to two nearby buildings.'
+    },
+    tags: { th: ['ถนน', 'ทางแยก', 'จุดที่ 4'], en: ['Road', 'Junction', 'Point 4'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 320, y: 445 },
+    hotspots: [
+      { id: 'campus-road-4-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 180, pitch: -3 },
+      { id: 'campus-road-4-to-building-1', type: 'scene', target: 'campusBuilding1', yaw: -60, pitch: -2 },
+      { id: 'campus-road-4-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: 55, pitch: -2 },
+      { id: 'campus-road-4-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusBuilding1',
+    ...tourMedia.campusBuilding1,
+    title: { th: 'อาคารภายในวิทยาเขต จุดที่ 1', en: 'Campus Building Point 1' },
+    description: {
+      th: 'อาคารเรียนและพื้นที่ใช้งานภายในวิทยาเขต สามารถย้อนกลับไปยังถนนเส้นหลักได้',
+      en: 'An academic and activity building connected back to the main campus road.'
+    },
+    tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 1'], en: ['Building', 'Academic', 'Point 1'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 280, y: 465 },
+    hotspots: [
+      { id: 'building-1-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -3 },
+      {
+        id: 'building-1-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 5,
+        title: { th: 'อาคารภายในวิทยาเขต', en: 'Campus building' },
+        description: {
+          th: 'อาคารสำหรับการเรียน การทำกิจกรรม และการให้บริการภายในมหาวิทยาลัย',
+          en: 'A campus building supporting learning, activities and university services.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'campusBuilding2',
+    ...tourMedia.campusBuilding2,
+    title: { th: 'อาคารภายในวิทยาเขต จุดที่ 2', en: 'Campus Building Point 2' },
+    description: {
+      th: 'อาคารอีกจุดหนึ่งในกลุ่มอาคารของวิทยาเขต เชื่อมต่อกับถนนเส้นหลักบริเวณเดียวกัน',
+      en: 'Another building in the campus complex, connected to the same main road point.'
+    },
+    tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 2'], en: ['Building', 'Academic', 'Point 2'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 350, y: 465 },
+    hotspots: [
+      { id: 'building-2-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -3 },
+      {
+        id: 'building-2-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 5,
+        title: { th: 'อาคารภายในวิทยาเขต', en: 'Campus building' },
+        description: {
+          th: 'อาคารสำหรับรองรับการเรียนรู้และกิจกรรมของนักศึกษาและบุคลากร',
+          en: 'A building supporting learning and activities for students and staff.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'campusRoad5',
+    ...tourMedia.campusRoad5,
+    title: { th: 'ถนนภายในวิทยาเขต จุดที่ 5', en: 'Campus Road Point 5' },
+    description: {
+      th: 'จุดข้ามถนนและทางเดินในช่วงถัดไปของเส้นทางทัวร์ภายในมหาวิทยาลัย',
+      en: 'A crossing and walkway on the next section of the internal campus tour route.'
+    },
+    tags: { th: ['ถนน', 'ทางข้าม', 'จุดที่ 5'], en: ['Road', 'Crossing', 'Point 5'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 365, y: 430 },
+    hotspots: [
+      { id: 'campus-road-5-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -3 },
+      { id: 'campus-road-5-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad6',
+    ...tourMedia.campusRoad6,
+    title: { th: 'ถนนภายในวิทยาเขต จุดที่ 6', en: 'Campus Road Point 6' },
+    description: {
+      th: 'ช่วงถนนโค้งและพื้นที่สีเขียวซึ่งเชื่อมต่อไปยังกลุ่มอาคารปลายเส้นทาง',
+      en: 'A curved road and green area leading toward the buildings at the end of the route.'
+    },
+    tags: { th: ['ถนน', 'พื้นที่สีเขียว', 'จุดที่ 6'], en: ['Road', 'Green space', 'Point 6'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 400, y: 405 },
+    hotspots: [
+      { id: 'campus-road-6-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 180, pitch: -3 },
+      { id: 'campus-road-6-to-road-7', type: 'scene', target: 'campusRoad7', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad7',
+    ...tourMedia.campusRoad7,
+    title: { th: 'ถนนภายในวิทยาเขต จุดที่ 7', en: 'Campus Road Point 7' },
+    description: {
+      th: 'ทางแยกบริเวณอาคารปลายเส้นทาง เชื่อมต่อไปยังจุดอาคารสำหรับเยี่ยมชม',
+      en: 'A junction near the end of the route, connecting to the final campus building.'
+    },
+    tags: { th: ['ถนน', 'ทางแยก', 'จุดที่ 7'], en: ['Road', 'Junction', 'Point 7'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 430, y: 380 },
+    hotspots: [
+      { id: 'campus-road-7-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 180, pitch: -3 },
+      { id: 'campus-road-7-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: -45, pitch: -2 }
+    ]
+  },
+  {
+    id: 'campusBuilding3',
+    ...tourMedia.campusBuilding3,
+    title: { th: 'อาคารภายในวิทยาเขต จุดที่ 3', en: 'Campus Building Point 3' },
+    description: {
+      th: 'อาคารบริเวณปลายเส้นทางทัวร์ พร้อมลานและพื้นที่เปิดโล่งโดยรอบ',
+      en: 'A building at the end of the tour route, surrounded by an open forecourt and green space.'
+    },
+    tags: { th: ['อาคาร', 'ลาน', 'จุดที่ 3'], en: ['Building', 'Forecourt', 'Point 3'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 455, y: 350 },
+    hotspots: [
+      { id: 'building-3-to-campus-road-7', type: 'scene', target: 'campusRoad7', yaw: 180, pitch: -3 },
+      {
+        id: 'building-3-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 5,
+        title: { th: 'อาคารปลายเส้นทาง', en: 'Route-end building' },
+        description: {
+          th: 'อาคารและลานอเนกประสงค์บริเวณส่วนปลายของเส้นทางเยี่ยมชมวิทยาเขต',
+          en: 'A campus building and open activity area at the end of the visitor route.'
         }
       }
     ]
@@ -302,22 +510,28 @@ export function validateTour(): readonly string[] {
   const hotspotIds = new Set<string>();
 
   for (const scene of tourScenes) {
-    if (ids.has(scene.id)) {
-      errors.push(`Duplicate scene id: ${scene.id}`);
-    }
+    if (ids.has(scene.id)) errors.push(`Duplicate scene id: ${scene.id}`);
     ids.add(scene.id);
 
-    if (scene.panorama.length === 0 || scene.thumbnail.length === 0) {
-      errors.push(`Scene ${scene.id} is missing media`);
+    const mediaUrls = [scene.sourcePanorama, ...getSceneAssetUrls(scene)];
+    for (const mediaUrl of mediaUrls) {
+      if (!mediaUrl.startsWith('/mainimages/')) {
+        errors.push(`Scene ${scene.id} must use /mainimages media: ${mediaUrl}`);
+      }
+      if (mediaUrl.includes('/tour/pano') || mediaUrl.includes('/tour/thumbs')) {
+        errors.push(`Scene ${scene.id} references legacy tour media: ${mediaUrl}`);
+      }
     }
-
-    for (const mediaPath of [scene.panorama, scene.thumbnail]) {
-      if (!mediaPath.startsWith('/')) {
-        errors.push(`Scene ${scene.id} media path must start with /: ${mediaPath}`);
-      }
-      if (mediaPath.startsWith('/public/')) {
-        errors.push(`Scene ${scene.id} media path must omit /public: ${mediaPath}`);
-      }
+    if (scene.tiledPanorama.width !== panoramaTileConfig.width
+      || scene.tiledPanorama.cols !== panoramaTileConfig.cols
+      || scene.tiledPanorama.rows !== panoramaTileConfig.rows) {
+      errors.push(`Scene ${scene.id} has an invalid tile configuration`);
+    }
+    if (scene.mapPosition.x < 0 || scene.mapPosition.x > tourMap.width) {
+      errors.push(`Scene ${scene.id} map x is outside the image`);
+    }
+    if (scene.mapPosition.y < 0 || scene.mapPosition.y > tourMap.height) {
+      errors.push(`Scene ${scene.id} map y is outside the image`);
     }
 
     for (const locale of locales) {
@@ -328,11 +542,14 @@ export function validateTour(): readonly string[] {
     }
 
     for (const hotspot of scene.hotspots) {
-      if (hotspotIds.has(hotspot.id)) {
-        errors.push(`Duplicate hotspot id: ${hotspot.id}`);
-      }
+      if (hotspotIds.has(hotspot.id)) errors.push(`Duplicate hotspot id: ${hotspot.id}`);
       hotspotIds.add(hotspot.id);
-
+      if (!Number.isFinite(hotspot.yaw) || !Number.isFinite(hotspot.pitch)) {
+        errors.push(`Hotspot ${hotspot.id} has a non-finite angle`);
+      }
+      if (hotspot.pitch < -90 || hotspot.pitch > 90) {
+        errors.push(`Hotspot ${hotspot.id} pitch is outside -90..90 degrees`);
+      }
       if (hotspot.type === 'scene' && !sceneIds.includes(hotspot.target)) {
         errors.push(`Scene ${scene.id} links to missing scene ${hotspot.target}`);
       }
@@ -347,9 +564,7 @@ export function validateTour(): readonly string[] {
     const id = queue.shift();
     if (!id || reachable.has(id)) continue;
     reachable.add(id);
-    for (const hotspot of getNavigationHotspots(getScene(id))) {
-      queue.push(hotspot.target);
-    }
+    for (const hotspot of getNavigationHotspots(getScene(id))) queue.push(hotspot.target);
   }
 
   for (const id of sceneIds) {

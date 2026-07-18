@@ -2,6 +2,7 @@
 @import '@photo-sphere-viewer/core/index.css';
 @import '@photo-sphere-viewer/markers-plugin/index.css';
 @import '@photo-sphere-viewer/virtual-tour-plugin/index.css';
+@import 'leaflet/dist/leaflet.css';
 
 :root {
   color-scheme: light;
@@ -791,7 +792,9 @@ svg {
   overflow: hidden;
   border: 2px solid rgb(255 255 255 / 58%);
   border-radius: 14px;
-  background: var(--orange-950);
+  background:
+    radial-gradient(circle at 85% 15%, rgb(253 186 116 / 28%) 0 16%, transparent 17%),
+    linear-gradient(145deg, rgb(194 65 12 / 96%), rgb(67 20 7 / 98%));
   color: var(--white);
   text-align: left;
   scroll-snap-align: start;
@@ -802,22 +805,15 @@ svg {
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: linear-gradient(0deg, rgb(20 8 2 / 90%), transparent 76%);
+  background: linear-gradient(0deg, rgb(20 8 2 / 48%), transparent 76%);
   content: '';
 }
 
-.scene-card img {
-  position: absolute;
-  z-index: -2;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 220ms ease;
-}
-
-.scene-card:hover img {
-  transform: scale(1.06);
+.scene-card:hover {
+  border-color: var(--orange-300);
+  background:
+    radial-gradient(circle at 85% 15%, rgb(255 237 213 / 34%) 0 16%, transparent 17%),
+    linear-gradient(145deg, rgb(234 88 12 / 98%), rgb(124 45 18 / 98%));
 }
 
 .scene-card[aria-current="true"] {
@@ -880,29 +876,71 @@ svg {
 
 .tour-arrow {
   display: grid;
-  width: 54px;
-  height: 54px;
-  place-items: center;
-  border: 3px solid var(--white);
-  border-radius: 50%;
-  background: linear-gradient(145deg, var(--orange-700), var(--orange-900));
+  width: 190px;
+  min-height: 56px;
+  grid-template-columns: 42px 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px 6px 6px;
+  border: 2px solid rgb(255 255 255 / 86%);
+  border-radius: 18px;
+  background: rgb(67 20 7 / 92%);
   box-shadow: 0 8px 24px rgb(20 8 2 / 58%);
   color: var(--white);
-  font-size: 1.35rem;
+  text-align: left;
+  backdrop-filter: blur(8px);
+  transition: transform 160ms ease, background 160ms ease;
 }
 
 .tour-arrow:hover,
 .tour-arrow:focus-visible {
-  background: var(--orange-950);
-  transform: scale(1.08);
+  background: rgb(124 45 18 / 96%);
+  transform: translateY(-2px) scale(1.03);
 }
 
-.tour-arrow span {
-  transform: translateX(1px);
+.tour-arrow__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--orange-500), var(--orange-900));
+}
+
+.tour-arrow__icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+
+.tour-arrow__number {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 62%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 14%);
+  font-size: 0.67rem;
+  font-weight: 900;
+}
+
+.tour-arrow__label {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .psv-virtual-tour-link {
-  filter: sepia(1) saturate(2.1) hue-rotate(330deg) drop-shadow(0 8px 7px rgb(20 8 2 / 55%));
+  filter: drop-shadow(0 8px 7px rgb(20 8 2 / 40%));
 }
 
 .psv-tooltip {
@@ -1016,52 +1054,173 @@ svg {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 20px;
-  background:
-    linear-gradient(rgb(154 52 18 / 6%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(154 52 18 / 6%) 1px, transparent 1px),
-    var(--orange-50);
-  background-size: 28px 28px;
+  background: #dbe6d4;
 }
 
-.route-map svg {
+.persistent-tour-map {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  z-index: 28;
+  top: 18px;
+  right: 82px;
+  width: clamp(280px, 32vw, 360px);
+  height: 210px;
+  overflow: hidden;
+  border: 2px solid rgb(255 255 255 / 76%);
+  border-radius: 18px;
+  background: #dbe6d4;
+  box-shadow: 0 12px 34px rgb(20 8 2 / 42%);
+}
+
+.persistent-tour-map .route-map {
   height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.tour-map-title {
+  position: absolute;
+  z-index: 550;
+  top: 10px;
+  left: 52px;
+  max-width: 110px;
+  margin: 0;
+  padding: 6px 9px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 9px;
+  background: rgb(36 21 13 / 82%);
+  color: var(--white);
+  font-size: 0.7rem;
+  font-weight: 850;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   pointer-events: none;
 }
 
-.route-map line {
-  stroke: var(--orange-300);
-  stroke-width: 1.6;
-  stroke-dasharray: 4 3;
+.leaflet-tour-map {
+  width: 100%;
+  height: 100%;
+  background: #dbe6d4;
+  font-family: inherit;
 }
 
-.map-node {
-  position: absolute;
-  left: var(--map-x);
-  top: var(--map-y);
+.tour-map-marker-shell {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.tour-map-marker {
   display: grid;
-  min-width: 122px;
-  min-height: 58px;
+  width: 30px;
+  height: 30px;
   place-items: center;
-  padding: 9px 12px;
-  border: 2px solid var(--orange-300);
-  border-radius: 15px;
-  background: var(--white);
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  background: var(--orange-800);
+  box-shadow: 0 5px 14px rgb(31 13 4 / 45%);
+  color: var(--white);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-align: center;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.leaflet-marker-icon:hover .tour-map-marker,
+.leaflet-marker-icon:focus .tour-map-marker {
+  background: var(--orange-500);
+  transform: scale(1.1);
+}
+
+.tour-map-marker.is-current {
+  background: var(--focus);
+  box-shadow: 0 0 0 5px rgb(37 99 235 / 25%), 0 5px 14px rgb(31 13 4 / 45%);
+  transform: scale(1.18);
+}
+
+.leaflet-tour-map .leaflet-tooltip {
+  border: 0;
+  border-radius: 9px;
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 750;
+}
+
+.map-reset {
+  position: absolute;
+  z-index: 500;
+  top: 12px;
+  right: 12px;
+  padding: 8px 11px;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 10px;
+  background: rgb(255 253 249 / 92%);
   box-shadow: var(--shadow-sm);
   color: var(--orange-900);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 800;
-  text-align: center;
-  transform: translate(-50%, -50%);
 }
 
-.map-node:hover,
-.map-node[aria-current="true"] {
-  border-color: var(--orange-800);
+.map-reset:hover {
+  background: var(--orange-100);
+}
+
+.map-calibration {
+  position: absolute;
+  z-index: 500;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 12px;
+  background: rgb(36 21 13 / 88%);
+  box-shadow: var(--shadow-sm);
+  color: var(--white);
+  font-size: 0.74rem;
+  backdrop-filter: blur(8px);
+}
+
+.map-calibration span {
+  flex: 1;
+}
+
+.map-calibration button {
+  padding: 6px 9px;
+  border: 1px solid var(--orange-300);
+  border-radius: 8px;
   background: var(--orange-800);
   color: var(--white);
+  font-weight: 800;
+}
+
+.map-calibration button:disabled {
+  opacity: 0.55;
+}
+
+.persistent-tour-map .map-calibration {
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  align-items: center;
+  flex-direction: row;
+  gap: 5px;
+  padding: 5px 7px;
+  font-size: 0.65rem;
+}
+
+.persistent-tour-map .map-calibration strong {
+  display: none;
+}
+
+.persistent-tour-map .map-calibration button {
+  padding: 4px 6px;
+  font-size: 0.63rem;
 }
 
 .text-tour-content {
@@ -1128,6 +1287,14 @@ svg {
     display: none;
   }
 
+  .persistent-tour-map {
+    top: 12px;
+    right: 66px;
+    width: 280px;
+    height: 170px;
+    border-radius: 15px;
+  }
+
   .scene-panel {
     top: 12px;
     left: 12px;
@@ -1189,11 +1356,46 @@ svg {
     height: 330px;
   }
 
-  .map-node {
-    min-width: 96px;
-    min-height: 52px;
-    padding: 7px;
-    font-size: 0.7rem;
+}
+
+@media (max-width: 700px) {
+  .tour-viewer,
+  .viewer-vignette {
+    top: 140px;
+  }
+
+  .persistent-tour-map {
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 140px;
+    border-width: 0 0 2px;
+    border-radius: 0;
+  }
+
+  .scene-panel {
+    top: 152px;
+    max-height: calc(100% - 304px);
+  }
+
+  .control-rail {
+    top: calc(50% + 70px);
+  }
+
+  .scene-loader {
+    top: 154px;
+  }
+
+  .tour-arrow {
+    width: 168px;
+    grid-template-columns: 38px 22px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .tour-arrow__icon {
+    width: 38px;
+    height: 38px;
   }
 }
 
@@ -1249,9 +1451,10 @@ svg {
     height: 300px;
   }
 
-  .map-node {
-    min-width: 82px;
-    max-width: 110px;
+  .map-calibration {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
   }
 }
 
@@ -1295,8 +1498,24 @@ svg {
   }
 
   .scene-panel {
+    top: 8px;
     max-height: 130px;
     padding: 12px 14px;
+  }
+
+  .persistent-tour-map {
+    top: 8px;
+    right: 104px;
+    left: auto;
+    width: 250px;
+    height: 128px;
+    border: 2px solid rgb(255 255 255 / 76%);
+    border-radius: 14px;
+  }
+
+  .tour-viewer,
+  .viewer-vignette {
+    top: 0;
   }
 
   .scene-panel h1 {
@@ -1314,8 +1533,13 @@ svg {
   }
 
   .control-rail {
+    top: 50%;
     display: grid;
     grid-template-columns: repeat(2, 42px);
+  }
+
+  .scene-loader {
+    top: 12px;
   }
 
   .control-rail button {

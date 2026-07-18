@@ -8,6 +8,10 @@ import {
 } from 'react';
 import { Viewer, events as viewerEvents } from '@photo-sphere-viewer/core';
 import {
+  EquirectangularTilesAdapter,
+  type EquirectangularTilesPanorama
+} from '@photo-sphere-viewer/equirectangular-tiles-adapter';
+import {
   AutorotatePlugin,
   events as autorotateEvents
 } from '@photo-sphere-viewer/autorotate-plugin';
@@ -26,10 +30,13 @@ import {
   getNavigationHotspots,
   getScene,
   localize,
+  panoramaTileUrl,
+  toDegrees,
   tourScenes,
   type InfoHotspot,
   type Locale,
-  type SceneId
+  type SceneId,
+  type TourScene
 } from '../src/tour-data';
 import { goToScene, message } from '../src/i18n';
 
@@ -63,15 +70,22 @@ interface ViewerCallbacks {
   onAutorotate: (enabled: boolean) => void;
 }
 
+const buildPanorama = (scene: TourScene): EquirectangularTilesPanorama => ({
+  width: scene.tiledPanorama.width,
+  cols: scene.tiledPanorama.cols,
+  rows: scene.tiledPanorama.rows,
+  baseUrl: scene.tiledPanorama.baseUrl,
+  tileUrl: (col, row) => panoramaTileUrl(scene.tiledPanorama, col, row)
+});
+
 const buildTourNodes = (): VirtualTourNode[] => tourScenes.map((scene) => ({
   id: scene.id,
-  panorama: scene.panorama,
-  thumbnail: scene.thumbnail,
+  panorama: buildPanorama(scene),
   name: `${scene.title.th} · ${scene.title.en}`,
   data: { sceneId: scene.id },
   links: getNavigationHotspots(scene).map((hotspot) => ({
     nodeId: hotspot.target,
-    position: { yaw: `${hotspot.yaw}deg`, pitch: `${hotspot.pitch}deg` },
+    position: { yaw: toDegrees(hotspot.yaw), pitch: toDegrees(hotspot.pitch) },
     data: { hotspotId: hotspot.id }
   }))
 }));
@@ -113,13 +127,16 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       const scene = getScene(sceneId);
       if (animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         void viewer.animate({
-          yaw: `${scene.initialView.yaw}deg`,
-          pitch: `${scene.initialView.pitch}deg`,
+          yaw: toDegrees(scene.initialView.yaw),
+          pitch: toDegrees(scene.initialView.pitch),
           zoom: scene.initialView.zoom,
           speed: 550
         });
       } else {
-        viewer.rotate({ yaw: `${scene.initialView.yaw}deg`, pitch: `${scene.initialView.pitch}deg` });
+        viewer.rotate({
+          yaw: toDegrees(scene.initialView.yaw),
+          pitch: toDegrees(scene.initialView.pitch)
+        });
         viewer.zoom(scene.initialView.zoom);
       }
     },
@@ -137,18 +154,33 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const createArrowElement = (link: { nodeId: string }): HTMLElement => {
       const target = getScene(link.nodeId as SceneId);
+      const targetIndex = tourScenes.findIndex((scene) => scene.id === target.id) + 1;
+      const targetTitle = localize(target.title, callbacksRef.current.locale);
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'tour-arrow';
       button.dataset.target = target.id;
-      button.setAttribute(
-        'aria-label',
-        goToScene(callbacksRef.current.locale, localize(target.title, callbacksRef.current.locale))
-      );
+      button.setAttribute('aria-label', goToScene(callbacksRef.current.locale, targetTitle));
+
       const icon = document.createElement('span');
+      icon.className = 'tour-arrow__icon';
       icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = '→'; // arrow icon
-      button.append(icon);
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M12 20V5m0 0-6 6m6-6 6 6');
+      svg.append(path);
+      icon.append(svg);
+
+      const number = document.createElement('span');
+      number.className = 'tour-arrow__number';
+      number.textContent = String(targetIndex);
+      number.setAttribute('aria-hidden', 'true');
+
+      const label = document.createElement('span');
+      label.className = 'tour-arrow__label';
+      label.textContent = targetTitle;
+      button.append(icon, number, label);
       return button;
     };
 
@@ -159,6 +191,10 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       minFov: 35,
       maxFov: 100,
       canvasBackground: '#431407',
+      adapter: EquirectangularTilesAdapter.withConfig({
+        baseBlur: false,
+        antialias: true
+      }),
       defaultTransition: { effect: 'fade', speed: reducedMotion ? 0 : 650, rotation: false },
       plugins: [
         MarkersPlugin.withConfig({
@@ -175,14 +211,18 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           startNodeId: 'entrance',
           positionMode: 'manual',
           renderMode: '2d',
-          preload: true,
+          preload: false,
           transitionOptions: () => ({
             showLoader: false,
             effect: reducedMotion ? 'none' : 'fade',
             speed: reducedMotion ? 0 : 650,
             rotation: false
           }),
-          arrowStyle: { element: createArrowElement, className: 'tour-arrow-marker', size: { width: 54, height: 54 } },
+          arrowStyle: {
+            element: createArrowElement,
+            className: 'tour-arrow-marker',
+            size: { width: 190, height: 64 }
+          },
           getLinkTooltip: (_content, link) => {
             const target = getScene(link.nodeId as SceneId);
             return goToScene(callbacksRef.current.locale, localize(target.title, callbacksRef.current.locale));
@@ -202,9 +242,17 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const setInitialView = (sceneId: SceneId, animate = false): void => {
       const scene = getScene(sceneId);
       if (animate && !reducedMotion) {
-        void viewer.animate({ yaw: `${scene.initialView.yaw}deg`, pitch: `${scene.initialView.pitch}deg`, zoom: scene.initialView.zoom, speed: 550 });
+        void viewer.animate({
+          yaw: toDegrees(scene.initialView.yaw),
+          pitch: toDegrees(scene.initialView.pitch),
+          zoom: scene.initialView.zoom,
+          speed: 550
+        });
       } else {
-        viewer.rotate({ yaw: `${scene.initialView.yaw}deg`, pitch: `${scene.initialView.pitch}deg` });
+        viewer.rotate({
+          yaw: toDegrees(scene.initialView.yaw),
+          pitch: toDegrees(scene.initialView.pitch)
+        });
         viewer.zoom(scene.initialView.zoom);
       }
     };
@@ -223,7 +271,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       return {
         id: hotspot.id,
         element,
-        position: { yaw: `${hotspot.yaw}deg`, pitch: `${hotspot.pitch}deg` },
+        position: { yaw: toDegrees(hotspot.yaw), pitch: toDegrees(hotspot.pitch) },
         size: { width: 48, height: 48 },
         anchor: 'center center',
         tooltip: title,
@@ -262,6 +310,21 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       autorotateRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.querySelectorAll<HTMLButtonElement>('.tour-arrow[data-target]').forEach((button) => {
+      const targetId = button.dataset.target as SceneId | undefined;
+      if (!targetId) return;
+      const target = getScene(targetId);
+      const targetTitle = localize(target.title, locale);
+      button.setAttribute('aria-label', goToScene(locale, targetTitle));
+      const label = button.querySelector<HTMLElement>('.tour-arrow__label');
+      if (label) label.textContent = targetTitle;
+    });
+  }, [locale]);
 
   return (
     <div

@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   getInfoHotspots,
   getNavigationHotspots,
   getScene,
-  getSceneEdges,
+  getSceneAssetUrls,
   localize,
   tourScenes,
   type InfoHotspot,
@@ -22,8 +22,9 @@ import {
 import { useTourStore } from '../src/stores/tour-store';
 import { ModalDialog } from './ModalDialog';
 import TourViewer, { type TourViewerHandle } from './TourViewer';
+import TourMap from './TourMap';
 
-type DialogName = 'info' | 'map' | 'about' | 'text-tour' | null;
+type DialogName = 'info' | 'about' | 'text-tour' | null;
 
 function Icon({ children }: { readonly children: ReactNode }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{children}</svg>;
@@ -64,9 +65,22 @@ export default function TourApp() {
   }, []);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+    if (!('serviceWorker' in navigator)) return;
+
+    if (process.env.NODE_ENV === 'development') {
+      const clearDevelopmentCaches = async (): Promise<void> => {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+        if ('caches' in window) {
+          const keys = await window.caches.keys();
+          await Promise.all(keys.filter((key) => key.startsWith('kmuntb-tour-')).map((key) => window.caches.delete(key)));
+        }
+      };
+      void clearDevelopmentCaches().catch(() => undefined);
+      return;
     }
+
+    void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
   }, []);
 
   const announce = (text: string): void => {
@@ -98,6 +112,7 @@ export default function TourApp() {
 
   const handleSceneChange = (sceneId: SceneId): void => {
     setCurrentScene(sceneId);
+    cacheSceneForOffline(sceneId);
     const index = tourScenes.findIndex((item) => item.id === sceneId) + 1;
     announce(sceneChanged(locale, index, tourScenes.length, localize(getScene(sceneId).title, locale)));
   };
@@ -107,33 +122,13 @@ export default function TourApp() {
     window.setTimeout(() => viewerRef.current?.focus(), 320);
   };
 
-  const routeMap = (
-    <div className="route-map">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        {getSceneEdges().map((edge) => {
-          const from = getScene(edge.from).mapPosition;
-          const to = getScene(edge.to).mapPosition;
-          return <line key={`${edge.from}-${edge.to}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />;
-        })}
-      </svg>
-      {tourScenes.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className="map-node"
-          style={{ '--map-x': `${item.mapPosition.x}%`, '--map-y': `${item.mapPosition.y}%` } as CSSProperties}
-          aria-current={item.id === currentSceneId ? 'true' : 'false'}
-          aria-label={goToScene(locale, localize(item.title, locale))}
-          onClick={() => {
-            closeDialog();
-            void navigate(item.id);
-          }}
-        >
-          {localize(item.title, locale)}
-        </button>
-      ))}
-    </div>
-  );
+  const cacheSceneForOffline = (sceneId: SceneId): void => {
+    if (process.env.NODE_ENV === 'development' || !('serviceWorker' in navigator)) return;
+    const assets = getSceneAssetUrls(getScene(sceneId));
+    void navigator.serviceWorker.ready.then((registration) => {
+      registration.active?.postMessage({ type: 'CACHE_SCENE_ASSETS', sceneId, assets });
+    }).catch(() => undefined);
+  };
 
   return (
     <div className="app min-h-dvh">
@@ -173,6 +168,7 @@ export default function TourApp() {
             onProgress={setProgress}
             onReady={(sceneId) => {
               setCurrentScene(sceneId);
+              cacheSceneForOffline(sceneId);
               setReady(true);
               setProgress(100);
               setError(null);
@@ -182,6 +178,15 @@ export default function TourApp() {
             onAutorotate={setAutorotate}
           />
           <div className="viewer-vignette" aria-hidden="true" />
+
+          <aside className="persistent-tour-map" aria-labelledby="persistent-map-title">
+            <h2 id="persistent-map-title" className="tour-map-title">{message(locale, 'mapTitle')}</h2>
+            <TourMap
+              locale={locale}
+              currentSceneId={currentSceneId}
+              onNavigate={(sceneId) => void navigate(sceneId)}
+            />
+          </aside>
 
           <section
             id="scene-panel"
@@ -194,7 +199,7 @@ export default function TourApp() {
               <p className="eyebrow">
                 {isHydrated
                   ? sceneCounter(locale, tourScenes.findIndex((item) => item.id === scene.id) + 1, tourScenes.length)
-                  : sceneCounter(locale, 1, 4)}
+                  : sceneCounter(locale, 1, tourScenes.length)}
               </p>
               <button className="close-icon" type="button" aria-label={message(locale, 'hideInfo')} onClick={() => setSceneInfoVisible(false)}>
                 <Icon><path d="m6 6 12 12M18 6 6 18" /></Icon>
@@ -251,9 +256,6 @@ export default function TourApp() {
             <button type="button" aria-label={message(locale, 'enterFullscreen')} data-tooltip={message(locale, 'enterFullscreen')} onClick={() => viewerRef.current?.toggleFullscreen()}>
               <Icon><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5" /></Icon>
             </button>
-            <button type="button" aria-label={message(locale, 'mapButton')} data-tooltip={message(locale, 'mapButton')} onClick={() => setDialog('map')}>
-              <Icon><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" /></Icon>
-            </button>
             <button type="button" aria-pressed={sceneInfoVisible} aria-label={sceneInfoVisible ? message(locale, 'hideInfo') : message(locale, 'showInfo')} data-tooltip={sceneInfoVisible ? message(locale, 'hideInfo') : message(locale, 'showInfo')} onClick={() => setSceneInfoVisible(!sceneInfoVisible)}>
               <Icon><path d="M4 5h16v14H4zM8 9h8M8 13h6" /></Icon>
             </button>
@@ -306,7 +308,6 @@ export default function TourApp() {
           <div className="scene-list">
             {tourScenes.map((item, index) => (
               <button className="scene-card" type="button" key={item.id} data-scene={item.id} aria-current={item.id === currentSceneId ? 'true' : 'false'} aria-label={item.id === currentSceneId ? currentScene(locale, localize(item.title, locale)) : goToScene(locale, localize(item.title, locale))} onClick={() => void navigate(item.id)}>
-                <img src={item.thumbnail} alt="" loading="lazy" />
                 <span className="scene-card__number">{index + 1}</span>
                 <strong>{localize(item.title, locale)}</strong>
                 <small>{localize(item.title, alternativeLocale)}</small>
@@ -323,13 +324,6 @@ export default function TourApp() {
           <p className="scene-alt-title">{localize(selectedInfo.title, alternativeLocale)}</p>
           <p className="dialog-description">{localize(selectedInfo.description, locale)}</p>
         </> : null}
-      </ModalDialog>
-
-      <ModalDialog open={dialog === 'map'} titleId="map-dialog-title" wide onClose={closeDialog}>
-        <p className="eyebrow">{message(locale, 'mapEyebrow')}</p>
-        <h2 id="map-dialog-title">{message(locale, 'mapTitle')}</h2>
-        <p className="dialog-description">{message(locale, 'mapDescription')}</p>
-        {routeMap}
       </ModalDialog>
 
       <ModalDialog open={dialog === 'about'} titleId="about-dialog-title" onClose={closeDialog}>
