@@ -1,18 +1,44 @@
-const entrancePanorama = '/tour/pano/entrance.jpg';
-const balconyPanorama = '/tour/pano/balcony.jpg';
-const bicyclePanorama = '/tour/pano/bicycle.jpg';
-const roomPanorama = '/tour/pano/room.jpg';
-const entranceThumbnail = '/tour/thumbs/thumb-entrance.jpg';
-const balconyThumbnail = '/tour/thumbs/thumb-balcony.jpg';
-const bicycleThumbnail = '/tour/thumbs/thumb-bicycle.jpg';
-const roomThumbnail = '/tour/thumbs/thumb-room.jpg';
-const University_page = '/public/mainimages/set1-1.jpg';
+export interface SceneMedia {
+  readonly panorama: string;
+  readonly thumbnail: string;
+}
+
+/**
+ * Files inside public/mainimages are served from /mainimages.
+ * Pass only the file name here; never include the public directory in a URL.
+ */
+function mainImage(fileName: string): string {
+  return `/mainimages/${fileName}`;
+}
+
+export const tourMedia = {
+  entrance: {
+    panorama: '/tour/pano/entrance.jpg',
+    thumbnail: '/tour/thumbs/thumb-entrance.jpg'
+  },
+  balcony: {
+    panorama: '/tour/pano/balcony.jpg',
+    thumbnail: '/tour/thumbs/thumb-balcony.jpg'
+  },
+  bicycle: {
+    panorama: '/tour/pano/bicycle.jpg',
+    thumbnail: '/tour/thumbs/thumb-bicycle.jpg'
+  },
+  room: {
+    panorama: '/tour/pano/room.jpg',
+    thumbnail: '/tour/thumbs/thumb-room.jpg'
+  },
+  university: {
+    panorama: mainImage('temp1.jpg'),
+    thumbnail: mainImage('temp1.jpg')
+  }
+} as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
 export type Locale = (typeof locales)[number];
 
-export const sceneIds = ['entrance', 'balcony', 'bicycle', 'room', 'University'] as const;
-export type SceneId = (typeof sceneIds)[number];
+export type SceneId = keyof typeof tourMedia;
+export const sceneIds: readonly SceneId[] = Object.keys(tourMedia) as SceneId[];
 
 export type LocalizedText = Readonly<Record<Locale, string>>;
 
@@ -66,8 +92,7 @@ export interface SceneEdge {
 export const tourScenes = [
   {
     id: 'entrance',
-    panorama: entrancePanorama,
-    thumbnail: entranceThumbnail,
+    ...tourMedia.entrance,
     title: {
       th: 'ทางเข้าอาคารคณะ',
       en: 'Faculty Entrance'
@@ -86,6 +111,7 @@ export const tourScenes = [
       { id: 'entrance-to-balcony', type: 'scene', target: 'balcony', yaw: -30, pitch: -4 },
       { id: 'entrance-to-bicycle', type: 'scene', target: 'bicycle', yaw: 150, pitch: -6 },
       { id: 'entrance-to-room', type: 'scene', target: 'room', yaw: -95, pitch: -2 },
+      { id: 'entrance-to-university', type: 'scene', target: 'university', yaw: 20, pitch: -2 },
       {
         id: 'entrance-glass-door',
         type: 'info',
@@ -101,8 +127,7 @@ export const tourScenes = [
   },
   {
     id: 'balcony',
-    panorama: balconyPanorama,
-    thumbnail: balconyThumbnail,
+    ...tourMedia.balcony,
     title: {
       th: 'ระเบียงและบันได',
       en: 'Walkway & Stairway'
@@ -135,8 +160,7 @@ export const tourScenes = [
   },
   {
     id: 'bicycle',
-    panorama: bicyclePanorama,
-    thumbnail: bicycleThumbnail,
+    ...tourMedia.bicycle,
     title: {
       th: 'ลานจอดจักรยาน',
       en: 'Bicycle Parking'
@@ -169,8 +193,7 @@ export const tourScenes = [
   },
   {
     id: 'room',
-    panorama: roomPanorama,
-    thumbnail: roomThumbnail,
+    ...tourMedia.room,
     title: {
       th: 'พื้นที่ภายในอาคาร',
       en: 'Indoor Space'
@@ -201,34 +224,33 @@ export const tourScenes = [
     ]
   },
   {
-    id: 'University',
-    panorama: University_page,
-    thumbnail: University_page,
+    id: 'university',
+    ...tourMedia.university,
     title: {
-      th: 'พื้นที่ภายในอาคาร',
-      en: 'Indoor Space'
+      th: 'ลานหน้ามหาวิทยาลัย',
+      en: 'University Front Plaza'
     },
     description: {
-      th: 'พื้นที่ภายในอาคารสำหรับจัดเก็บอุปกรณ์และทำงาน แสดงตัวอย่างการใช้งานพื้นที่จริงภายในวิทยาเขต',
-      en: 'An indoor work and storage area showing an example of how campus spaces are used day to day.'
+      th: 'ลานด้านหน้ามหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี พร้อมป้ายมหาวิทยาลัยและพื้นที่สวนโดยรอบ',
+      en: 'The front plaza of King Mongkut’s University of Technology North Bangkok, Prachinburi Campus, with its landmark sign and surrounding garden.'
     },
     tags: {
-      th: ['ภายใน', 'พื้นที่ทำงาน', 'จัดเก็บ'],
-      en: ['Indoor', 'Workspace', 'Storage']
+      th: ['ลานมหาวิทยาลัย', 'ป้ายมหาวิทยาลัย', 'พื้นที่กลางแจ้ง'],
+      en: ['University plaza', 'Landmark', 'Outdoor']
     },
     initialView: { yaw: 0, pitch: 0, zoom: 22 },
-    mapPosition: { x: 76, y: 76 },
+    mapPosition: { x: 50, y: 76 },
     hotspots: [
-      { id: 'University-to-entrance', type: 'scene', target: 'entrance', yaw: 0, pitch: 0 },
+      { id: 'university-to-entrance', type: 'scene', target: 'entrance', yaw: 0, pitch: 0 },
       {
-        id: 'University-storage',
+        id: 'university-landmark',
         type: 'info',
-        yaw: 120,
-        pitch: 0,
-        title: { th: 'พื้นที่จัดเก็บ', en: 'Storage area' },
+        yaw: 0,
+        pitch: 4,
+        title: { th: 'ป้ายมหาวิทยาลัย', en: 'KMUTNB landmark' },
         description: {
-          th: 'มุมจัดเก็บอุปกรณ์และเครื่องใช้ภายในอาคาร สะท้อนการใช้งานพื้นที่ของคณะ',
-          en: 'A corner used to store equipment and supplies for everyday faculty activities.'
+          th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
+          en: 'The KMUTNB landmark welcomes visitors at the entrance to the Prachinburi Campus.'
         }
       }
     ]
@@ -289,6 +311,15 @@ export function validateTour(): readonly string[] {
       errors.push(`Scene ${scene.id} is missing media`);
     }
 
+    for (const mediaPath of [scene.panorama, scene.thumbnail]) {
+      if (!mediaPath.startsWith('/')) {
+        errors.push(`Scene ${scene.id} media path must start with /: ${mediaPath}`);
+      }
+      if (mediaPath.startsWith('/public/')) {
+        errors.push(`Scene ${scene.id} media path must omit /public: ${mediaPath}`);
+      }
+    }
+
     for (const locale of locales) {
       const tags: readonly string[] = scene.tags[locale];
       if (!scene.title[locale] || !scene.description[locale] || tags.length === 0) {
@@ -309,7 +340,9 @@ export function validateTour(): readonly string[] {
   }
 
   const reachable = new Set<SceneId>();
-  const queue: SceneId[] = [sceneIds[0]];
+  const firstSceneId = sceneIds[0];
+  if (!firstSceneId) errors.push('Tour has no scenes');
+  const queue: SceneId[] = firstSceneId ? [firstSceneId] : [];
   while (queue.length > 0) {
     const id = queue.shift();
     if (!id || reachable.has(id)) continue;

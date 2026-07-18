@@ -1,21 +1,28 @@
-const CACHE_NAME = 'kmuntb-tour-v3';
-const TOUR_ASSETS = [
+const CACHE_NAME = 'kmuntb-tour-v4';
+const SHELL_ASSETS = [
   '/',
   '/manifest.webmanifest',
-  '/favicon.svg',
-  '/tour/pano/entrance.jpg',
-  '/tour/pano/balcony.jpg',
-  '/tour/pano/bicycle.jpg',
-  '/tour/pano/room.jpg',
-  '/tour/thumbs/thumb-entrance.jpg',
-  '/tour/thumbs/thumb-balcony.jpg',
-  '/tour/thumbs/thumb-bicycle.jpg',
-  '/tour/thumbs/thumb-room.jpg',
-  '/public/mainimages/set1-1.jpg'
+  '/favicon.svg'
 ];
 
+async function getTourAssets() {
+  try {
+    const response = await fetch('/api/tour-assets', { cache: 'no-store' });
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    return Array.isArray(data.assets) ? data.assets : [];
+  } catch {
+    return [];
+  }
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(TOUR_ASSETS)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(async (cache) => cache.addAll([...SHELL_ASSETS, ...await getTourAssets()]))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {

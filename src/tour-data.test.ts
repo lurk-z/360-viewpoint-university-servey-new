@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { messages } from './i18n';
 import {
@@ -35,8 +37,21 @@ describe('tour configuration', () => {
       'balcony:bicycle',
       'balcony:entrance',
       'bicycle:entrance',
-      'entrance:room'
+      'entrance:room',
+      'entrance:university'
     ]);
+  });
+
+  it('references existing files from the Next.js public directory', () => {
+    for (const scene of tourScenes) {
+      for (const mediaPath of [scene.panorama, scene.thumbnail]) {
+        expect(mediaPath, `${scene.id} must use a root-relative public URL`).toMatch(/^\/(?!public\/)/);
+        expect(
+          existsSync(resolve(process.cwd(), 'public', mediaPath.slice(1))),
+          `${scene.id} references a missing public file: ${mediaPath}`
+        ).toBe(true);
+      }
+    }
   });
 
   it('keeps map positions and hotspot angles within supported ranges', () => {

@@ -54,6 +54,7 @@ npm run check        # typecheck + tests + legacy syntax + build
 app/layout.tsx              metadata, viewport และ global styles
 app/page.tsx                หน้าแรกของ App Router
 app/api/health/route.ts     backend/API boundary สำหรับ health check
+app/api/tour-assets/route.ts รายชื่อภาพจาก media object สำหรับ offline cache
 components/TourApp.tsx      React UI, dialogs, scene list และ controls
 components/TourViewer.tsx   Client Component ที่สร้าง Photo Sphere Viewer
 components/ModalDialog.tsx  accessible native dialog wrapper
@@ -61,14 +62,27 @@ src/tour-data.ts            source of truth ของ scene, hotspot และ r
 src/i18n.ts                 ข้อความ UI ภาษาไทย/อังกฤษ
 src/stores/tour-store.ts    Zustand store สำหรับ shared client state
 src/styles.css              Photo Sphere Viewer styles และ design system
-public/tour/                panorama และ thumbnails ที่ serve แบบ static
+public/tour/                panorama และ thumbnails เดิมที่ serve แบบ static
+public/mainimages/          โฟลเดอร์สำหรับเพิ่มภาพ panorama ชุดใหม่
 public/sw.js                offline cache strategy
 360-tour-offline.html       legacy single-file compatibility artifact
 ```
 
 ## เพิ่มฉาก
 
-เพิ่มไฟล์ panorama และ thumbnail ใน `public/tour/` แล้วแก้ข้อมูลใน `src/tour-data.ts` เพียงจุดเดียว ระบบจะสร้าง scene selector, hotspot navigation, route map และ text-only tour จาก source เดียวกัน
+1. วางภาพ panorama ใหม่ใน `public/mainimages/` เช่น `campus-02.jpg`
+2. เพิ่ม object ใน `tourMedia` ที่ `src/tour-data.ts` โดยระบุเพียงชื่อไฟล์:
+
+```ts
+campus02: {
+  panorama: mainImage('campus-02.jpg'),
+  thumbnail: mainImage('campus-02.jpg')
+}
+```
+
+3. เพิ่ม scene ที่มี `id: 'campus02'` ใน `tourScenes` แล้วเชื่อม scene hotspot ไป-กลับกับฉากอื่น
+
+ไฟล์ในโฟลเดอร์ `public` ต้องอ้างผ่าน URL ที่ตัดคำว่า `public` ออกเสมอ เช่น `public/mainimages/campus-02.jpg` จะใช้ URL `/mainimages/campus-02.jpg` ระบบ test จะตรวจ path, ไฟล์ที่หาย และเส้นทางฉากให้โดยอัตโนมัติ ส่วน service worker จะอ่านรายชื่อภาพจาก `tourMedia` เพื่อสร้าง offline cache โดยไม่ต้องแก้ `public/sw.js` ทุกครั้ง
 
 ## Offline และ privacy
 
