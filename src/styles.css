@@ -5,8 +5,8 @@
 
 :root {
   color-scheme: light;
-  --orange-950: #431407;
-  --orange-900: #7c2d12;
+  --orange-950: rgb(255, 106, 0);
+  --orange-900: #d14b1e;
   --orange-800: #9a3412;
   --orange-700: #c2410c;
   --orange-500: #f97316;
