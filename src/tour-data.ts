@@ -1,11 +1,11 @@
-import entrancePanorama from '../tour/pano/entrance.jpg?url';
-import balconyPanorama from '../tour/pano/balcony.jpg?url';
-import bicyclePanorama from '../tour/pano/bicycle.jpg?url';
-import roomPanorama from '../tour/pano/room.jpg?url';
-import entranceThumbnail from '../tour/thumbs/thumb-entrance.jpg?url';
-import balconyThumbnail from '../tour/thumbs/thumb-balcony.jpg?url';
-import bicycleThumbnail from '../tour/thumbs/thumb-bicycle.jpg?url';
-import roomThumbnail from '../tour/thumbs/thumb-room.jpg?url';
+const entrancePanorama = '/tour/pano/entrance.jpg';
+const balconyPanorama = '/tour/pano/balcony.jpg';
+const bicyclePanorama = '/tour/pano/bicycle.jpg';
+const roomPanorama = '/tour/pano/room.jpg';
+const entranceThumbnail = '/tour/thumbs/thumb-entrance.jpg';
+const balconyThumbnail = '/tour/thumbs/thumb-balcony.jpg';
+const bicycleThumbnail = '/tour/thumbs/thumb-bicycle.jpg';
+const roomThumbnail = '/tour/thumbs/thumb-room.jpg';
 
 export const locales = ['th', 'en'] as const;
 export type Locale = (typeof locales)[number];
@@ -251,7 +251,7 @@ export function validateTour(): readonly string[] {
     }
     ids.add(scene.id);
 
-    if (!scene.panorama || !scene.thumbnail) {
+    if (scene.panorama.length === 0 || scene.thumbnail.length === 0) {
       errors.push(`Scene ${scene.id} is missing media`);
     }
 

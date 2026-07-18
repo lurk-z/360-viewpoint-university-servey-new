@@ -1,0 +1,20 @@
+{
+  "name": "Virtual Open House KMUTNB Prachinburi",
+  "short_name": "KMUTNB 360",
+  "description": "Virtual Open House 360° ของ KMUTNB วิทยาเขตปราจีนบุรี",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#9a3412",
+  "background_color": "#fff7ed",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
