@@ -8,7 +8,7 @@
 
 - Next.js 16 + React 19 + TypeScript
 - Tailwind CSS 4 สำหรับ utility pipeline และ design system
-- Photo Sphere Viewer 5 พร้อม Virtual Tour, Markers, Autorotate และ Equirectangular Tiles Adapter
+- Photo Sphere Viewer 5 พร้อม Virtual Tour, Markers, Autorotate และ Equirectangular Adapter สำหรับภาพต้นฉบับไฟล์เดียว
 - Leaflet 1.9 แบบ `CRS.Simple` สำหรับแผนที่ภาพที่ซูม ลาก และเลือกฉากได้
 - Zustand สำหรับ shared client state ของ locale, scene, loading และ viewer controls
 - Vitest สำหรับ scene graph และ localization tests
@@ -42,10 +42,9 @@ npm run start
 
 ```bash
 npm run dev          # Next.js development server + HMR
-npm run generate:tiles # สร้าง base image และ tiles จาก panorama ต้นฉบับ
 npm run typecheck    # TypeScript strict check
 npm test             # scene graph / localization tests
-npm run check:workers # ตรวจ syntax ของ service worker และ tile generator
+npm run check:workers # ตรวจ syntax ของ service worker
 npm run build        # Next.js production build
 npm run start        # serve production build on port 8360
 npm run check        # typecheck + tests + legacy syntax + build
@@ -67,8 +66,7 @@ src/i18n.ts                 ข้อความ UI ภาษาไทย/อ�
 src/stores/tour-store.ts    Zustand store สำหรับ shared client state
 src/styles.css              Photo Sphere Viewer styles และ design system
 public/tour/                ไฟล์ legacy ที่แอป Next.js ไม่ได้อ้างอิง
-public/mainimages/          panorama ทั้ง 15 ฉาก และโฟลเดอร์ map
-public/mainimages/tiles/    base image, tiles และ manifest สำหรับ viewer
+public/mainimages/          panorama ต้นฉบับทั้ง 15 ฉาก และโฟลเดอร์ map
 public/sw.js                offline cache strategy
 360-tour-offline.html       legacy single-file compatibility artifact
 ```
@@ -79,17 +77,16 @@ public/sw.js                offline cache strategy
 2. เพิ่ม object ใน `tourMedia` ที่ `src/tour-data.ts` โดยระบุเพียงชื่อไฟล์:
 
 ```ts
-campus02: tiledMainImage('campus-02.jpg')
+campus02: mainPanorama('campus-02.jpg')
 ```
 
-3. เพิ่มชื่อไฟล์ใน `SOURCE_FILES` ของ `scripts/generate-panorama-tiles.mjs` แล้วรัน `npm run generate:tiles`
-4. เพิ่ม scene ที่มี `id: 'campus02'` ใน `tourScenes` แล้วเชื่อม scene hotspot ไป-กลับกับฉากอื่น
+3. เพิ่ม scene ที่มี `id: 'campus02'` ใน `tourScenes` แล้วเชื่อม scene hotspot ไป-กลับกับฉากอื่น
 
 ไฟล์ในโฟลเดอร์ `public` ต้องอ้างผ่าน URL ที่ตัดคำว่า `public` ออกเสมอ เช่น `public/mainimages/campus-02.jpg` จะใช้ URL `/mainimages/campus-02.jpg` ระบบ test จะตรวจ path, ไฟล์ที่หาย และเส้นทางฉากให้โดยอัตโนมัติ ค่า `yaw` และ `pitch` ในข้อมูลใช้หน่วยองศา ส่วน `mapPosition` ใช้พิกัดพิกเซลของ `mainmap.png` จากมุมซ้ายบน
 
 ## Offline และ privacy
 
-Service worker ทำงานเฉพาะ production โดย precache หน้าเริ่มต้น, manifest, icon และแผนที่ เมื่อผู้ใช้เปิดฉาก ระบบจะ cache base image และ tile ทั้ง 32 ชิ้นของฉากนั้นเบื้องหลัง ฉากที่เคยเปิดจึงหมุนดูได้ครบแบบออฟไลน์ ขณะ development ระบบจะถอน service worker และล้าง cache เก่าของโปรเจกต์เพื่อให้ refresh แล้วเห็นข้อมูลมุมล่าสุดทันที การเปิดผ่าน `file://` ไม่รองรับเพราะ WebGL, ES modules และ service worker ต้องใช้ HTTP origin
+Service worker ทำงานเฉพาะ production โดย precache หน้าเริ่มต้น, manifest, icon และแผนที่ เมื่อผู้ใช้เปิดฉาก ระบบจะ cache panorama ต้นฉบับหนึ่งไฟล์ของฉากนั้นเบื้องหลัง ฉากที่เคยเปิดจึงหมุนดูได้ครบแบบออฟไลน์ ขณะ development ระบบจะถอน service worker และล้าง cache เก่าของโปรเจกต์เพื่อให้ refresh แล้วเห็นข้อมูลมุมล่าสุดทันที การเปิดผ่าน `file://` ไม่รองรับเพราะ WebGL, ES modules และ service worker ต้องใช้ HTTP origin
 
 เว็บไซต์ไม่มี analytics, marketing cookies หรือ tracking form ภาพทั้งหมดถูก serve จาก repository นี้ และไม่มี runtime request ไปยัง CDN ภายนอก
 

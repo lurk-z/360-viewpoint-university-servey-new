@@ -52,7 +52,7 @@ export const messages = {
     campus: 'วิทยาเขต',
     campusValue: 'ปราจีนบุรี · มจพ.',
     creator: 'จัดทำโดย',
-    creatorValue: 'นายศุภกร สุขปัทม์',
+    creatorValue: 'นายศุภกร สุขปัทม์ , นายศิรวัฒน์ มิ่งเมือง',
     advisor: 'อาจารย์ที่ปรึกษา',
     advisorValue: 'รศ.ดร.ยุพิน สรรพคุณ',
     objectivesTitle: 'วัตถุประสงค์หลัก',

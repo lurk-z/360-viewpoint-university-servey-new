@@ -6,11 +6,11 @@ import {
   useImperativeHandle,
   useRef
 } from 'react';
-import { Viewer, events as viewerEvents } from '@photo-sphere-viewer/core';
 import {
-  EquirectangularTilesAdapter,
-  type EquirectangularTilesPanorama
-} from '@photo-sphere-viewer/equirectangular-tiles-adapter';
+  EquirectangularAdapter,
+  Viewer,
+  events as viewerEvents
+} from '@photo-sphere-viewer/core';
 import {
   AutorotatePlugin,
   events as autorotateEvents
@@ -30,13 +30,11 @@ import {
   getNavigationHotspots,
   getScene,
   localize,
-  panoramaTileUrl,
   toDegrees,
   tourScenes,
   type InfoHotspot,
   type Locale,
-  type SceneId,
-  type TourScene
+  type SceneId
 } from '../src/tour-data';
 import { goToScene, message } from '../src/i18n';
 
@@ -70,17 +68,9 @@ interface ViewerCallbacks {
   onAutorotate: (enabled: boolean) => void;
 }
 
-const buildPanorama = (scene: TourScene): EquirectangularTilesPanorama => ({
-  width: scene.tiledPanorama.width,
-  cols: scene.tiledPanorama.cols,
-  rows: scene.tiledPanorama.rows,
-  baseUrl: scene.tiledPanorama.baseUrl,
-  tileUrl: (col, row) => panoramaTileUrl(scene.tiledPanorama, col, row)
-});
-
 const buildTourNodes = (): VirtualTourNode[] => tourScenes.map((scene) => ({
   id: scene.id,
-  panorama: buildPanorama(scene),
+  panorama: scene.panorama,
   name: `${scene.title.th} · ${scene.title.en}`,
   data: { sceneId: scene.id },
   links: getNavigationHotspots(scene).map((hotspot) => ({
@@ -181,9 +171,9 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       minFov: 35,
       maxFov: 100,
       canvasBackground: '#431407',
-      adapter: EquirectangularTilesAdapter.withConfig({
-        baseBlur: false,
-        antialias: true
+      adapter: EquirectangularAdapter.withConfig({
+        shader: true,
+        useXmpData: false
       }),
       defaultTransition: { effect: 'fade', speed: reducedMotion ? 0 : 650, rotation: false },
       plugins: [

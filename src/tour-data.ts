@@ -1,25 +1,6 @@
-export const panoramaTileConfig = {
-  width: 7680,
-  height: 3840,
-  cols: 8,
-  rows: 4,
-  tileSize: 960,
-  baseWidth: 2048,
-  baseHeight: 1024
-} as const;
-
-export interface TiledPanoramaMedia {
-  readonly width: number;
-  readonly cols: number;
-  readonly rows: number;
-  readonly baseUrl: string;
-  readonly tileUrlPattern: string;
-}
-
 export interface SceneMedia {
-  /** Original 7680×3840 source. It is preserved and is not loaded by the viewer. */
-  readonly sourcePanorama: string;
-  readonly tiledPanorama: TiledPanoramaMedia;
+  /** Original 7680×3840 equirectangular image loaded directly by the viewer. */
+  readonly panorama: string;
 }
 
 /**
@@ -30,19 +11,8 @@ function mainImage(fileName: string): string {
   return `/mainimages/${fileName}`;
 }
 
-function tiledMainImage(fileName: string): SceneMedia {
-  const stem = fileName.replace(/\.jpe?g$/i, '');
-  const tileRoot = `tiles/${stem}`;
-  return {
-    sourcePanorama: mainImage(fileName),
-    tiledPanorama: {
-      width: panoramaTileConfig.width,
-      cols: panoramaTileConfig.cols,
-      rows: panoramaTileConfig.rows,
-      baseUrl: mainImage(`${tileRoot}/base.jpg`),
-      tileUrlPattern: mainImage(`${tileRoot}/tile-{col}-{row}.jpg`)
-    }
-  };
+function mainPanorama(fileName: string): SceneMedia {
+  return { panorama: mainImage(fileName) };
 }
 
 export const tourMap = {
@@ -52,21 +22,21 @@ export const tourMap = {
 } as const;
 
 export const tourMedia = {
-  entrance: tiledMainImage('temp1.jpg'),
-  entranceRoad: tiledMainImage('temp1-2.jpg'),
-  memorialPlaza: tiledMainImage('temp1-3.jpg'),
-  memorial: tiledMainImage('temp1-3-1.jpg'),
-  campusRoad1: tiledMainImage('temp1-4.jpg'),
-  vallayaHotel: tiledMainImage('temp1-4-1.jpg'),
-  campusRoad2: tiledMainImage('temp1-4.5.jpg'),
-  campusRoad3: tiledMainImage('temp1-4.9.jpg'),
-  campusRoad4: tiledMainImage('temp1-5.jpg'),
-  campusBuilding1: tiledMainImage('temp1-5-1.jpg'),
-  campusBuilding2: tiledMainImage('temp1-5-2.jpg'),
-  campusRoad5: tiledMainImage('temp2-1.jpg'),
-  campusRoad6: tiledMainImage('temp2-2.jpg'),
-  campusRoad7: tiledMainImage('temp2-3.jpg'),
-  campusBuilding3: tiledMainImage('temp2-4.jpg')
+  entrance: mainPanorama('temp1.jpg'),
+  entranceRoad: mainPanorama('temp1-2.jpg'),
+  memorialPlaza: mainPanorama('temp1-3.jpg'),
+  memorial: mainPanorama('temp1-3-1.jpg'),
+  campusRoad1: mainPanorama('temp1-4.jpg'),
+  vallayaHotel: mainPanorama('temp1-4-1.jpg'),
+  campusRoad2: mainPanorama('temp1-4.5.jpg'),
+  campusRoad3: mainPanorama('temp1-4.9.jpg'),
+  campusRoad4: mainPanorama('temp1-5.jpg'),
+  campusBuilding1: mainPanorama('temp1-5-1.jpg'),
+  campusBuilding2: mainPanorama('temp1-5-2.jpg'),
+  campusRoad5: mainPanorama('temp2-1.jpg'),
+  campusRoad6: mainPanorama('temp2-2.jpg'),
+  campusRoad7: mainPanorama('temp2-3.jpg'),
+  campusBuilding3: mainPanorama('temp2-4.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -123,8 +93,7 @@ export type Hotspot = SceneHotspot | InfoHotspot;
 
 export interface TourScene {
   readonly id: SceneId;
-  readonly sourcePanorama: string;
-  readonly tiledPanorama: TiledPanoramaMedia;
+  readonly panorama: string;
   readonly title: LocalizedText;
   readonly description: LocalizedText;
   readonly tags: Readonly<Record<Locale, readonly string[]>>;
@@ -146,24 +115,8 @@ export function toDegrees(value: number): string {
   return `${Object.is(value, -0) ? 0 : value}deg`;
 }
 
-export function panoramaTileUrl(media: TiledPanoramaMedia, col: number, row: number): string {
-  if (!Number.isInteger(col) || col < 0 || col >= media.cols) {
-    throw new Error(`Invalid panorama tile column: ${col}`);
-  }
-  if (!Number.isInteger(row) || row < 0 || row >= media.rows) {
-    throw new Error(`Invalid panorama tile row: ${row}`);
-  }
-  return media.tileUrlPattern.replace('{col}', String(col)).replace('{row}', String(row));
-}
-
 export function getSceneAssetUrls(scene: TourScene): readonly string[] {
-  const assets = [scene.tiledPanorama.baseUrl];
-  for (let row = 0; row < scene.tiledPanorama.rows; row += 1) {
-    for (let col = 0; col < scene.tiledPanorama.cols; col += 1) {
-      assets.push(panoramaTileUrl(scene.tiledPanorama, col, row));
-    }
-  }
-  return assets;
+  return [scene.panorama];
 }
 
 export const tourScenes = [
@@ -192,12 +145,12 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.entrance.tiledPanorama.baseUrl,
+            src: tourMedia.entrance.panorama,
             alt: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'Front view of the university landmark' },
             caption: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'University landmark' }
           },
           {
-            src: tourMedia.entranceRoad.tiledPanorama.baseUrl,
+            src: tourMedia.entranceRoad.panorama,
             alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
             caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
           }
@@ -263,12 +216,12 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.memorial.tiledPanorama.baseUrl,
+            src: tourMedia.memorial.panorama,
             alt: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' },
             caption: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' }
           },
           {
-            src: tourMedia.memorialPlaza.tiledPanorama.baseUrl,
+            src: tourMedia.memorialPlaza.panorama,
             alt: { th: 'ลานบริเวณอนุสรณ์', en: 'Plaza surrounding the memorial' },
             caption: { th: 'ลานอนุสรณ์', en: 'Memorial plaza' }
           }
@@ -318,12 +271,12 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.vallayaHotel.tiledPanorama.baseUrl,
+            src: tourMedia.vallayaHotel.panorama,
             alt: { th: 'อาคารโรงแรมวไลยอลงกรณ์', en: 'Vallayalangkorn Hotel building' },
             caption: { th: 'อาคารโรงแรม', en: 'Hotel building' }
           },
           {
-            src: tourMedia.campusRoad1.tiledPanorama.baseUrl,
+            src: tourMedia.campusRoad1.panorama,
             alt: { th: 'ถนนใกล้อาคารโรงแรม', en: 'Road near the hotel building' },
             caption: { th: 'ถนนสายหลักใกล้อาคาร', en: 'Nearby main road' }
           }
@@ -406,12 +359,12 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.campusBuilding1.tiledPanorama.baseUrl,
+            src: tourMedia.campusBuilding1.panorama,
             alt: { th: 'อาคารภายในวิทยาเขตจุดที่ 1', en: 'Campus building point 1' },
             caption: { th: 'มุมหน้าอาคาร', en: 'Building view' }
           },
           {
-            src: tourMedia.campusRoad4.tiledPanorama.baseUrl,
+            src: tourMedia.campusRoad4.panorama,
             alt: { th: 'ถนนทางแยกใกล้อาคารจุดที่ 1', en: 'Road junction near building point 1' },
             caption: { th: 'ทางเข้าจากถนนสายหลัก', en: 'Approach from the main road' }
           }
@@ -444,12 +397,12 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.campusBuilding2.tiledPanorama.baseUrl,
+            src: tourMedia.campusBuilding2.panorama,
             alt: { th: 'อาคารภายในวิทยาเขตจุดที่ 2', en: 'Campus building point 2' },
             caption: { th: 'มุมหน้าอาคาร', en: 'Building view' }
           },
           {
-            src: tourMedia.campusRoad4.tiledPanorama.baseUrl,
+            src: tourMedia.campusRoad4.panorama,
             alt: { th: 'ถนนทางแยกใกล้อาคารจุดที่ 2', en: 'Road junction near building point 2' },
             caption: { th: 'ทางเข้าจากถนนสายหลัก', en: 'Approach from the main road' }
           }
@@ -530,12 +483,12 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.campusBuilding3.tiledPanorama.baseUrl,
+            src: tourMedia.campusBuilding3.panorama,
             alt: { th: 'อาคารบริเวณปลายเส้นทาง', en: 'Building at the end of the route' },
             caption: { th: 'อาคารปลายเส้นทาง', en: 'Route-end building' }
           },
           {
-            src: tourMedia.campusRoad7.tiledPanorama.baseUrl,
+            src: tourMedia.campusRoad7.panorama,
             alt: { th: 'ถนนใกล้อาคารปลายเส้นทาง', en: 'Road near the route-end building' },
             caption: { th: 'ทางแยกก่อนถึงอาคาร', en: 'Junction before the building' }
           }
@@ -593,7 +546,7 @@ export function validateTour(): readonly string[] {
     if (ids.has(scene.id)) errors.push(`Duplicate scene id: ${scene.id}`);
     ids.add(scene.id);
 
-    const mediaUrls = [scene.sourcePanorama, ...getSceneAssetUrls(scene)];
+    const mediaUrls = getSceneAssetUrls(scene);
     for (const mediaUrl of mediaUrls) {
       if (!mediaUrl.startsWith('/mainimages/')) {
         errors.push(`Scene ${scene.id} must use /mainimages media: ${mediaUrl}`);
@@ -601,11 +554,9 @@ export function validateTour(): readonly string[] {
       if (mediaUrl.includes('/tour/pano') || mediaUrl.includes('/tour/thumbs')) {
         errors.push(`Scene ${scene.id} references legacy tour media: ${mediaUrl}`);
       }
-    }
-    if (scene.tiledPanorama.width !== panoramaTileConfig.width
-      || scene.tiledPanorama.cols !== panoramaTileConfig.cols
-      || scene.tiledPanorama.rows !== panoramaTileConfig.rows) {
-      errors.push(`Scene ${scene.id} has an invalid tile configuration`);
+      if (mediaUrl.includes('/tiles/')) {
+        errors.push(`Scene ${scene.id} references generated panorama tiles: ${mediaUrl}`);
+      }
     }
     if (scene.mapPosition.x < 0 || scene.mapPosition.x > tourMap.width) {
       errors.push(`Scene ${scene.id} map x is outside the image`);
@@ -640,6 +591,9 @@ export function validateTour(): readonly string[] {
           }
           if (image.src.includes('/tour/pano') || image.src.includes('/tour/thumbs')) {
             errors.push(`Info hotspot ${hotspot.id} references legacy tour media: ${image.src}`);
+          }
+          if (image.src.includes('/tiles/')) {
+            errors.push(`Info hotspot ${hotspot.id} references generated panorama tiles: ${image.src}`);
           }
           for (const locale of locales) {
             if (!image.alt[locale].trim()) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kmuntb-tour-v6';
+const CACHE_NAME = 'kmuntb-tour-v7';
 const sceneCacheJobs = new Map();
 const SHELL_ASSETS = [
   '/',
@@ -55,8 +55,7 @@ async function networkFirst(request, navigation = false) {
 function isSceneAsset(url) {
   const parsed = new URL(url, self.location.origin);
   return parsed.origin === self.location.origin
-    && parsed.pathname.startsWith('/mainimages/tiles/')
-    && /\.jpe?g$/i.test(parsed.pathname);
+    && /^\/mainimages\/[^/]+\.jpe?g$/i.test(parsed.pathname);
 }
 
 async function cacheSceneAssets(sceneId, assets) {
@@ -65,14 +64,12 @@ async function cacheSceneAssets(sceneId, assets) {
   const job = (async () => {
     const cache = await caches.open(CACHE_NAME);
     const urls = [...new Set(assets)].filter(isSceneAsset);
-    for (let index = 0; index < urls.length; index += 4) {
-      await Promise.all(urls.slice(index, index + 4).map(async (url) => {
-        const request = new Request(url, { credentials: 'same-origin' });
-        if (await cache.match(request)) return;
-        const response = await fetch(request);
-        if (!response.ok) throw new Error(`Unable to cache ${url}`);
-        await cache.put(request, response);
-      }));
+    for (const url of urls) {
+      const request = new Request(url, { credentials: 'same-origin' });
+      if (await cache.match(request)) continue;
+      const response = await fetch(request);
+      if (!response.ok) throw new Error(`Unable to cache ${url}`);
+      await cache.put(request, response);
     }
   })().finally(() => sceneCacheJobs.delete(sceneId));
 
