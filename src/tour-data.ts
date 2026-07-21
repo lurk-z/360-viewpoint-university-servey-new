@@ -21,6 +21,7 @@ export const tourMap = {
   height: 577
 } as const;
 
+//เพิ่มรูป
 export const tourMedia = {
   entrance: mainPanorama('temp1.jpg'),
   entranceRoad: mainPanorama('temp1-2.jpg'),
@@ -132,7 +133,8 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: 0, zoom: 22 },
     mapPosition: { x: 360, y: 290 },
     hotspots: [
-      { id: 'entrance-to-road', type: 'scene', target: 'entranceRoad', yaw: 100, pitch: -3 },
+      { id: 'entrance-to-road', type: 'scene', target: 'entranceRoad', yaw: -70, pitch: -2 },
+      
       {
         id: 'entrance-landmark-info',
         type: 'info',
@@ -170,8 +172,30 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 330, y: 320 },
     hotspots: [
-      { id: 'road-to-entrance', type: 'scene', target: 'entrance', yaw: 170, pitch: -3 },
-      { id: 'road-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 0, pitch: -3 }
+      { id: 'road-to-entrance', type: 'scene', target: 'entrance', yaw: 250, pitch: -2 },
+      { id: 'road-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: -50, pitch: -2 },{
+        id: 'bus-landmark-info',
+        type: 'info',
+        yaw: 130,
+        pitch: 1,
+        title: { th: 'จุดขึ้นรถเมล์เที่ยวรอบปราจีนบุรี', en: 'Bus boarding point for the Prachinburi sightseeing tour' },
+        description: {
+          th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
+          en: 'The KMUTNB landmark identifies the main entrance to the Prachinburi campus.'
+        },
+        images: [
+          {
+            src: tourMedia.entrance.panorama,
+            alt: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'Front view of the university landmark' },
+            caption: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'University landmark' }
+          },
+          {
+            src: tourMedia.entranceRoad.panorama,
+            alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
+            caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
+          }
+        ]
+      }
     ]
   },
   {
@@ -186,9 +210,9 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 22 },
     mapPosition: { x: 290, y: 340 },
     hotspots: [
-      { id: 'plaza-to-road', type: 'scene', target: 'entranceRoad', yaw: 175, pitch: -3 },
+      { id: 'plaza-to-road', type: 'scene', target: 'entranceRoad', yaw: 175, pitch: -2 },
       { id: 'plaza-to-memorial', type: 'scene', target: 'memorial', yaw: -55, pitch: -2 },
-      { id: 'plaza-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 15, pitch: -3 }
+      { id: 'plaza-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 0, pitch: 0 }
     ]
   },
   {
@@ -203,7 +227,7 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: { x: 270, y: 350 },
     hotspots: [
-      { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -3 },
+      { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -2 },
       {
         id: 'memorial-info',
         type: 'info',
@@ -241,9 +265,8 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 255, y: 370 },
     hotspots: [
-      { id: 'campus-road-1-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -3 },
-      { id: 'campus-road-1-to-hotel', type: 'scene', target: 'vallayaHotel', yaw: -70, pitch: -2 },
-      { id: 'campus-road-1-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 0, pitch: -3 }
+      { id: 'campus-road-1-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -2 },
+      { id: 'campus-road-1-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 0, pitch: -2 }
     ]
   },
   {
@@ -258,7 +281,7 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: 1, zoom: 24 },
     mapPosition: { x: 215, y: 385 },
     hotspots: [
-      { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -3 },
+      { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
       {
         id: 'hotel-info',
         type: 'info',
@@ -296,8 +319,9 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 270, y: 405 },
     hotspots: [
-      { id: 'campus-road-2-to-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -3 },
-      { id: 'campus-road-2-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 0, pitch: -3 }
+      { id: 'campus-road-2-to-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
+      { id: 'campus-road-2-to-hotel', type: 'scene', target: 'vallayaHotel', yaw: -70, pitch: -2 },
+      { id: 'campus-road-2-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 0, pitch: -2 }
     ]
   },
   {
@@ -312,8 +336,9 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 295, y: 425 },
     hotspots: [
-      { id: 'campus-road-3-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 180, pitch: -3 },
-      { id: 'campus-road-3-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 0, pitch: -3 }
+      { id: 'campus-road-3-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 180, pitch: -2 },
+      { id: 'campus-road-3-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 0, pitch: -2 },
+      { id: 'campus-road-3-to-building-1', type: 'scene', target: 'campusBuilding1', yaw: -60, pitch: -2 },
     ]
   },
   {
@@ -328,9 +353,9 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 320, y: 445 },
     hotspots: [
-      { id: 'campus-road-4-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 180, pitch: -3 },
-      { id: 'campus-road-4-to-building-1', type: 'scene', target: 'campusBuilding1', yaw: -60, pitch: -2 },
-      { id: 'campus-road-4-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: 55, pitch: -2 },
+      { id: 'campus-road-4-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 180, pitch: -2 },
+      { id: 'campus-road-4-to-building-1', type: 'scene', target: 'campusBuilding1', yaw: -80, pitch: -2 },
+      { id: 'campus-road-4-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: -60, pitch: -2 },
       { id: 'campus-road-4-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 0, pitch: -3 }
     ]
   },
@@ -346,7 +371,8 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: { x: 280, y: 465 },
     hotspots: [
-      { id: 'building-1-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -3 },
+      { id: 'building-1-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
+      { id: 'building-1-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: 90 ,pitch: 0 },
       {
         id: 'building-1-info',
         type: 'info',
@@ -384,7 +410,7 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: { x: 350, y: 465 },
     hotspots: [
-      { id: 'building-2-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -3 },
+      { id: 'building-2-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       {
         id: 'building-2-info',
         type: 'info',
@@ -422,8 +448,9 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 365, y: 430 },
     hotspots: [
-      { id: 'campus-road-5-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -3 },
-      { id: 'campus-road-5-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 0, pitch: -3 }
+      { id: 'campus-road-5-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
+      { id: 'campus-road-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: -70 ,pitch: 0 },
+      { id: 'campus-road-5-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 0, pitch: -2 }
     ]
   },
   {
@@ -438,8 +465,8 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 400, y: 405 },
     hotspots: [
-      { id: 'campus-road-6-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 180, pitch: -3 },
-      { id: 'campus-road-6-to-road-7', type: 'scene', target: 'campusRoad7', yaw: 0, pitch: -3 }
+      { id: 'campus-road-6-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 180, pitch: -2 },
+      { id: 'campus-road-6-to-road-7', type: 'scene', target: 'campusRoad7', yaw: -10, pitch: -2 }
     ]
   },
   {
