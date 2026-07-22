@@ -201,7 +201,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           arrowStyle: {
             element: createArrowElement,
             className: 'tour-arrow-marker',
-            size: { width: 54, height: 54 }
+            size: { width: 45, height: 45 }
           },
           getLinkTooltip: (_content, link) => {
             const target = getScene(link.nodeId as SceneId);

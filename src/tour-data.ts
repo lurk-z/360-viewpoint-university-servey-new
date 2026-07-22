@@ -15,6 +15,16 @@ function mainPanorama(fileName: string): SceneMedia {
   return { panorama: mainImage(fileName) };
 }
 
+function busImage(fileName: string): string {
+  return `/mainimages/bus/${fileName}`;
+}
+
+
+function busPanorama(fileName: string): SceneMedia {
+  return { panorama: busImage(fileName) };
+}
+
+
 export const tourMap = {
   image: mainImage('map/mainmap.png'),
   width: 1150,
@@ -37,7 +47,12 @@ export const tourMedia = {
   campusRoad5: mainPanorama('temp2-1.jpg'),
   campusRoad6: mainPanorama('temp2-2.jpg'),
   campusRoad7: mainPanorama('temp2-3.jpg'),
-  campusBuilding3: mainPanorama('temp2-4.jpg')
+  campusBuilding3: mainPanorama('temp2-4.jpg'),
+  buspage1: busPanorama('page1.jpg'),
+  buspage2: busPanorama('page2.jpg'),
+  buspage3: busPanorama('page3.jpg')
+
+
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -131,14 +146,14 @@ export const tourScenes = [
     },
     tags: { th: ['ทางเข้า', 'ป้ายมหาวิทยาลัย', 'กลางแจ้ง'], en: ['Entrance', 'Landmark', 'Outdoor'] },
     initialView: { yaw: 0, pitch: 0, zoom: 22 },
-    mapPosition: { x: 360, y: 290 },
+    mapPosition: {   x: 1054, y: 159   },
     hotspots: [
-      { id: 'entrance-to-road', type: 'scene', target: 'entranceRoad', yaw: -70, pitch: -2 },
+      { id: 'entrance-to-road', type: 'scene', target: 'entranceRoad', yaw: -40, pitch: -3 },
       
       {
         id: 'entrance-landmark-info',
         type: 'info',
-        yaw: 0,
+        yaw: 10,
         pitch: 1,
         title: { th: 'ป้ายมหาวิทยาลัย', en: 'KMUTNB landmark' },
         description: {
@@ -170,9 +185,9 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ประตูทางเข้า', 'เส้นทาง'], en: ['Road', 'Gate', 'Route'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 330, y: 320 },
+    mapPosition: { x: 1046, y: 159  },
     hotspots: [
-      { id: 'road-to-entrance', type: 'scene', target: 'entrance', yaw: 250, pitch: -2 },
+      { id: 'road-to-entrance', type: 'scene', target: 'entrance', yaw: 200, pitch: 1 },
       { id: 'road-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: -50, pitch: -2 },{
         id: 'bus-landmark-info',
         type: 'info',
@@ -185,12 +200,17 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.entrance.panorama,
+            src: tourMedia.buspage1.panorama,
             alt: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'Front view of the university landmark' },
             caption: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'University landmark' }
           },
           {
-            src: tourMedia.entranceRoad.panorama,
+            src: tourMedia.buspage2.panorama,
+            alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
+            caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
+          },
+          {
+            src: tourMedia.buspage3.panorama,
             alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
             caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
           }
@@ -208,11 +228,11 @@ export const tourScenes = [
     },
     tags: { th: ['ลาน', 'สวน', 'อนุสรณ์'], en: ['Plaza', 'Garden', 'Memorial'] },
     initialView: { yaw: 0, pitch: -1, zoom: 22 },
-    mapPosition: { x: 290, y: 340 },
+    mapPosition: {  x: 1009, y: 176   },
     hotspots: [
       { id: 'plaza-to-road', type: 'scene', target: 'entranceRoad', yaw: 175, pitch: -2 },
       { id: 'plaza-to-memorial', type: 'scene', target: 'memorial', yaw: -55, pitch: -2 },
-      { id: 'plaza-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 0, pitch: 0 }
+      { id: 'plaza-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 0, pitch: -2 }
     ]
   },
   {
@@ -225,7 +245,7 @@ export const tourScenes = [
     },
     tags: { th: ['อนุสรณ์', 'จุดสำคัญ', 'กลางแจ้ง'], en: ['Memorial', 'Landmark', 'Outdoor'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 270, y: 350 },
+    mapPosition: {  x: 1007, y: 193  },
     hotspots: [
       { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -2 },
       {
@@ -263,23 +283,23 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางเดิน', 'จุดที่ 1'], en: ['Road', 'Walkway', 'Point 1'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 255, y: 370 },
+    mapPosition: {  x: 985, y: 193 },
     hotspots: [
       { id: 'campus-road-1-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -2 },
-      { id: 'campus-road-1-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 0, pitch: -2 }
+      { id: 'campus-road-1-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 10, pitch: -2 }
     ]
   },
   {
     id: 'vallayaHotel',
     ...tourMedia.vallayaHotel,
-    title: { th: 'โรงแรมวไลยอลงกรณ์', en: 'Vallayalangkorn Hotel' },
+    title: { th: 'โรงแรมวิลลาวิชาลัย', en: 'Villa Wichalai Hotel' },
     description: {
-      th: 'อาคารโรงแรมวไลยอลงกรณ์ภายในวิทยาเขต เป็นจุดแยกที่เชื่อมกลับไปยังถนนเส้นหลัก',
-      en: 'Vallayalangkorn Hotel is a campus building located just off the main internal road.'
+      th: 'อาคารปฏิบัติการการท่องเที่ยวและโรงแรม โรงแรมวิลลาวิชาลัย',
+      en: 'Tourism and Hotel Training Facility – Villa Wichalai Hotel'
     },
     tags: { th: ['โรงแรม', 'อาคาร', 'จุดบริการ'], en: ['Hotel', 'Building', 'Service'] },
     initialView: { yaw: 0, pitch: 1, zoom: 24 },
-    mapPosition: { x: 215, y: 385 },
+    mapPosition: {  x: 926, y: 249  },
     hotspots: [
       { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
       {
@@ -287,15 +307,15 @@ export const tourScenes = [
         type: 'info',
         yaw: 0,
         pitch: 4,
-        title: { th: 'อาคารโรงแรมวไลยอลงกรณ์', en: 'Vallayalangkorn Hotel building' },
+        title: { th: 'อาคารโรงแรมวิลลาวิชาลัย', en: 'Villa Wichalai Hotel building' },
         description: {
-          th: 'อาคารบริการและที่พักภายในมหาวิทยาลัยซึ่งตั้งอยู่ใกล้ถนนสายหลักของวิทยาเขต',
-          en: 'A campus accommodation and service building near the main internal road.'
+          th: 'อาคารปฏิบัติการการท่องเที่ยวและโรงแรม วิลลาวิชาลัยเปิดให้บริการห้องพัก จำนวนถึง 33 ห้อง ท่ามกลางบรรยากาศร่มรื่น ทุกห้องสามารถมองเห็นวิววนอุทยานเขาอีโต้ สะดวกสบายด้วยการรักษาความปลอดภัยตลอด 24 ชั่วโมง อีกทั้งสถานที่ตั้งของโรงแรมอยู่ใกล้ทางขึ้นอุทยานแห่งชาติเขาใหญ่เพียง 10 นาที',
+          en: 'Villa Wichalai, a tourism and hotel training facility, offers 33 guest rooms set amidst a lush, shady atmosphere. Every room features a view of Khao E-To Forest Park, and guests enjoy the convenience of 24-hour security. Additionally, the hotel is located just 10 minutes from the entrance to Khao Yai National Park.'
         },
         images: [
           {
             src: tourMedia.vallayaHotel.panorama,
-            alt: { th: 'อาคารโรงแรมวไลยอลงกรณ์', en: 'Vallayalangkorn Hotel building' },
+            alt: { th: 'อาคารโรงแรมวิลลาวิชาลัย', en: 'Villa Wichalai Hotel building' },
             caption: { th: 'อาคารโรงแรม', en: 'Hotel building' }
           },
           {
@@ -317,7 +337,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางเดิน', 'จุดที่ 2'], en: ['Road', 'Walkway', 'Point 2'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 270, y: 405 },
+    mapPosition: { x: 937, y: 222  },
     hotspots: [
       { id: 'campus-road-2-to-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
       { id: 'campus-road-2-to-hotel', type: 'scene', target: 'vallayaHotel', yaw: -70, pitch: -2 },
@@ -334,7 +354,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'อาคาร', 'จุดที่ 3'], en: ['Road', 'Buildings', 'Point 3'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 295, y: 425 },
+    mapPosition: {   x: 889, y: 252  },
     hotspots: [
       { id: 'campus-road-3-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 180, pitch: -2 },
       { id: 'campus-road-3-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 0, pitch: -2 },
@@ -351,7 +371,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางแยก', 'จุดที่ 4'], en: ['Road', 'Junction', 'Point 4'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 320, y: 445 },
+    mapPosition: {  x: 868, y: 263  },
     hotspots: [
       { id: 'campus-road-4-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 180, pitch: -2 },
       { id: 'campus-road-4-to-building-1', type: 'scene', target: 'campusBuilding1', yaw: -80, pitch: -2 },
@@ -362,14 +382,14 @@ export const tourScenes = [
   {
     id: 'campusBuilding1',
     ...tourMedia.campusBuilding1,
-    title: { th: 'อาคารภายในวิทยาเขต จุดที่ 1', en: 'Campus Building Point 1' },
+    title: { th: 'คณะบริหารธุรกิจและอุตสาหกรรมบริการ', en: 'Faculty of Business Administration and Industrial Services' },
     description: {
-      th: 'อาคารเรียนและพื้นที่ใช้งานภายในวิทยาเขต สามารถย้อนกลับไปยังถนนเส้นหลักได้',
-      en: 'An academic and activity building connected back to the main campus road.'
+      th: 'คณะบริหารธุรกิจและอุตสาหกรรมบริการ มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (มจพ.) ได้รับการยกฐานะขึ้นเป็นส่วนงานใหม่เทียบเท่าคณะ',
+      en: 'The Faculty of Business Administration and Service Industries at King Mongkut\'s University of Technology North Bangkok (KMUTNB) has been elevated to the status of a new organizational unit equivalent to a faculty.'
     },
     tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 1'], en: ['Building', 'Academic', 'Point 1'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 280, y: 465 },
+    mapPosition: {  x: 895, y: 260  },
     hotspots: [
       { id: 'building-1-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       { id: 'building-1-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: 90 ,pitch: 0 },
@@ -378,15 +398,15 @@ export const tourScenes = [
         type: 'info',
         yaw: 0,
         pitch: 5,
-        title: { th: 'อาคารภายในวิทยาเขต', en: 'Campus building' },
+        title: { th: 'คณะบริหารธุรกิจและอุตสาหกรรมบริการ', en: 'Faculty of Business Administration and Industrial Services' },
         description: {
-          th: 'อาคารสำหรับการเรียน การทำกิจกรรม และการให้บริการภายในมหาวิทยาลัย',
-          en: 'A campus building supporting learning, activities and university services.'
+          th: 'ภาควิชาการจัดการอุตสาหกรรมการท่องเที่ยวและการโรงแรมแขนงวิชาการจัดการธุรกิจ (ในภาควิชาการจัดการอุตสาหกรรม) โครงสร้างคณะ: ประกอบด้วย 3 ส่วนงานคือ สำนักงานคณบดี, ภาควิชาบริหารธุรกิจท่องเที่ยวและโรงแรม และภาควิชาบริหารธุรกิจอุตสาหกรรมและการค้า หลักสูตรที่เปิดสอน: เริ่มเปิดสอนในปีการศึกษา 2559 ในระดับปริญญาตรี (บริหารธุรกิจบัณฑิต - บธ.บ.) 2 สาขาวิชา คือ: สาขาการจัดการอุตสาหกรรมการท่องเที่ยวและโรงแรม สาขาบริหารธุรกิจอุตสาหกรรมและการค้า',
+          en: 'Department of Tourism and Hotel Industry Management (under the Industrial Management Department); Faculty Structure: Comprises three units—the Office of the Dean, the Department of Tourism and Hotel Business Administration, and the Department of Industrial and Trade Business Administration. Programs Offered: Instruction began in the 2016 academic year at the bachelor\'s degree level (Bachelor of Business Administration - B.B.A.) in two majors: Tourism and Hotel Industry Management, and Industrial and Trade Business Administration.'
         },
         images: [
           {
             src: tourMedia.campusBuilding1.panorama,
-            alt: { th: 'อาคารภายในวิทยาเขตจุดที่ 1', en: 'Campus building point 1' },
+            alt: { th: 'อาคารคณะบริหารธุรกิจและอุตสาหกรรมบริการ', en: 'Faculty of Business Administration and Service Industries Building' },
             caption: { th: 'มุมหน้าอาคาร', en: 'Building view' }
           },
           {
@@ -401,14 +421,14 @@ export const tourScenes = [
   {
     id: 'campusBuilding2',
     ...tourMedia.campusBuilding2,
-    title: { th: 'อาคารภายในวิทยาเขต จุดที่ 2', en: 'Campus Building Point 2' },
+    title: { th: 'อุทยานเทคโนโลยี มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ', en: 'KMUTNB Techno Park' },
     description: {
-      th: 'อาคารอีกจุดหนึ่งในกลุ่มอาคารของวิทยาเขต เชื่อมต่อกับถนนเส้นหลักบริเวณเดียวกัน',
-      en: 'Another building in the campus complex, connected to the same main road point.'
+      th: 'เป็นศูนย์รวมประสานงานการให้บริการวิชาการ งานวิจัยระดับสูง และพัฒนานวัตกรรมเพื่ออุตสาหกรรมที่มหาวิทยาลัยมีความเชี่ยวชาญเฉพาะด',
+      en: 'It serves as a coordination hub for academic services, advanced research, and industrial innovation development in areas where the university possesses specialized expertise.'
     },
     tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 2'], en: ['Building', 'Academic', 'Point 2'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 350, y: 465 },
+    mapPosition: {  x: 857, y: 283  },
     hotspots: [
       { id: 'building-2-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       {
@@ -416,10 +436,10 @@ export const tourScenes = [
         type: 'info',
         yaw: 0,
         pitch: 5,
-        title: { th: 'อาคารภายในวิทยาเขต', en: 'Campus building' },
+        title: { th: 'อุทยานเทคโนโลยี มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ', en: 'KMUTNB Techno Park' },
         description: {
-          th: 'อาคารสำหรับรองรับการเรียนรู้และกิจกรรมของนักศึกษาและบุคลากร',
-          en: 'A building supporting learning and activities for students and staff.'
+          th: 'เป็นหน่วยงานกลาง (One Stop Service) ที่เป็นศูนย์รวมประสานงานการให้บริการวิชาการ งานวิจัยระดับสูง และพัฒนานวัตกรรมเพื่ออุตสาหกรรมที่มหาวิทยาลัยมีความเชี่ยวชาญเฉพาะ เป็นศูนย์รวมประสานงานการให้บริการวิชาการ งานวิจัยระดับสูง ให้สามารถนำไปใช้ประโยชน์ในเชิงพาณิชย์ และสร้างเครือข่ายความร่วมมือในลักษณะพันธมิตรอุตสาหกรรมระหว่างสถาบันการศึกษา ภาครัฐและเอกชน รวมถึงเป็นการผสมผสานระหว่างความเชี่ยวชาญในสาขาต่าง ๆ ของมหาวิทยาลัยกับภาคธุรกิจอุตสาหกรรม แบ่งเป็น 6 คลัสเตอร์ 25 ศูนย์ปฏิบัติการ 1 สถาบัน และ 1 หลักสูตร',
+          en: 'It is a central agency (One Stop Service) that coordinates academic services, advanced research, and innovation development for industry in which the university has specialized expertise. It serves as a central hub for coordinating academic services and advanced research to facilitate commercialization and build collaborative networks in the form of industrial partnerships between educational institutions, the public and private sectors. It also integrates the expertise of the university in various fields with the business and industrial sectors, divided into 6 clusters, 25 operational centers, 1 institute, and 1 program.'
         },
         images: [
           {
@@ -446,7 +466,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางข้าม', 'จุดที่ 5'], en: ['Road', 'Crossing', 'Point 5'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 365, y: 430 },
+    mapPosition: {   x: 851, y: 273   },
     hotspots: [
       { id: 'campus-road-5-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       { id: 'campus-road-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: -70 ,pitch: 0 },
@@ -463,7 +483,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'พื้นที่สีเขียว', 'จุดที่ 6'], en: ['Road', 'Green space', 'Point 6'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 400, y: 405 },
+    mapPosition: {  x: 823, y: 290  },
     hotspots: [
       { id: 'campus-road-6-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 180, pitch: -2 },
       { id: 'campus-road-6-to-road-7', type: 'scene', target: 'campusRoad7', yaw: -10, pitch: -2 }
@@ -479,7 +499,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางแยก', 'จุดที่ 7'], en: ['Road', 'Junction', 'Point 7'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 430, y: 380 },
+    mapPosition: {  x: 729, y: 267  },
     hotspots: [
       { id: 'campus-road-7-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 180, pitch: -3 },
       { id: 'campus-road-7-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: -45, pitch: -2 }
@@ -488,14 +508,14 @@ export const tourScenes = [
   {
     id: 'campusBuilding3',
     ...tourMedia.campusBuilding3,
-    title: { th: 'อาคารภายในวิทยาเขต จุดที่ 3', en: 'Campus Building Point 3' },
+    title: { th: 'อาคารหอประชุมเเละกิจการนักศึกษา', en: 'Auditorium and Student Affairs Building' },
     description: {
-      th: 'อาคารบริเวณปลายเส้นทางทัวร์ พร้อมลานและพื้นที่เปิดโล่งโดยรอบ',
-      en: 'A building at the end of the tour route, surrounded by an open forecourt and green space.'
+      th: 'อาคารหอประชุมเเละกิจการนักศึกษา เป็นอาคารที่ทำกิจการต่างๆภายใน',
+      en: 'The Auditorium and Student Affairs Building is a building that houses various activities within the organization.'
     },
     tags: { th: ['อาคาร', 'ลาน', 'จุดที่ 3'], en: ['Building', 'Forecourt', 'Point 3'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 455, y: 350 },
+    mapPosition: {  x: 729, y: 267  },
     hotspots: [
       { id: 'building-3-to-campus-road-7', type: 'scene', target: 'campusRoad7', yaw: 180, pitch: -3 },
       {
@@ -503,10 +523,10 @@ export const tourScenes = [
         type: 'info',
         yaw: 0,
         pitch: 5,
-        title: { th: 'อาคารปลายเส้นทาง', en: 'Route-end building' },
+        title: { th: 'อาคารหอประชุมเเละกิจการนักศึกษา', en: 'Auditorium and Student Affairs Building' },
         description: {
-          th: 'อาคารและลานอเนกประสงค์บริเวณส่วนปลายของเส้นทางเยี่ยมชมวิทยาเขต',
-          en: 'A campus building and open activity area at the end of the visitor route.'
+          th: 'อาคารหอประชุมเเละกิจการนักศึกษา เป็นอาคารที่ทำกิจการต่างๆภายใน',
+          en: 'The Auditorium and Student Affairs Building is a building that houses various activities within the organization.'
         },
         images: [
           {

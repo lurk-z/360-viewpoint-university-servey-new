@@ -794,7 +794,7 @@ svg {
   border-radius: 14px;
   background:
     radial-gradient(circle at 85% 15%, rgb(253 186 116 / 28%) 0 16%, transparent 17%),
-    linear-gradient(145deg, rgb(194 65 12 / 96%), rgb(67 20 7 / 98%));
+    linear-gradient(145deg, rgb(194 65 12 / 96%), rgba(248, 103, 0, 0.98));
   color: var(--white);
   text-align: left;
   scroll-snap-align: start;
@@ -813,12 +813,12 @@ svg {
   border-color: var(--orange-300);
   background:
     radial-gradient(circle at 85% 15%, rgb(255 237 213 / 34%) 0 16%, transparent 17%),
-    linear-gradient(145deg, rgb(234 88 12 / 98%), rgb(124 45 18 / 98%));
+    linear-gradient(145deg, rgb(234 88 12 / 98%), rgba(186, 66, 26, 0.98));
 }
 
 .scene-card[aria-current="true"] {
   border-color: var(--orange-300);
-  box-shadow: 0 0 0 3px rgb(249 115 22 / 55%);
+  box-shadow: 0 0 0 3px rgb(234 88 12 / 98%);
 }
 
 .scene-card__number {
@@ -876,8 +876,8 @@ svg {
 
 .tour-arrow {
   display: grid;
-  width: 54px;
-  height: 54px;
+  width: 45px;
+  height: 45px;
   place-items: center;
   padding: 0;
   border: 3px solid rgb(255 255 255 / 92%);
