@@ -12,7 +12,6 @@ import {
   type SceneId
 } from '../src/tour-data';
 import {
-  currentScene,
   goToScene,
   loadingProgress,
   message,
@@ -134,7 +133,6 @@ export default function TourApp() {
     <div className="app min-h-dvh">
       <div className="skip-links">
         <a href="#tour-viewer">{message(locale, 'skipViewer')}</a>
-        <a href="#scene-selector">{message(locale, 'skipScenes')}</a>
       </div>
 
       <header className="app-header">
@@ -297,24 +295,6 @@ export default function TourApp() {
           <div className="sr-only" role="status" aria-live="polite">{announcement}</div>
         </section>
 
-        <nav id="scene-selector" className="scene-strip" aria-label={message(locale, 'selectScenes')}>
-          <div className="scene-strip__heading">
-            <div>
-              <p className="eyebrow">{message(locale, 'exploreEyebrow')}</p>
-              <h2>{message(locale, 'exploreTitle')}</h2>
-            </div>
-            <button className="text-button" type="button" onClick={() => setDialog('text-tour')}>{message(locale, 'viewAll')}</button>
-          </div>
-          <div className="scene-list">
-            {tourScenes.map((item, index) => (
-              <button className="scene-card" type="button" key={item.id} data-scene={item.id} aria-current={item.id === currentSceneId ? 'true' : 'false'} aria-label={item.id === currentSceneId ? currentScene(locale, localize(item.title, locale)) : goToScene(locale, localize(item.title, locale))} onClick={() => void navigate(item.id)}>
-                <span className="scene-card__number">{index + 1}</span>
-                <strong>{localize(item.title, locale)}</strong>
-                <small>{localize(item.title, alternativeLocale)}</small>
-              </button>
-            ))}
-          </div>
-        </nav>
       </main>
 
       <ModalDialog open={dialog === 'info'} titleId="info-dialog-title" wide onClose={closeDialog}>

@@ -37,6 +37,10 @@ import {
   type SceneId
 } from '../src/tour-data';
 import { goToScene, message } from '../src/i18n';
+import {
+  ARROW_SETTLE_DURATION,
+  getSceneTransitionOptions
+} from '../src/viewer-transition';
 
 export interface TourViewerHandle {
   navigate: (sceneId: SceneId) => Promise<void>;
@@ -89,6 +93,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
   const markersRef = useRef<MarkersPlugin | null>(null);
   const virtualTourRef = useRef<VirtualTourPlugin | null>(null);
   const autorotateRef = useRef<AutorotatePlugin | null>(null);
+  const viewAnimationIdRef = useRef(0);
   const callbacksRef = useRef<ViewerCallbacks>({
     locale,
     onInfo,
@@ -104,16 +109,16 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     navigate: async (sceneId) => {
       const plugin = virtualTourRef.current;
       if (!plugin) return;
-      await plugin.setCurrentNode(sceneId, {
-        effect: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : 'fade',
-        speed: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 650,
-        rotation: false,
-        showLoader: false
-      });
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      viewAnimationIdRef.current += 1;
+      await viewerRef.current?.stopAnimation();
+      await plugin.setCurrentNode(sceneId, getSceneTransitionOptions(false, reducedMotion));
     },
     reset: (sceneId, animate = false) => {
       const viewer = viewerRef.current;
       if (!viewer) return;
+      viewAnimationIdRef.current += 1;
+      void viewer.stopAnimation();
       const scene = getScene(sceneId);
       if (animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         void viewer.animate({
@@ -192,12 +197,11 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           positionMode: 'manual',
           renderMode: '2d',
           preload: false,
-          transitionOptions: () => ({
-            showLoader: false,
-            effect: reducedMotion ? 'none' : 'fade',
-            speed: reducedMotion ? 0 : 650,
-            rotation: false
-          }),
+          transitionOptions: (_toNode, _fromNode, fromLink) => {
+            viewAnimationIdRef.current += 1;
+            void viewerRef.current?.stopAnimation();
+            return getSceneTransitionOptions(Boolean(fromLink), reducedMotion);
+          },
           arrowStyle: {
             element: createArrowElement,
             className: 'tour-arrow-marker',
@@ -219,14 +223,14 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     autorotateRef.current = autorotatePlugin;
     virtualTourRef.current = virtualTourPlugin;
 
-    const setInitialView = (sceneId: SceneId, animate = false): void => {
+    const setInitialView = (sceneId: SceneId, animate = false, speed = 550): void => {
       const scene = getScene(sceneId);
       if (animate && !reducedMotion) {
         void viewer.animate({
           yaw: toDegrees(scene.initialView.yaw),
           pitch: toDegrees(scene.initialView.pitch),
           zoom: scene.initialView.zoom,
-          speed: 550
+          speed
         });
       } else {
         viewer.rotate({
@@ -272,11 +276,19 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       setInitialView(sceneId);
     }, { once: true });
     viewer.addEventListener(viewerEvents.PanoramaLoadedEvent.type, () => viewer.hideError());
-    virtualTourPlugin.addEventListener(virtualTourEvents.NodeChangedEvent.type, ({ node }) => {
+    virtualTourPlugin.addEventListener(virtualTourEvents.NodeChangedEvent.type, ({ node, data }) => {
       const sceneId = node.id as SceneId;
       callbacksRef.current.onSceneChange(sceneId);
       markersPlugin.setMarkers(buildInfoMarkers(sceneId));
-      window.requestAnimationFrame(() => setInitialView(sceneId));
+      const animationId = ++viewAnimationIdRef.current;
+      const settleAfterArrow = Boolean(data.fromLink) && !reducedMotion;
+      window.requestAnimationFrame(() => {
+        if (animationId !== viewAnimationIdRef.current) return;
+        void viewer.stopAnimation().then(() => {
+          if (animationId !== viewAnimationIdRef.current) return;
+          setInitialView(sceneId, settleAfterArrow, ARROW_SETTLE_DURATION);
+        });
+      });
     });
     autorotatePlugin.addEventListener(autorotateEvents.AutorotateEvent.type, ({ autorotateEnabled }) => {
       callbacksRef.current.onAutorotate(autorotateEnabled);

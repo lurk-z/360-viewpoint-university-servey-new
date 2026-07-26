@@ -57,7 +57,7 @@ app/layout.tsx              metadata, viewport และ global styles
 app/page.tsx                หน้าแรกของ App Router
 app/api/health/route.ts     backend/API boundary สำหรับ health check
 app/api/tour-assets/route.ts รายชื่อ panorama จาก media object
-components/TourApp.tsx      React UI, dialogs, scene list และ controls
+components/TourApp.tsx      React UI, dialogs, persistent map และ controls
 components/TourViewer.tsx   Client Component ที่สร้าง Photo Sphere Viewer
 components/TourMap.tsx      Client Component ที่สร้างแผนที่ Leaflet
 components/ModalDialog.tsx  accessible native dialog wrapper
@@ -66,7 +66,7 @@ src/i18n.ts                 ข้อความ UI ภาษาไทย/อ�
 src/stores/tour-store.ts    Zustand store สำหรับ shared client state
 src/styles.css              Photo Sphere Viewer styles และ design system
 public/tour/                ไฟล์ legacy ที่แอป Next.js ไม่ได้อ้างอิง
-public/mainimages/          panorama ต้นฉบับทั้ง 15 ฉาก และโฟลเดอร์ map
+public/mainimages/          panorama ต้นฉบับทั้ง 25 ฉาก และโฟลเดอร์ map
 public/sw.js                offline cache strategy
 360-tour-offline.html       legacy single-file compatibility artifact
 ```

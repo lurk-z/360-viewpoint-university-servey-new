@@ -729,129 +729,6 @@ svg {
   background: var(--orange-100);
 }
 
-.scene-strip {
-  position: absolute;
-  z-index: 25;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: 20px max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
-  background: linear-gradient(0deg, rgb(20 8 2 / 90%) 0, rgb(20 8 2 / 58%) 70%, transparent 100%);
-  color: var(--white);
-  pointer-events: none;
-}
-
-.scene-strip > * {
-  pointer-events: auto;
-}
-
-.scene-strip__heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 16px;
-  max-width: 920px;
-  margin: 0 auto 10px;
-}
-
-.scene-strip__heading .eyebrow {
-  color: var(--orange-300);
-}
-
-.scene-strip__heading h2 {
-  margin: 2px 0 0;
-  font-size: 0.9rem;
-}
-
-.scene-strip .text-button {
-  padding: 8px;
-  color: var(--orange-300);
-  font-size: 0.75rem;
-}
-
-.scene-list {
-  display: flex;
-  max-width: 920px;
-  gap: 10px;
-  margin: 0 auto;
-  padding: 3px;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scroll-snap-type: x proximity;
-  scrollbar-color: var(--orange-500) transparent;
-}
-
-.scene-card {
-  position: relative;
-  display: grid;
-  width: 178px;
-  height: 90px;
-  flex: 0 0 auto;
-  align-content: end;
-  padding: 10px;
-  overflow: hidden;
-  border: 2px solid rgb(255 255 255 / 58%);
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at 85% 15%, rgb(253 186 116 / 28%) 0 16%, transparent 17%),
-    linear-gradient(145deg, rgb(194 65 12 / 96%), rgba(248, 103, 0, 0.98));
-  color: var(--white);
-  text-align: left;
-  scroll-snap-align: start;
-  isolation: isolate;
-}
-
-.scene-card::after {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: linear-gradient(0deg, rgb(20 8 2 / 48%), transparent 76%);
-  content: '';
-}
-
-.scene-card:hover {
-  border-color: var(--orange-300);
-  background:
-    radial-gradient(circle at 85% 15%, rgb(255 237 213 / 34%) 0 16%, transparent 17%),
-    linear-gradient(145deg, rgb(234 88 12 / 98%), rgba(186, 66, 26, 0.98));
-}
-
-.scene-card[aria-current="true"] {
-  border-color: var(--orange-300);
-  box-shadow: 0 0 0 3px rgb(234 88 12 / 98%);
-}
-
-.scene-card__number {
-  position: absolute;
-  top: 7px;
-  left: 7px;
-  display: grid;
-  width: 23px;
-  height: 23px;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--orange-800);
-  color: var(--white);
-  font-size: 0.7rem;
-  font-weight: 850;
-}
-
-.scene-card strong {
-  overflow: hidden;
-  font-size: 0.76rem;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.scene-card small {
-  overflow: hidden;
-  color: rgb(255 255 255 / 78%);
-  font-size: 0.63rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .info-hotspot {
   display: grid;
   width: 48px;
@@ -1066,7 +943,7 @@ svg {
 .persistent-tour-map {
   position: absolute;
   z-index: 28;
-  bottom: 150px;
+  bottom: 18px;
   right: 82px;
   width: clamp(280px, 32vw, 360px);
   height: 210px;
@@ -1294,7 +1171,7 @@ svg {
   }
 
   .persistent-tour-map {
-    bottom: 118px;
+    bottom: 12px;
     right: 66px;
     width: 280px;
     height: 170px;
@@ -1331,33 +1208,6 @@ svg {
     display: none;
   }
 
-  .scene-strip {
-    padding: 16px 12px max(12px, env(safe-area-inset-bottom));
-  }
-
-  .scene-strip__heading {
-    margin-bottom: 7px;
-  }
-
-  .scene-strip__heading .eyebrow,
-  .scene-strip__heading .text-button {
-    display: none;
-  }
-
-  .scene-strip__heading h2 {
-    font-size: 0.78rem;
-  }
-
-  .scene-card {
-    width: 138px;
-    height: 72px;
-    border-radius: 12px;
-  }
-
-  .scene-card small {
-    display: none;
-  }
-
   .route-map {
     height: 330px;
   }
@@ -1368,7 +1218,7 @@ svg {
   .persistent-tour-map {
     top: auto;
     right: 10px;
-    bottom: 112px;
+    bottom: 10px;
     left: auto;
     width: min(240px, calc(100% - 20px));
     height: 140px;
@@ -1471,7 +1321,6 @@ svg {
   }
 
   .brand__copy span,
-  .scene-strip__heading,
   .viewer-help,
   .scene-description,
   .tag-list,
@@ -1487,7 +1336,7 @@ svg {
 
   .persistent-tour-map {
     top: auto;
-    bottom: 84px;
+    bottom: 8px;
     right: 104px;
     left: auto;
     width: 250px;
@@ -1504,15 +1353,6 @@ svg {
   .scene-panel h1 {
     margin-top: 5px;
     font-size: 1.1rem;
-  }
-
-  .scene-card {
-    width: 128px;
-    height: 62px;
-  }
-
-  .scene-strip {
-    padding-block: 9px max(9px, env(safe-area-inset-bottom));
   }
 
   .control-rail {

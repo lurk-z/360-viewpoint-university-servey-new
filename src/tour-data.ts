@@ -19,11 +19,11 @@ function busImage(fileName: string): string {
   return `/mainimages/bus/${fileName}`;
 }
 
-
-function busPanorama(fileName: string): SceneMedia {
-  return { panorama: busImage(fileName) };
-}
-
+const infoMedia = {
+  busPage1: busImage('page1.jpg'),
+  busPage2: busImage('page2.jpg'),
+  busPage3: busImage('page3.jpg')
+} as const;
 
 export const tourMap = {
   image: mainImage('map/mainmap.png'),
@@ -48,11 +48,16 @@ export const tourMedia = {
   campusRoad6: mainPanorama('temp2-2.jpg'),
   campusRoad7: mainPanorama('temp2-3.jpg'),
   campusBuilding3: mainPanorama('temp2-4.jpg'),
-  buspage1: busPanorama('page1.jpg'),
-  buspage2: busPanorama('page2.jpg'),
-  buspage3: busPanorama('page3.jpg')
-
-
+  campusRoad8: mainPanorama('temp3-1.jpg'),
+  campusRoad9: mainPanorama('temp3-2.jpg'),
+  campusRoad10: mainPanorama('temp3-3.jpg'),
+  campusRoad11: mainPanorama('temp3-4.jpg'),
+  campusRoad12: mainPanorama('temp3-5.jpg'),
+  campusRoad13: mainPanorama('temp3-6.jpg'),
+  campusRoad14: mainPanorama('temp3-7.jpg'),
+  campusRoad15: mainPanorama('temp3-8.jpg'),
+  campusRoad16: mainPanorama('temp3-9.jpg'),
+  campusRoad17: mainPanorama('temp3-10.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -200,17 +205,17 @@ export const tourScenes = [
         },
         images: [
           {
-            src: tourMedia.buspage1.panorama,
+            src: infoMedia.busPage1,
             alt: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'Front view of the university landmark' },
             caption: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'University landmark' }
           },
           {
-            src: tourMedia.buspage2.panorama,
+            src: infoMedia.busPage2,
             alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
             caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
           },
           {
-            src: tourMedia.buspage3.panorama,
+            src: infoMedia.busPage3,
             alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
             caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
           }
@@ -221,7 +226,7 @@ export const tourScenes = [
   {
     id: 'memorialPlaza',
     ...tourMedia.memorialPlaza,
-    title: { th: 'ลานอนุสรณ์', en: 'Memorial Plaza' },
+    title: { th: 'หน้าลานอนุสรณ์ ราชกาลที่4', en: 'In front of the King Rama IV Memorial Plaza.' },
     description: {
       th: 'พื้นที่ลานกลางแจ้งและสวนริมถนนภายในวิทยาเขต เชื่อมต่อไปยังอนุสรณ์และเส้นทางส่วนถัดไป',
       en: 'An open plaza and garden beside the campus road, connecting to the memorial and the next route segment.'
@@ -232,13 +237,13 @@ export const tourScenes = [
     hotspots: [
       { id: 'plaza-to-road', type: 'scene', target: 'entranceRoad', yaw: 175, pitch: -2 },
       { id: 'plaza-to-memorial', type: 'scene', target: 'memorial', yaw: -55, pitch: -2 },
-      { id: 'plaza-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 0, pitch: -2 }
+      { id: 'plaza-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 0, pitch: -8 }
     ]
   },
   {
     id: 'memorial',
     ...tourMedia.memorial,
-    title: { th: 'จุดอนุสรณ์ภายในวิทยาเขต', en: 'Campus Memorial' },
+    title: { th: 'ลานอนุสรณ์ ราชกาลที่4', en: 'King Rama IV Memorial Plaza' },
     description: {
       th: 'จุดอนุสรณ์ในพื้นที่ลานกลางแจ้งของวิทยาเขต เป็นจุดแยกจากเส้นทางหลักและสามารถย้อนกลับไปยังลานได้',
       en: 'A campus memorial in the open plaza, reached from and connected back to the main route.'
@@ -247,7 +252,7 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: {  x: 1007, y: 193  },
     hotspots: [
-      { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -2 },
+      { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 120, pitch: 0 },
       {
         id: 'memorial-info',
         type: 'info',
@@ -340,8 +345,8 @@ export const tourScenes = [
     mapPosition: { x: 937, y: 222  },
     hotspots: [
       { id: 'campus-road-2-to-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
-      { id: 'campus-road-2-to-hotel', type: 'scene', target: 'vallayaHotel', yaw: -70, pitch: -2 },
-      { id: 'campus-road-2-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 0, pitch: -2 }
+      { id: 'campus-road-2-to-hotel', type: 'scene', target: 'vallayaHotel', yaw: -50, pitch: -2 },
+      { id: 'campus-road-2-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 10, pitch: -5 }
     ]
   },
   {
@@ -356,8 +361,8 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: {   x: 889, y: 252  },
     hotspots: [
-      { id: 'campus-road-3-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 180, pitch: -2 },
-      { id: 'campus-road-3-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 0, pitch: -2 },
+      { id: 'campus-road-3-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 190, pitch: -2 },
+      { id: 'campus-road-3-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 13, pitch: -5 },
       { id: 'campus-road-3-to-building-1', type: 'scene', target: 'campusBuilding1', yaw: -60, pitch: -2 },
     ]
   },
@@ -470,7 +475,7 @@ export const tourScenes = [
     hotspots: [
       { id: 'campus-road-5-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       { id: 'campus-road-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: -70 ,pitch: 0 },
-      { id: 'campus-road-5-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 0, pitch: -2 }
+      { id: 'campus-road-5-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 5, pitch: -2 }
     ]
   },
   {
@@ -485,7 +490,7 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: {  x: 823, y: 290  },
     hotspots: [
-      { id: 'campus-road-6-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 180, pitch: -2 },
+      { id: 'campus-road-6-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 150, pitch: 0 },
       { id: 'campus-road-6-to-road-7', type: 'scene', target: 'campusRoad7', yaw: -10, pitch: -2 }
     ]
   },
@@ -502,7 +507,8 @@ export const tourScenes = [
     mapPosition: {  x: 729, y: 267  },
     hotspots: [
       { id: 'campus-road-7-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 180, pitch: -3 },
-      { id: 'campus-road-7-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: -45, pitch: -2 }
+      { id: 'campus-road-7-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: -45, pitch: -2 },
+      { id: 'campus-road-7-to-campus-road-8', type: 'scene', target: 'campusRoad8', yaw: 0, pitch: -3 },
     ]
   },
   {
@@ -541,6 +547,165 @@ export const tourScenes = [
           }
         ]
       }
+    ]
+  },
+  {
+    id: 'campusRoad8',
+    ...tourMedia.campusRoad8,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 8', en: 'Campus Route Point 8' },
+    description: {
+      th: 'จุดที่ 8 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจากอาคารหอประชุมและกิจการนักศึกษาไปยังจุดถัดไป',
+      en: 'Point 8 on the continuing campus route, connecting the auditorium and student affairs building to the next point.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 8'], en: ['Route', 'Outdoor', 'Point 8'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 690, y: 258 },
+    hotspots: [
+      { id: 'campus-road-8-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: 180, pitch: -3 },
+      { id: 'campus-road-8-to-road-9', type: 'scene', target: 'campusRoad9', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad9',
+    ...tourMedia.campusRoad9,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 9', en: 'Campus Route Point 9' },
+    description: {
+      th: 'จุดที่ 9 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 9 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 9'], en: ['Route', 'Outdoor', 'Point 9'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 650, y: 248 },
+    hotspots: [
+      { id: 'campus-road-9-to-road-8', type: 'scene', target: 'campusRoad8', yaw: 180, pitch: -3 },
+      { id: 'campus-road-9-to-road-10', type: 'scene', target: 'campusRoad10', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad10',
+    ...tourMedia.campusRoad10,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 10', en: 'Campus Route Point 10' },
+    description: {
+      th: 'จุดที่ 10 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 10 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 10'], en: ['Route', 'Outdoor', 'Point 10'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 610, y: 238 },
+    hotspots: [
+      { id: 'campus-road-10-to-road-9', type: 'scene', target: 'campusRoad9', yaw: 180, pitch: -3 },
+      { id: 'campus-road-10-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad11',
+    ...tourMedia.campusRoad11,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 11', en: 'Campus Route Point 11' },
+    description: {
+      th: 'จุดที่ 11 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 11 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 11'], en: ['Route', 'Outdoor', 'Point 11'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 570, y: 228 },
+    hotspots: [
+      { id: 'campus-road-11-to-road-10', type: 'scene', target: 'campusRoad10', yaw: 180, pitch: -3 },
+      { id: 'campus-road-11-to-road-12', type: 'scene', target: 'campusRoad12', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad12',
+    ...tourMedia.campusRoad12,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 12', en: 'Campus Route Point 12' },
+    description: {
+      th: 'จุดที่ 12 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 12 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 12'], en: ['Route', 'Outdoor', 'Point 12'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 530, y: 222 },
+    hotspots: [
+      { id: 'campus-road-12-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 180, pitch: -3 },
+      { id: 'campus-road-12-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad13',
+    ...tourMedia.campusRoad13,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 13', en: 'Campus Route Point 13' },
+    description: {
+      th: 'จุดที่ 13 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 13 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 13'], en: ['Route', 'Outdoor', 'Point 13'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 490, y: 222 },
+    hotspots: [
+      { id: 'campus-road-13-to-road-12', type: 'scene', target: 'campusRoad12', yaw: 180, pitch: -3 },
+      { id: 'campus-road-13-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad14',
+    ...tourMedia.campusRoad14,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 14', en: 'Campus Route Point 14' },
+    description: {
+      th: 'จุดที่ 14 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 14 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 14'], en: ['Route', 'Outdoor', 'Point 14'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 450, y: 228 },
+    hotspots: [
+      { id: 'campus-road-14-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 180, pitch: -3 },
+      { id: 'campus-road-14-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad15',
+    ...tourMedia.campusRoad15,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 15', en: 'Campus Route Point 15' },
+    description: {
+      th: 'จุดที่ 15 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 15 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 15'], en: ['Route', 'Outdoor', 'Point 15'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 415, y: 240 },
+    hotspots: [
+      { id: 'campus-road-15-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 180, pitch: -3 },
+      { id: 'campus-road-15-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad16',
+    ...tourMedia.campusRoad16,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 16', en: 'Campus Route Point 16' },
+    description: {
+      th: 'จุดที่ 16 ของเส้นทางต่อเนื่องภายในวิทยาเขต เชื่อมต่อจุดก่อนหน้าและจุดถัดไป',
+      en: 'Point 16 on the continuing campus route, connecting the previous and next points.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 16'], en: ['Route', 'Outdoor', 'Point 16'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 385, y: 260 },
+    hotspots: [
+      { id: 'campus-road-16-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 180, pitch: -3 },
+      { id: 'campus-road-16-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad17',
+    ...tourMedia.campusRoad17,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 17', en: 'Campus Route Point 17' },
+    description: {
+      th: 'จุดที่ 17 ซึ่งเป็นปลายช่วงของเส้นทางชุดนี้ และสามารถย้อนกลับไปยังจุดก่อนหน้าได้',
+      en: 'Point 17 at the end of this route segment, with a return path to the previous point.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 17'], en: ['Route', 'Outdoor', 'Point 17'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 360, y: 282 },
+    hotspots: [
+      { id: 'campus-road-17-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 180, pitch: -3 }
     ]
   }
 ] as const satisfies readonly TourScene[];
