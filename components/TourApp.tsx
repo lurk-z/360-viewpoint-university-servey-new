@@ -9,6 +9,7 @@ import {
   localize,
   tourScenes,
   type InfoHotspot,
+  type InfoReference,
   type SceneId
 } from '../src/tour-data';
 import {
@@ -27,6 +28,18 @@ type DialogName = 'info' | 'about' | 'text-tour' | null;
 
 function Icon({ children }: { readonly children: ReactNode }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{children}</svg>;
+}
+
+function ReferenceLine({ reference, locale }: { readonly reference: InfoReference; readonly locale: 'th' | 'en' }) {
+  const label = localize(reference.label, locale);
+  return (
+    <p className="info-reference">
+      <strong>{message(locale, 'sourceLabel')}:</strong>
+      {reference.url ? (
+        <a href={reference.url} target="_blank" rel="noopener noreferrer">{label}</a>
+      ) : <span>{label}</span>}
+    </p>
+  );
 }
 
 export default function TourApp() {
@@ -303,6 +316,7 @@ export default function TourApp() {
           <h2 id="info-dialog-title">{localize(selectedInfo.title, locale)}</h2>
           <p className="scene-alt-title">{localize(selectedInfo.title, alternativeLocale)}</p>
           <p className="dialog-description">{localize(selectedInfo.description, locale)}</p>
+          <ReferenceLine reference={selectedInfo.reference} locale={locale} />
           {selectedInfo.images?.length ? (
             <div className="info-gallery">
               {selectedInfo.images.map((image, index) => (
@@ -348,6 +362,7 @@ export default function TourApp() {
                 <details key={hotspot.id}>
                   <summary>{localize(hotspot.title, locale)}</summary>
                   <p>{localize(hotspot.description, locale)}</p>
+                  <ReferenceLine reference={hotspot.reference} locale={locale} />
                 </details>
               ))}
             </article>

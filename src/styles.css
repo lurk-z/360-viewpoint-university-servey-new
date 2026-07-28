@@ -859,6 +859,32 @@ svg {
   margin: 10px 0 18px;
 }
 
+.info-reference {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: -6px 0 18px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--orange-50);
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.info-reference strong {
+  color: var(--ink);
+}
+
+.info-reference a {
+  color: var(--orange-900);
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .info-gallery {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1133,6 +1159,12 @@ svg {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
+}
+
+.text-scene .info-reference {
+  margin: 8px 0 0;
+  padding: 7px 9px;
+  font-size: 0.74rem;
 }
 
 .text-scene summary {

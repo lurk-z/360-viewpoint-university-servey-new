@@ -102,10 +102,21 @@ export interface InfoImage {
   readonly caption?: LocalizedText;
 }
 
+export interface InfoReference {
+  readonly label: LocalizedText;
+  /** Optional source page. Only HTTP and HTTPS URLs are accepted by validation. */
+  readonly url?: string;
+}
+
+const wikipediaReference: InfoReference = {
+  label: { th: 'วิกิพีเดีย', en: 'Wikipedia' }
+};
+
 export interface InfoHotspot extends HotspotBase {
   readonly type: 'info';
   readonly title: LocalizedText;
   readonly description: LocalizedText;
+  readonly reference: InfoReference;
   /** One or more supporting images shown in the centered information gallery. */
   readonly images?: readonly InfoImage[];
 }
@@ -165,6 +176,7 @@ export const tourScenes = [
           th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
           en: 'The KMUTNB landmark identifies the main entrance to the Prachinburi campus.'
         },
+        reference: wikipediaReference,
         images: [
           {
             src: tourMedia.entrance.panorama,
@@ -203,6 +215,7 @@ export const tourScenes = [
           th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
           en: 'The KMUTNB landmark identifies the main entrance to the Prachinburi campus.'
         },
+        reference: wikipediaReference,
         images: [
           {
             src: infoMedia.busPage1,
@@ -263,6 +276,7 @@ export const tourScenes = [
           th: 'อนุสรณ์เป็นหนึ่งในจุดสำคัญของพื้นที่ลานภายในมหาวิทยาลัย',
           en: 'The memorial is one of the notable landmarks in the campus plaza.'
         },
+        reference: wikipediaReference,
         images: [
           {
             src: tourMedia.memorial.panorama,
@@ -317,6 +331,7 @@ export const tourScenes = [
           th: 'อาคารปฏิบัติการการท่องเที่ยวและโรงแรม วิลลาวิชาลัยเปิดให้บริการห้องพัก จำนวนถึง 33 ห้อง ท่ามกลางบรรยากาศร่มรื่น ทุกห้องสามารถมองเห็นวิววนอุทยานเขาอีโต้ สะดวกสบายด้วยการรักษาความปลอดภัยตลอด 24 ชั่วโมง อีกทั้งสถานที่ตั้งของโรงแรมอยู่ใกล้ทางขึ้นอุทยานแห่งชาติเขาใหญ่เพียง 10 นาที',
           en: 'Villa Wichalai, a tourism and hotel training facility, offers 33 guest rooms set amidst a lush, shady atmosphere. Every room features a view of Khao E-To Forest Park, and guests enjoy the convenience of 24-hour security. Additionally, the hotel is located just 10 minutes from the entrance to Khao Yai National Park.'
         },
+        reference: wikipediaReference,
         images: [
           {
             src: tourMedia.vallayaHotel.panorama,
@@ -408,6 +423,7 @@ export const tourScenes = [
           th: 'ภาควิชาการจัดการอุตสาหกรรมการท่องเที่ยวและการโรงแรมแขนงวิชาการจัดการธุรกิจ (ในภาควิชาการจัดการอุตสาหกรรม) โครงสร้างคณะ: ประกอบด้วย 3 ส่วนงานคือ สำนักงานคณบดี, ภาควิชาบริหารธุรกิจท่องเที่ยวและโรงแรม และภาควิชาบริหารธุรกิจอุตสาหกรรมและการค้า หลักสูตรที่เปิดสอน: เริ่มเปิดสอนในปีการศึกษา 2559 ในระดับปริญญาตรี (บริหารธุรกิจบัณฑิต - บธ.บ.) 2 สาขาวิชา คือ: สาขาการจัดการอุตสาหกรรมการท่องเที่ยวและโรงแรม สาขาบริหารธุรกิจอุตสาหกรรมและการค้า',
           en: 'Department of Tourism and Hotel Industry Management (under the Industrial Management Department); Faculty Structure: Comprises three units—the Office of the Dean, the Department of Tourism and Hotel Business Administration, and the Department of Industrial and Trade Business Administration. Programs Offered: Instruction began in the 2016 academic year at the bachelor\'s degree level (Bachelor of Business Administration - B.B.A.) in two majors: Tourism and Hotel Industry Management, and Industrial and Trade Business Administration.'
         },
+        reference: wikipediaReference,
         images: [
           {
             src: tourMedia.campusBuilding1.panorama,
@@ -446,6 +462,7 @@ export const tourScenes = [
           th: 'เป็นหน่วยงานกลาง (One Stop Service) ที่เป็นศูนย์รวมประสานงานการให้บริการวิชาการ งานวิจัยระดับสูง และพัฒนานวัตกรรมเพื่ออุตสาหกรรมที่มหาวิทยาลัยมีความเชี่ยวชาญเฉพาะ เป็นศูนย์รวมประสานงานการให้บริการวิชาการ งานวิจัยระดับสูง ให้สามารถนำไปใช้ประโยชน์ในเชิงพาณิชย์ และสร้างเครือข่ายความร่วมมือในลักษณะพันธมิตรอุตสาหกรรมระหว่างสถาบันการศึกษา ภาครัฐและเอกชน รวมถึงเป็นการผสมผสานระหว่างความเชี่ยวชาญในสาขาต่าง ๆ ของมหาวิทยาลัยกับภาคธุรกิจอุตสาหกรรม แบ่งเป็น 6 คลัสเตอร์ 25 ศูนย์ปฏิบัติการ 1 สถาบัน และ 1 หลักสูตร',
           en: 'It is a central agency (One Stop Service) that coordinates academic services, advanced research, and innovation development for industry in which the university has specialized expertise. It serves as a central hub for coordinating academic services and advanced research to facilitate commercialization and build collaborative networks in the form of industrial partnerships between educational institutions, the public and private sectors. It also integrates the expertise of the university in various fields with the business and industrial sectors, divided into 6 clusters, 25 operational centers, 1 institute, and 1 program.'
         },
+        reference: wikipediaReference,
         images: [
           {
             src: tourMedia.campusBuilding2.panorama,
@@ -521,7 +538,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'ลาน', 'จุดที่ 3'], en: ['Building', 'Forecourt', 'Point 3'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: {  x: 729, y: 267  },
+    mapPosition: { x: 701, y: 288 },
     hotspots: [
       { id: 'building-3-to-campus-road-7', type: 'scene', target: 'campusRoad7', yaw: 180, pitch: -3 },
       {
@@ -534,6 +551,7 @@ export const tourScenes = [
           th: 'อาคารหอประชุมเเละกิจการนักศึกษา เป็นอาคารที่ทำกิจการต่างๆภายใน',
           en: 'The Auditorium and Student Affairs Building is a building that houses various activities within the organization.'
         },
+        reference: wikipediaReference,
         images: [
           {
             src: tourMedia.campusBuilding3.panorama,
@@ -559,7 +577,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 8'], en: ['Route', 'Outdoor', 'Point 8'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 690, y: 258 },
+    mapPosition: {  x: 694, y: 246  },
     hotspots: [
       { id: 'campus-road-8-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: 180, pitch: -3 },
       { id: 'campus-road-8-to-road-9', type: 'scene', target: 'campusRoad9', yaw: 0, pitch: -3 }
@@ -575,7 +593,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 9'], en: ['Route', 'Outdoor', 'Point 9'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 650, y: 248 },
+    mapPosition: { x: 639, y: 215 },
     hotspots: [
       { id: 'campus-road-9-to-road-8', type: 'scene', target: 'campusRoad8', yaw: 180, pitch: -3 },
       { id: 'campus-road-9-to-road-10', type: 'scene', target: 'campusRoad10', yaw: 0, pitch: -3 }
@@ -591,7 +609,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 10'], en: ['Route', 'Outdoor', 'Point 10'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 610, y: 238 },
+    mapPosition: { x: 575, y: 181 },
     hotspots: [
       { id: 'campus-road-10-to-road-9', type: 'scene', target: 'campusRoad9', yaw: 180, pitch: -3 },
       { id: 'campus-road-10-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 0, pitch: -3 }
@@ -607,7 +625,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 11'], en: ['Route', 'Outdoor', 'Point 11'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 570, y: 228 },
+    mapPosition: { x: 526, y: 178 },
     hotspots: [
       { id: 'campus-road-11-to-road-10', type: 'scene', target: 'campusRoad10', yaw: 180, pitch: -3 },
       { id: 'campus-road-11-to-road-12', type: 'scene', target: 'campusRoad12', yaw: 0, pitch: -3 }
@@ -623,7 +641,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 12'], en: ['Route', 'Outdoor', 'Point 12'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 530, y: 222 },
+    mapPosition: { x: 486, y: 185 },
     hotspots: [
       { id: 'campus-road-12-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 180, pitch: -3 },
       { id: 'campus-road-12-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 0, pitch: -3 }
@@ -639,7 +657,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 13'], en: ['Route', 'Outdoor', 'Point 13'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 490, y: 222 },
+    mapPosition: { x: 438, y: 203 },
     hotspots: [
       { id: 'campus-road-13-to-road-12', type: 'scene', target: 'campusRoad12', yaw: 180, pitch: -3 },
       { id: 'campus-road-13-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 0, pitch: -3 }
@@ -655,7 +673,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 14'], en: ['Route', 'Outdoor', 'Point 14'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 450, y: 228 },
+    mapPosition: { x: 404, y: 235 },
     hotspots: [
       { id: 'campus-road-14-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 180, pitch: -3 },
       { id: 'campus-road-14-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 0, pitch: -3 }
@@ -671,10 +689,10 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 15'], en: ['Route', 'Outdoor', 'Point 15'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 415, y: 240 },
+    mapPosition: { x: 374, y: 297 },
     hotspots: [
       { id: 'campus-road-15-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 180, pitch: -3 },
-      { id: 'campus-road-15-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 0, pitch: -3 }
+      { id: 'campus-road-15-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 150, pitch: -3 }
     ]
   },
   {
@@ -687,10 +705,10 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 16'], en: ['Route', 'Outdoor', 'Point 16'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 385, y: 260 },
+    mapPosition: { x: 351, y: 299 },
     hotspots: [
-      { id: 'campus-road-16-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 180, pitch: -3 },
-      { id: 'campus-road-16-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 0, pitch: -3 }
+      { id: 'campus-road-16-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 230, pitch: -3 },
+      { id: 'campus-road-16-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 120, pitch: -3 }
     ]
   },
   {
@@ -703,9 +721,9 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 17'], en: ['Route', 'Outdoor', 'Point 17'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 360, y: 282 },
+    mapPosition: { x: 344, y: 272 },
     hotspots: [
-      { id: 'campus-road-17-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 180, pitch: -3 }
+      { id: 'campus-road-17-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 200, pitch: -3 }
     ]
   }
 ] as const satisfies readonly TourScene[];
@@ -797,6 +815,21 @@ export function validateTour(): readonly string[] {
         errors.push(`Scene ${scene.id} links to missing scene ${hotspot.target}`);
       }
       if (hotspot.type === 'info') {
+        for (const locale of locales) {
+          if (!hotspot.reference.label[locale].trim()) {
+            errors.push(`Info hotspot ${hotspot.id} reference is missing ${locale} label`);
+          }
+        }
+        if (hotspot.reference.url !== undefined) {
+          try {
+            const referenceUrl = new URL(hotspot.reference.url);
+            if (referenceUrl.protocol !== 'http:' && referenceUrl.protocol !== 'https:') {
+              errors.push(`Info hotspot ${hotspot.id} reference must use HTTP or HTTPS`);
+            }
+          } catch {
+            errors.push(`Info hotspot ${hotspot.id} has an invalid reference URL`);
+          }
+        }
         for (const image of hotspot.images ?? []) {
           if (!image.src.startsWith('/mainimages/')) {
             errors.push(`Info hotspot ${hotspot.id} must use /mainimages media: ${image.src}`);

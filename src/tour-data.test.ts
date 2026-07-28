@@ -61,9 +61,8 @@ describe('tour configuration', () => {
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
 
-  it('keeps the new temp3 route reciprocal', () => {
+  it('keeps the temp3 sequence reciprocal and preserves its current entry loop', () => {
     const route = [
-      'campusBuilding3',
       'campusRoad8',
       'campusRoad9',
       'campusRoad10',
@@ -82,6 +81,10 @@ describe('tour configuration', () => {
       expect(getNavigationHotspots(getScene(from)).map((item) => item.target)).toContain(to);
       expect(getNavigationHotspots(getScene(to)).map((item) => item.target)).toContain(from);
     }
+
+    expect(getNavigationHotspots(getScene('campusRoad7')).map((item) => item.target)).toContain('campusRoad8');
+    expect(getNavigationHotspots(getScene('campusRoad8')).map((item) => item.target)).toContain('campusBuilding3');
+    expect(getNavigationHotspots(getScene('campusBuilding3')).map((item) => item.target)).toContain('campusRoad7');
   });
 
   it('derives the route map from the scene graph without invented edges', () => {
@@ -101,6 +104,7 @@ describe('tour configuration', () => {
       'campusRoad4:campusRoad5',
       'campusRoad5:campusRoad6',
       'campusRoad6:campusRoad7',
+      'campusRoad7:campusRoad8',
       'campusBuilding3:campusRoad7',
       'campusBuilding3:campusRoad8',
       'campusRoad8:campusRoad9',
@@ -159,6 +163,20 @@ describe('tour configuration', () => {
             if (image.caption) expect(image.caption[locale].trim()).not.toBe('');
           }
         }
+      }
+    }
+  });
+
+  it('includes the temporary Wikipedia reference in all seven information hotspots', () => {
+    const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
+
+    expect(infoHotspots).toHaveLength(7);
+    for (const hotspot of infoHotspots) {
+      expect(hotspot.reference).toEqual({
+        label: { th: 'วิกิพีเดีย', en: 'Wikipedia' }
+      });
+      for (const locale of locales) {
+        expect(hotspot.reference.label[locale].trim()).not.toBe('');
       }
     }
   });
