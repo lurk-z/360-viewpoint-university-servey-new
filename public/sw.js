@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kmuntb-tour-v7';
+const CACHE_NAME = 'kmuntb-tour-v8';
 const sceneCacheJobs = new Map();
 const SHELL_ASSETS = [
   '/',

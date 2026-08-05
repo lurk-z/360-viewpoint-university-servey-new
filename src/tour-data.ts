@@ -11,8 +11,10 @@ function mainImage(fileName: string): string {
   return `/mainimages/${fileName}`;
 }
 
+const PANORAMA_ASSET_VERSION = '20260805-redacted';
+
 function mainPanorama(fileName: string): SceneMedia {
-  return { panorama: mainImage(fileName) };
+  return { panorama: `${mainImage(fileName)}?v=${PANORAMA_ASSET_VERSION}` };
 }
 
 function busImage(fileName: string): string {
@@ -57,7 +59,12 @@ export const tourMedia = {
   campusRoad14: mainPanorama('temp3-7.jpg'),
   campusRoad15: mainPanorama('temp3-8.jpg'),
   campusRoad16: mainPanorama('temp3-9.jpg'),
-  campusRoad17: mainPanorama('temp3-10.jpg')
+  campusRoad17: mainPanorama('temp3-10.jpg'),
+  campusRoad18: mainPanorama('temp4-2.jpg'),
+  campusRoad19: mainPanorama('temp4-3.jpg'),
+  campusRoad20: mainPanorama('temp4-4.jpg'),
+  campusRoad21: mainPanorama('temp4-5.jpg'),
+  campusRoad22: mainPanorama('temp4-6.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -692,7 +699,8 @@ export const tourScenes = [
     mapPosition: { x: 374, y: 297 },
     hotspots: [
       { id: 'campus-road-15-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 180, pitch: -3 },
-      { id: 'campus-road-15-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 150, pitch: -3 }
+      { id: 'campus-road-15-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 150, pitch: -3 },
+      { id: 'campus-road-15-to-road-18', type: 'scene', target: 'campusRoad18', yaw: 0, pitch: -3 }
     ]
   },
   {
@@ -724,6 +732,124 @@ export const tourScenes = [
     mapPosition: { x: 344, y: 272 },
     hotspots: [
       { id: 'campus-road-17-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 200, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad18',
+    ...tourMedia.campusRoad18,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 18', en: 'Campus Route Point 18' },
+    description: {
+      th: 'จุดเริ่มต้นของเส้นทางแยกจากจุดที่ 15 ซึ่งเชื่อมต่อไปยังกลุ่มอาคารภายในวิทยาเขต',
+      en: 'The first point on the branch from Point 15, leading toward the campus building area.'
+    },
+    tags: { th: ['เส้นทาง', 'ทางแยก', 'จุดที่ 18'], en: ['Route', 'Junction', 'Point 18'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 411, y: 449 },
+    hotspots: [
+      { id: 'campus-road-18-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 180, pitch: -3 },
+      { id: 'campus-road-18-to-road-19', type: 'scene', target: 'campusRoad19', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad19',
+    ...tourMedia.campusRoad19,
+    title: { th: 'คณะอุตสาหกรรมเกษตรดิจิทัล', en: 'Faculty of Digital Agro-Industry' },
+    description: {
+      th: 'จุดชมบริเวณด้านหน้าคณะอุตสาหกรรมเกษตรดิจิทัลบนเส้นทางแยกภายในวิทยาเขต',
+      en: 'A viewpoint in front of the Faculty of Digital Agro-Industry on the campus branch route.'
+    },
+    tags: { th: ['อาคาร', 'คณะ', 'จุดที่ 19'], en: ['Building', 'Faculty', 'Point 19'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 388, y: 430 },
+    hotspots: [
+      { id: 'campus-road-19-to-road-18', type: 'scene', target: 'campusRoad18', yaw: -90, pitch: -3 },
+      { id: 'campus-road-19-to-road-20', type: 'scene', target: 'campusRoad20', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad20',
+    ...tourMedia.campusRoad20,
+    title: { th: 'เส้นทางบริเวณกลุ่มอาคาร จุดที่ 20', en: 'Building Area Route Point 20' },
+    description: {
+      th: 'ถนนเชื่อมต่อระหว่างกลุ่มอาคารบนเส้นทางแยกภายในวิทยาเขต',
+      en: 'A connecting road between campus buildings on the branch route.'
+    },
+    tags: { th: ['เส้นทาง', 'อาคาร', 'จุดที่ 20'], en: ['Route', 'Buildings', 'Point 20'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 373, y: 418 },
+    hotspots: [
+      { id: 'campus-road-20-to-road-19', type: 'scene', target: 'campusRoad19', yaw: 30, pitch: -3 },
+      { id: 'campus-road-20-to-road-21', type: 'scene', target: 'campusRoad21', yaw: -200, pitch: 0 }
+    ]
+  },
+  {
+    id: 'campusRoad21',
+    ...tourMedia.campusRoad21,
+    title: { th: 'อาคารบริหาร', en: 'Administration Building' },
+    description: {
+      th: 'จุดชมบริเวณด้านหน้าอาคารบริหารของวิทยาเขต',
+      en: 'A viewpoint in front of the campus Administration Building.'
+    },
+    tags: { th: ['อาคาร', 'บริหาร', 'จุดที่ 21'], en: ['Building', 'Administration', 'Point 21'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 352, y: 401 },
+    hotspots: [
+      { id: 'campus-road-21-to-road-20', type: 'scene', target: 'campusRoad20', yaw: -90, pitch: -3 },
+      { id: 'campus-road-21-to-road-22', type: 'scene', target: 'campusRoad22', yaw: 90, pitch: -3 },
+      {
+        id: 'Administration Building-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 5,
+        title: { th: 'อาคารบริหาร', en: 'Administration Building' },
+        description: {
+          th: 'อาคารบริหารใน มจพ. วิทยาเขตปราจีนบุรี ใช้เป็นศูนย์กลางการให้บริการนักศึกษา งานกิจการนักศึกษา ทุนการศึกษา และห้องประชุมสำคัญของมหาวิทยาลัยงานบริการและกิจกรรมหลักกองกิจการนักศึกษาและสวัสดิการ: ให้บริการเรื่องกู้ยืมเงิน กยศ. ทุนการศึกษา และการผ่อนผันการเกณฑ์ทหารงานพยาบาลเบื้องต้น: ให้บริการตรวจรักษาพยาบาลเบื้องต้น ทำแผล และจ่ายยาห้องประชุมใหญ่: ใช้จัดกิจกรรมอบรม สัมมนานักศึกษาใหม่ และพิธีการต่างๆ ของมหาวิทยาลัยจุดติดต่อส่วนกลาง: เป็นสถานที่ประสานงานและติดต่อราชการภายในวิทยาเขต',
+          en: 'The administrative building at KMUTT Prachinburi Campus serves as a central hub for student services, student affairs, scholarships, and important university meeting rooms. Key services and activities include: Student Affairs and Welfare Division: providing services related to student loans (Government Student Loan Fund), scholarships, and military service deferment; Basic Medical Services: providing basic medical check-ups, wound care, and medication; Main Meeting Room: used for training activities, seminars for new students, and various university ceremonies; Central Contact Point: serving as the location for coordinating and contacting government agencies within the campus.'
+        },
+        reference: wikipediaReference,
+        images: [
+          {
+            src: tourMedia.campusRoad21.panorama,
+            alt: { th: 'อาคารบริหาร', en: 'Administration Building' },
+            caption: { th: 'อาคารบริหาร', en: 'Administration Building' }
+          }
+        ]
+      }
+      
+    ]
+  },
+  {
+    id: 'campusRoad22',
+    ...tourMedia.campusRoad22,
+    title: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' },
+    description: {
+      th: 'สำนักหอสมุดกลาง สำหรับค้นคว้าและอ่านหนังสือ รวมถึงเป็นที่ตั้งของ สำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ บนชั้น 6 ที่มีบริการห้องคอมพิวเตอร์และพื้นที่การเรียนรู้',
+      en: 'The central library building, used for research and reading, and home to the Computer and Information Technology Department on the 6th floor with computer rooms and learning spaces.'
+    },
+    tags: { th: ['อาคาร', 'หอสมุด'], en: ['Building', 'Library'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 250, y: 422 },
+    hotspots: [
+      { id: 'campus-road-22-to-road-21', type: 'scene', target: 'campusRoad21', yaw: 180, pitch: -3 },
+       {
+        id: 'Sirindhorn Building-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 5,
+        title: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' },
+        description: {
+          th: 'อาคารสิรินธร ในมหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (มจพ.) วิทยาเขตปราจีนบุรี หลักๆ ใช้เป็น สำนักหอสมุดกลาง สำหรับค้นคว้าและอ่านหนังสือ รวมถึงเป็นที่ตั้งของ สำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ บนชั้น 6 ที่มีบริการห้องคอมพิวเตอร์และพื้นที่การเรียนรู้หน้าที่และบริการภายในอาคารหอสมุดกลาง (ห้องสมุด): เป็นศูนย์รวมทรัพยากรสารสนเทศ หนังสือ และพื้นที่สำหรับให้นักศึกษามานั่งอ่านหนังสือและค้นคว้าข้อมูลบริการคอมพิวเตอร์ (ชั้น 6): จัดเตรียมเครื่องคอมพิวเตอร์พร้อมโปรแกรมการศึกษาและวิจัย เช่น Microsoft Office, Adobe Creative Cloud และ SPSSพื้นที่เรียนรู้ (Learning Space): รองรับการใช้งานและอ่านหนังสือกลุ่มหรือเดี่ยวของนักศึกษาจุดบริการสอบ/อบรม: ใช้เป็นห้องปฏิบัติการและสถานที่จัดสอบหรืออบรมด้านดิจิทัลต่างๆ ของมหาวิทยาลัย',
+          en: 'The Sirindhorn Building at King Mongkut\'s University of Technology North Bangkok (KMUTNB), Prachinburi Campus, primarily serves as the Central Library, providing a space for research and reading. It also houses the Computer and Information Technology Center on the 6th floor, offering computer labs and learning spaces. Functions and services within the building include: Central Library (Library): A central repository of information resources, books, and a space for students to read and research. Computer Services (6th Floor): Equipped with computers and educational and research software such as Microsoft Office, Adobe Creative Cloud, and SPSS. Learning Space: Supports group and individual student reading and research. Examination/Training Center: Used as a laboratory and venue for conducting examinations or training in various digital areas offered by the university.'
+        },
+        reference: wikipediaReference,
+        images: [
+          {
+            src: tourMedia.campusRoad22.panorama,
+            alt: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' },
+            caption: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' }
+          }
+        ]
+      }
     ]
   }
 ] as const satisfies readonly TourScene[];

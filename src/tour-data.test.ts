@@ -50,13 +50,18 @@ function readJpegDimensions(filePath: string): { width: number; height: number }
   throw new Error(`Could not read JPEG dimensions: ${filePath}`);
 }
 
+function publicAssetPath(assetUrl: string): string {
+  const pathname = new URL(assetUrl, 'https://tour.local').pathname;
+  return resolve(process.cwd(), 'public', pathname.slice(1));
+}
+
 describe('tour configuration', () => {
   it('passes all runtime validation rules', () => {
     expect(validateTour()).toEqual([]);
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(25);
+    expect(tourScenes).toHaveLength(30);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
@@ -87,6 +92,49 @@ describe('tour configuration', () => {
     expect(getNavigationHotspots(getScene('campusBuilding3')).map((item) => item.target)).toContain('campusRoad7');
   });
 
+  it('adds a reciprocal temp4 branch at campus road point 15 without replacing the existing route', () => {
+    const branch = [
+      'campusRoad15',
+      'campusRoad18',
+      'campusRoad19',
+      'campusRoad20',
+      'campusRoad21',
+      'campusRoad22'
+    ] as const;
+
+    for (let index = 0; index < branch.length - 1; index += 1) {
+      const from = branch[index]!;
+      const to = branch[index + 1]!;
+      expect(getNavigationHotspots(getScene(from)).map((item) => item.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((item) => item.target)).toContain(from);
+    }
+
+    expect(getNavigationHotspots(getScene('campusRoad15')).map((item) => item.target)).toContain('campusRoad16');
+    expect(getNavigationHotspots(getScene('campusRoad16')).map((item) => item.target)).toContain('campusRoad17');
+
+    const expectedAngles = {
+      'campus-road-15-to-road-18': 0,
+      'campus-road-18-to-road-15': 180,
+      'campus-road-18-to-road-19': 0,
+      'campus-road-19-to-road-18': -90,
+      'campus-road-19-to-road-20': 90,
+      'campus-road-20-to-road-19': -150,
+      'campus-road-20-to-road-21': 30,
+      'campus-road-21-to-road-20': -90,
+      'campus-road-21-to-road-22': 90,
+      'campus-road-22-to-road-21': 180
+    } as const;
+
+    for (const sceneId of branch) {
+      for (const hotspot of getNavigationHotspots(getScene(sceneId))) {
+        if (hotspot.id in expectedAngles) {
+          expect(hotspot.yaw).toBe(expectedAngles[hotspot.id as keyof typeof expectedAngles]);
+          expect(hotspot.pitch).toBe(-3);
+        }
+      }
+    }
+  });
+
   it('derives the route map from the scene graph without invented edges', () => {
     const edges = getSceneEdges().map(({ from, to }) => [from, to].sort().join(':')).sort();
     expect(edges).toEqual([
@@ -115,7 +163,12 @@ describe('tour configuration', () => {
       'campusRoad13:campusRoad14',
       'campusRoad14:campusRoad15',
       'campusRoad15:campusRoad16',
+      'campusRoad15:campusRoad18',
       'campusRoad16:campusRoad17',
+      'campusRoad18:campusRoad19',
+      'campusRoad19:campusRoad20',
+      'campusRoad20:campusRoad21',
+      'campusRoad21:campusRoad22',
       'entrance:entranceRoad',
       'entranceRoad:memorialPlaza',
       'memorial:memorialPlaza'
@@ -130,7 +183,7 @@ describe('tour configuration', () => {
       expect('sourcePanorama' in scene).toBe(false);
       expect('tiledPanorama' in scene).toBe(false);
       expect(
-        existsSync(resolve(process.cwd(), 'public', scene.panorama.slice(1))),
+        existsSync(publicAssetPath(scene.panorama)),
         `${scene.id} references a missing source file: ${scene.panorama}`
       ).toBe(true);
       expect(getSceneAssetUrls(scene)).toEqual([scene.panorama]);
@@ -141,12 +194,35 @@ describe('tour configuration', () => {
 
   it('uses all ten full-resolution temp3 panoramas in order', () => {
     const expectedFiles = Array.from({ length: 10 }, (_, index) => `temp3-${index + 1}.jpg`);
-    const newScenes = tourScenes.slice(-10);
+    const temp3Scenes = Array.from({ length: 10 }, (_, index) => getScene(`campusRoad${index + 8}` as Parameters<typeof getScene>[0]));
 
-    expect(newScenes.map((scene) => scene.panorama)).toEqual(expectedFiles.map((file) => `/mainimages/${file}`));
+    expect(temp3Scenes.map((scene) => new URL(scene.panorama, 'https://tour.local').pathname))
+      .toEqual(expectedFiles.map((file) => `/mainimages/${file}`));
     for (const file of expectedFiles) {
       const filePath = resolve(process.cwd(), 'public/mainimages', file);
       expect(readJpegDimensions(filePath), file).toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
+  it('uses all five full-resolution temp4 panoramas and the configured map positions', () => {
+    const sceneIds = ['campusRoad18', 'campusRoad19', 'campusRoad20', 'campusRoad21', 'campusRoad22'] as const;
+    const expectedFiles = ['temp4-2.jpg', 'temp4-3.jpg', 'temp4-4.jpg', 'temp4-5.jpg', 'temp4-6.jpg'];
+    const expectedPositions = [
+      { x: 389, y: 329 },
+      { x: 329, y: 364 },
+      { x: 297, y: 386 },
+      { x: 269, y: 410 },
+      { x: 231, y: 428 }
+    ];
+
+    const scenes = sceneIds.map((sceneId) => getScene(sceneId));
+    expect(scenes.map((scene) => new URL(scene.panorama, 'https://tour.local').pathname))
+      .toEqual(expectedFiles.map((file) => `/mainimages/${file}`));
+    expect(scenes.map((scene) => scene.mapPosition)).toEqual(expectedPositions);
+
+    for (const file of expectedFiles) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
     }
   });
 
@@ -157,7 +233,7 @@ describe('tour configuration', () => {
         for (const image of hotspot.images ?? []) {
           expect(image.src).toMatch(/^\/mainimages\//);
           expect(image.src).not.toMatch(/^\/tour\/(?:pano|thumbs)\//);
-          expect(existsSync(resolve(process.cwd(), 'public', image.src.slice(1))), `${image.src} is missing`).toBe(true);
+          expect(existsSync(publicAssetPath(image.src)), `${image.src} is missing`).toBe(true);
           for (const locale of locales) {
             expect(image.alt[locale].trim()).not.toBe('');
             if (image.caption) expect(image.caption[locale].trim()).not.toBe('');
@@ -181,11 +257,12 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 25 source panoramas from the tour assets API', async () => {
+  it('returns only the 30 versioned source panoramas from the tour assets API', async () => {
     const response = getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(25);
+    expect(new Set(body.assets).size).toBe(30);
+    expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });
 
