@@ -18,21 +18,30 @@ function sourceUrl(source: { readonly url?: string }): string | undefined {
 }
 
 export function buildKnowledgeDocuments(content: PublicContentSnapshot): KnowledgeDocument[] {
+  const facultyById = new Map(content.faculties.map((faculty) => [faculty.id, faculty]));
+  const facultyManagedHotspots = new Set(content.faculties.flatMap((faculty) => (
+    faculty.hotspotId ? [faculty.hotspotId] : []
+  )));
   return [
     ...content.faculties.map((item): KnowledgeDocument => ({
       citation: { id: item.id, kind: 'faculty', title: item.name, url: sourceUrl(item.source) },
+      sceneId: item.sceneId,
       text: `FACULTY ${item.slug}\nTH: ${item.name.th}\n${item.summary.th}\n${item.description.th}\nEN: ${item.name.en}\n${item.summary.en}\n${item.description.en}`
     })),
-    ...content.programs.map((item): KnowledgeDocument => ({
-      citation: { id: item.id, kind: 'program', title: item.name, url: sourceUrl(item.source) },
-      text: `PROGRAM ${item.slug}\nTH: ${item.name.th} (${item.level.th})\n${item.summary.th}\n${item.description.th}\nการรับสมัคร: ${item.admission.th}\nEN: ${item.name.en} (${item.level.en})\n${item.summary.en}\n${item.description.en}\nAdmission: ${item.admission.en}`
-    })),
+    ...content.programs.map((item): KnowledgeDocument => {
+      const faculty = facultyById.get(item.facultyId);
+      return {
+        citation: { id: item.id, kind: 'program', title: item.name, url: sourceUrl(item.source) },
+        sceneId: faculty?.sceneId,
+        text: `PROGRAM ${item.slug}\nFACULTY: ${faculty?.name.th ?? '-'} / ${faculty?.name.en ?? '-'}\nTH: ${item.name.th} (${item.level.th})\n${item.summary.th}\n${item.description.th}\nการรับสมัคร: ${item.admission.th}\nEN: ${item.name.en} (${item.level.en})\n${item.summary.en}\n${item.description.en}\nAdmission: ${item.admission.en}`
+      };
+    }),
     ...content.activities.map((item): KnowledgeDocument => ({
       citation: { id: item.id, kind: 'activity', title: item.title, url: sourceUrl(item.source) },
       sceneId: item.sceneId,
       text: `ACTIVITY ${item.slug}\nTH: ${item.title.th}\n${item.summary.th}\n${item.description.th}\nEN: ${item.title.en}\n${item.summary.en}\n${item.description.en}\nDATE: ${item.startDate ?? '-'} to ${item.endDate ?? '-'}`
     })),
-    ...content.hotspots.map((item): KnowledgeDocument => ({
+    ...content.hotspots.filter((item) => !facultyManagedHotspots.has(item.hotspotId)).map((item): KnowledgeDocument => ({
       citation: { id: item.id, kind: 'hotspot', title: item.title, url: sourceUrl(item.reference) },
       sceneId: item.sceneId,
       text: `PLACE ${item.hotspotId} at scene ${item.sceneId}\nTH: ${item.title.th}\n${item.description.th}\nEN: ${item.title.en}\n${item.description.en}`

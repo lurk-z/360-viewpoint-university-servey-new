@@ -7,6 +7,10 @@ const migration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/202608070001_cms.sql'),
   'utf8'
 );
+const linkedContentMigration = readFileSync(
+  resolve(process.cwd(), 'supabase/migrations/202608070002_linked_faculty_content.sql'),
+  'utf8'
+);
 
 describe('CMS security and aggregate visits', () => {
   it('keeps public tables behind RLS and restricts privileged RPCs to service_role', () => {
@@ -23,6 +27,13 @@ describe('CMS security and aggregate visits', () => {
     expect(tableDefinition).toContain('visit_date date primary key');
     expect(tableDefinition).toContain('view_count bigint');
     expect(tableDefinition).not.toMatch(/\b(ip|user_agent|session_id|email|message)\b/i);
+  });
+
+  it('links faculty content to stable scene and hotspot IDs without exposing geometry fields', () => {
+    expect(linkedContentMigration).toContain('add column if not exists scene_id text');
+    expect(linkedContentMigration).toContain('add column if not exists hotspot_id text');
+    expect(linkedContentMigration).toContain('faculties_scene_id_unique_idx');
+    expect(linkedContentMigration).not.toMatch(/\b(yaw|pitch|map_position)\b/);
   });
 
   it('fills missing dates with zero for fixed 7/30-day dashboard series', () => {

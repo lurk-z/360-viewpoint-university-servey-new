@@ -29,13 +29,28 @@ function sourceFromForm(formData: FormData) {
   };
 }
 
+function imagesFromForm(formData: FormData) {
+  const sources = formData.getAll('imageSrc').map((value) => String(value).trim());
+  const altTh = formData.getAll('imageAltTh').map((value) => String(value).trim());
+  const altEn = formData.getAll('imageAltEn').map((value) => String(value).trim());
+  const captionTh = formData.getAll('imageCaptionTh').map((value) => String(value).trim());
+  const captionEn = formData.getAll('imageCaptionEn').map((value) => String(value).trim());
+  return sources.map((src, index) => ({
+    src,
+    alt: { th: altTh[index] ?? '', en: altEn[index] ?? '' },
+    ...((captionTh[index] || captionEn[index]) ? {
+      caption: { th: captionTh[index] ?? '', en: captionEn[index] ?? '' }
+    } : {})
+  }));
+}
+
 function parseDraftData(kind: ContentKind, formData: FormData): Record<string, unknown> {
   if (kind === 'faculties') {
     return facultyDataSchema.parse({
       name: { th: text(formData, 'nameTh'), en: text(formData, 'nameEn') },
       summary: { th: text(formData, 'summaryTh'), en: text(formData, 'summaryEn') },
       description: { th: text(formData, 'descriptionTh'), en: text(formData, 'descriptionEn') },
-      imageUrl: text(formData, 'imageUrl'),
+      images: imagesFromForm(formData),
       source: sourceFromForm(formData)
     });
   }
@@ -63,24 +78,47 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
     });
   }
 
-  let images: unknown;
-  try {
-    images = JSON.parse(text(formData, 'imagesJson'));
-  } catch {
-    throw new Error('Images JSON is invalid');
-  }
   return hotspotDataSchema.parse({
     title: { th: text(formData, 'nameTh'), en: text(formData, 'nameEn') },
     description: { th: text(formData, 'descriptionTh'), en: text(formData, 'descriptionEn') },
+    sceneTitle: { th: text(formData, 'sceneTitleTh'), en: text(formData, 'sceneTitleEn') },
+    sceneDescription: { th: text(formData, 'sceneDescriptionTh'), en: text(formData, 'sceneDescriptionEn') },
     reference: sourceFromForm(formData),
-    images
+    images: imagesFromForm(formData)
   });
 }
 
 function revalidateAdmin(kind?: ContentKind): void {
   revalidatePath('/');
   revalidatePath('/admin');
-  if (kind) revalidatePath(`/admin/${kind === 'hotspot_contents' ? 'hotspots' : kind}`);
+  if (kind) revalidatePath(`/admin/${kind === 'hotspot_contents' ? 'places' : kind}`);
+}
+
+async function assertPublishedFaculty(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  facultyId: string
+): Promise<void> {
+  const { data, error } = await supabase.from('faculties')
+    .select('id')
+    .eq('id', facultyId)
+    .is('archived_at', null)
+    .not('published_data', 'is', null)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('ต้องเผยแพร่คณะที่สังกัดก่อนเผยแพร่หลักสูตร');
+}
+
+async function assertNoPublishedPrograms(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  facultyId: string
+): Promise<void> {
+  const { count, error } = await supabase.from('programs')
+    .select('id', { count: 'exact', head: true })
+    .eq('faculty_id', facultyId)
+    .is('archived_at', null)
+    .not('published_data', 'is', null);
+  if (error) throw error;
+  if ((count ?? 0) > 0) throw new Error('กรุณายกเลิกเผยแพร่หลักสูตรของคณะนี้ก่อน');
 }
 
 export async function loginAction(formData: FormData): Promise<void> {
@@ -143,10 +181,22 @@ export async function publishContentAction(formData: FormData): Promise<void> {
   const kind = contentKindSchema.parse(text(formData, 'kind'));
   const id = text(formData, 'id');
   const supabase = await createServerSupabaseClient();
-  const { data, error: readError } = await supabase.from(kind).select('draft_data').eq('id', id).single();
-  if (readError) throw readError;
+  let draftData: unknown;
+  if (kind === 'programs') {
+    const { data, error } = await supabase.from('programs')
+      .select('draft_data,faculty_id')
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    await assertPublishedFaculty(supabase, data.faculty_id);
+    draftData = data.draft_data;
+  } else {
+    const { data, error } = await supabase.from(kind).select('draft_data').eq('id', id).single();
+    if (error) throw error;
+    draftData = data.draft_data;
+  }
   const { error } = await supabase.from(kind).update({
-    published_data: data.draft_data,
+    published_data: draftData,
     archived_at: null,
     updated_by: session.userId
   }).eq('id', id);
@@ -157,10 +207,13 @@ export async function publishContentAction(formData: FormData): Promise<void> {
 export async function unpublishContentAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
   const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const { error } = await (await createServerSupabaseClient()).from(kind).update({
+  const id = text(formData, 'id');
+  const supabase = await createServerSupabaseClient();
+  if (kind === 'faculties') await assertNoPublishedPrograms(supabase, id);
+  const { error } = await supabase.from(kind).update({
     published_data: null,
     updated_by: session.userId
-  }).eq('id', text(formData, 'id'));
+  }).eq('id', id);
   if (error) throw error;
   revalidateAdmin(kind);
 }
@@ -168,11 +221,14 @@ export async function unpublishContentAction(formData: FormData): Promise<void> 
 export async function archiveContentAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
   const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const { error } = await (await createServerSupabaseClient()).from(kind).update({
+  const id = text(formData, 'id');
+  const supabase = await createServerSupabaseClient();
+  if (kind === 'faculties') await assertNoPublishedPrograms(supabase, id);
+  const { error } = await supabase.from(kind).update({
     archived_at: new Date().toISOString(),
     published_data: null,
     updated_by: session.userId
-  }).eq('id', text(formData, 'id'));
+  }).eq('id', id);
   if (error) throw error;
   revalidateAdmin(kind);
 }
@@ -195,6 +251,13 @@ export async function deleteContentAction(formData: FormData): Promise<void> {
   const id = text(formData, 'id');
   const { data } = await supabase.from(kind).select('archived_at').eq('id', id).single();
   if (!data?.archived_at) throw new Error('Content must be archived before permanent deletion');
+  if (kind === 'faculties') {
+    const { count, error: countError } = await supabase.from('programs')
+      .select('id', { count: 'exact', head: true })
+      .eq('faculty_id', id);
+    if (countError) throw countError;
+    if ((count ?? 0) > 0) throw new Error('กรุณาย้ายหรือลบหลักสูตรของคณะนี้ก่อนลบคณะ');
+  }
   const { error } = await supabase.from(kind).delete().eq('id', id);
   if (error) throw error;
   revalidateAdmin(kind);

@@ -14,7 +14,7 @@ export default async function AdminMediaPage() {
 
   return (
     <section className="admin-page">
-      <header className="admin-page__header"><div><p>MEDIA LIBRARY</p><h1>คลังรูปภาพ</h1><span>รูปสำหรับคณะ หลักสูตร กิจกรรม และ Info hotspot เท่านั้น</span></div></header>
+      <header className="admin-page__header"><div><p>MEDIA LIBRARY</p><h1>คลังรูปภาพ</h1><span>รูปสำหรับคณะ หลักสูตร กิจกรรม และสถานที่สำคัญเท่านั้น</span></div></header>
       <AdminMediaUploader />
       {error ? <p className="admin-form-error">ไม่สามารถอ่าน Storage: {error.message}</p> : null}
       <div className="admin-media-grid">

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { ChatResponse, ChatTurn, Citation } from '../src/chat';
-import { localizeContent, resolveInfoHotspot, type PublicContentSnapshot } from '../src/content';
+import { localizeContent, resolveInfoHotspot, resolveTourScene, type PublicContentSnapshot } from '../src/content';
 import { getInfoHotspots, getScene, localize, type Locale, type SceneId } from '../src/tour-data';
 import { message } from '../src/i18n';
 
@@ -22,6 +22,11 @@ interface TourChatProps {
 }
 
 function citationSceneId(citation: Citation, content: PublicContentSnapshot): SceneId | undefined {
+  if (citation.kind === 'faculty') return content.faculties.find((item) => item.id === citation.id)?.sceneId;
+  if (citation.kind === 'program') {
+    const program = content.programs.find((item) => item.id === citation.id);
+    return content.faculties.find((item) => item.id === program?.facultyId)?.sceneId;
+  }
   if (citation.kind === 'hotspot') return content.hotspots.find((item) => item.id === citation.id)?.sceneId;
   if (citation.kind === 'activity') return content.activities.find((item) => item.id === citation.id)?.sceneId;
   return undefined;
@@ -33,7 +38,7 @@ export default function TourChat({ locale, sceneId, content, onNavigate, onOpenC
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const nextMessageId = useRef(1);
-  const scene = getScene(sceneId);
+  const scene = resolveTourScene(getScene(sceneId), content);
   const sceneHotspots = useMemo(() => (
     getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content))
   ), [content, scene]);
@@ -149,7 +154,7 @@ export default function TourChat({ locale, sceneId, content, onNavigate, onOpenC
               ) : null}
               {item.relatedSceneIds?.map((targetSceneId) => (
                 <button className="tour-chat__scene-link" type="button" key={targetSceneId} onClick={() => { onNavigate(targetSceneId); setOpen(false); }}>
-                  {localize(getScene(targetSceneId).title, locale)}
+                  {localize(resolveTourScene(getScene(targetSceneId), content).title, locale)}
                 </button>
               ))}
             </article>

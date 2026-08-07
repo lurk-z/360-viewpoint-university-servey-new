@@ -42,7 +42,7 @@ import {
   getSceneTransitionOptions
 } from '../src/viewer-transition';
 import { installPanoramaEnhancement } from '../src/panorama-enhancement';
-import { resolveInfoHotspot, type PublicContentSnapshot } from '../src/content';
+import { resolveInfoHotspot, resolveTourScene, type PublicContentSnapshot } from '../src/content';
 
 export interface TourViewerHandle {
   navigate: (sceneId: SceneId) => Promise<void>;
@@ -156,7 +156,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const initializeFrame = window.requestAnimationFrame(() => {
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const createArrowElement = (link: { nodeId: string }): HTMLElement => {
-      const target = getScene(link.nodeId as SceneId);
+      const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);
       const targetTitle = localize(target.title, callbacksRef.current.locale);
       const button = document.createElement('button');
       button.type = 'button';
@@ -216,7 +216,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
             size: { width: 45, height: 45 }
           },
           getLinkTooltip: (_content, link) => {
-            const target = getScene(link.nodeId as SceneId);
+            const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);
             return goToScene(callbacksRef.current.locale, localize(target.title, callbacksRef.current.locale));
           }
         })
@@ -332,7 +332,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     container.querySelectorAll<HTMLButtonElement>('.tour-arrow[data-target]').forEach((button) => {
       const targetId = button.dataset.target as SceneId | undefined;
       if (!targetId) return;
-      const target = getScene(targetId);
+      const target = resolveTourScene(getScene(targetId), content);
       const targetTitle = localize(target.title, locale);
       button.setAttribute('aria-label', goToScene(locale, targetTitle));
     });

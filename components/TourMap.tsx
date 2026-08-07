@@ -11,10 +11,12 @@ import {
   type SceneId
 } from '../src/tour-data';
 import { goToScene, message } from '../src/i18n';
+import { resolveTourScene, type PublicContentSnapshot } from '../src/content';
 
 interface TourMapProps {
   readonly locale: Locale;
   readonly currentSceneId: SceneId;
+  readonly content: PublicContentSnapshot;
   readonly onNavigate: (sceneId: SceneId) => void;
 }
 
@@ -25,18 +27,20 @@ interface CalibrationPoint {
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-export default function TourMap({ locale, currentSceneId, onNavigate }: TourMapProps) {
+export default function TourMap({ locale, currentSceneId, content, onNavigate }: TourMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRefs = useRef(new Map<SceneId, LeafletMarker>());
   const onNavigateRef = useRef(onNavigate);
   const localeRef = useRef(locale);
   const currentSceneIdRef = useRef(currentSceneId);
+  const contentRef = useRef(content);
   const [calibrationPoint, setCalibrationPoint] = useState<CalibrationPoint | null>(null);
   const [copied, setCopied] = useState(false);
   onNavigateRef.current = onNavigate;
   localeRef.current = locale;
   currentSceneIdRef.current = currentSceneId;
+  contentRef.current = content;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -78,7 +82,7 @@ export default function TourMap({ locale, currentSceneId, onNavigate }: TourMapP
 
       for (const [index, scene] of tourScenes.entries()) {
         const isCurrent = scene.id === currentSceneIdRef.current;
-        const title = localize(scene.title, localeRef.current);
+        const title = localize(resolveTourScene(scene, contentRef.current).title, localeRef.current);
         const icon = leaflet.divIcon({
           className: 'tour-map-marker-shell',
           html: `<span class="tour-map-marker${isCurrent ? ' is-current' : ''}">${index + 1}</span>`,
@@ -137,7 +141,7 @@ export default function TourMap({ locale, currentSceneId, onNavigate }: TourMapP
       const scene = tourScenes.find((item) => item.id === sceneId);
       if (!scene) continue;
       const isCurrent = sceneId === currentSceneId;
-      const title = localize(scene.title, locale);
+      const title = localize(resolveTourScene(scene, content).title, locale);
       const accessibleTitle = goToScene(locale, title);
       const element = marker.getElement();
       element?.querySelector('.tour-map-marker')?.classList.toggle('is-current', isCurrent);
@@ -151,7 +155,7 @@ export default function TourMap({ locale, currentSceneId, onNavigate }: TourMapP
     containerRef.current
       ?.querySelector<HTMLImageElement>('.leaflet-image-layer')
       ?.setAttribute('alt', message(locale, 'mapImageAlt'));
-  }, [currentSceneId, locale]);
+  }, [content, currentSceneId, locale]);
 
   const resetMap = (): void => {
     const map = mapRef.current;
@@ -197,7 +201,7 @@ export default function TourMap({ locale, currentSceneId, onNavigate }: TourMapP
       <div className="sr-only">
         {tourScenes.map((scene) => (
           <button key={scene.id} type="button" onClick={() => onNavigate(scene.id)}>
-            {goToScene(locale, localize(scene.title, locale))}
+            {goToScene(locale, localize(resolveTourScene(scene, content).title, locale))}
           </button>
         ))}
       </div>

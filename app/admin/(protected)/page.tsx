@@ -12,6 +12,8 @@ export default async function AdminDashboardPage() {
     listAdminContent('hotspot_contents')
   ]);
   const maximum = Math.max(1, ...stats.last7Days.map((day) => day.count));
+  const managedHotspotIds = new Set(faculties.flatMap((row) => row.hotspotId ? [row.hotspotId] : []));
+  const places = hotspots.filter((row) => !managedHotspotIds.has(row.id));
 
   return (
     <section className="admin-page">
@@ -40,7 +42,7 @@ export default async function AdminDashboardPage() {
           ['คณะ', faculties.length, '/admin/faculties'],
           ['หลักสูตร', programs.length, '/admin/programs'],
           ['กิจกรรม', activities.length, '/admin/activities'],
-          ['Info hotspot', hotspots.length, '/admin/hotspots']
+          ['สถานที่สำคัญ', places.length, '/admin/places']
         ].map(([label, count, href]) => <Link href={String(href)} key={String(href)}><strong>{String(label)}</strong><span>{String(count)} รายการ</span><b>จัดการ →</b></Link>)}
       </div>
     </section>

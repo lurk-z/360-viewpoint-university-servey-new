@@ -44,4 +44,23 @@ describe('grounded tour chat', () => {
     expect(fallback.answered).toBe(false);
     expect(fallback.citations.length).toBeGreaterThan(0);
   });
+
+  it('uses a linked faculty as the canonical AI source instead of duplicating its Info hotspot', () => {
+    const content = createFallbackContentSnapshot();
+    const faculty = {
+      id: 'faculty-business',
+      slug: 'business-administration',
+      sceneId: 'campusBuilding1',
+      hotspotId: 'building-1-info',
+      name: { th: 'คณะบริหารธุรกิจ', en: 'Business Faculty' },
+      summary: { th: 'สรุป', en: 'Summary' },
+      description: { th: 'รายละเอียด', en: 'Description' },
+      images: [{ src: '/mainimages/temp1-5-1.jpg', alt: { th: 'รูปคณะ', en: 'Faculty image' } }],
+      source: { label: { th: 'แหล่งข้อมูล', en: 'Source' } }
+    } as const;
+    const documents = buildKnowledgeDocuments({ ...content, faculties: [faculty] });
+
+    expect(documents.some((item) => item.citation.id === faculty.id && item.sceneId === faculty.sceneId)).toBe(true);
+    expect(documents.some((item) => item.citation.id === faculty.hotspotId)).toBe(false);
+  });
 });

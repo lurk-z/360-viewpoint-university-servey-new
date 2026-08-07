@@ -10,7 +10,7 @@ const links = [
   ['คณะ', '/admin/faculties'],
   ['หลักสูตร', '/admin/programs'],
   ['กิจกรรม', '/admin/activities'],
-  ['Info hotspot', '/admin/hotspots'],
+  ['สถานที่สำคัญ', '/admin/places'],
   ['Media', '/admin/media']
 ] as const;
 

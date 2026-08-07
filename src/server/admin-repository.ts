@@ -5,6 +5,7 @@ export interface AdminContentRow {
   readonly id: string;
   readonly slug?: string;
   readonly sceneId?: string;
+  readonly hotspotId?: string;
   readonly facultyId?: string;
   readonly draftData: Record<string, unknown>;
   readonly publishedData: Record<string, unknown> | null;
@@ -16,6 +17,7 @@ interface RawAdminRow {
   readonly id: string;
   readonly slug?: string;
   readonly scene_id?: string;
+  readonly hotspot_id?: string;
   readonly faculty_id?: string;
   readonly draft_data: Record<string, unknown>;
   readonly published_data: Record<string, unknown> | null;
@@ -27,15 +29,25 @@ export async function listAdminContent(kind: ContentKind): Promise<AdminContentR
   const supabase = await createServerSupabaseClient();
   const columns = kind === 'programs'
     ? 'id,slug,faculty_id,draft_data,published_data,archived_at,updated_at'
+    : kind === 'faculties'
+      ? 'id,slug,scene_id,hotspot_id,draft_data,published_data,archived_at,updated_at'
     : kind === 'hotspot_contents'
       ? 'id,scene_id,draft_data,published_data,archived_at,updated_at'
       : 'id,slug,draft_data,published_data,archived_at,updated_at';
-  const { data, error } = await supabase.from(kind).select(columns).order('updated_at', { ascending: false });
+  let { data, error } = await supabase.from(kind).select(columns).order('updated_at', { ascending: false });
+  if (kind === 'faculties' && error?.code === '42703') {
+    const legacyResult = await supabase.from('faculties')
+      .select('id,slug,draft_data,published_data,archived_at,updated_at')
+      .order('updated_at', { ascending: false });
+    data = legacyResult.data as typeof data;
+    error = legacyResult.error;
+  }
   if (error) throw error;
   return ((data ?? []) as unknown as RawAdminRow[]).map((row) => ({
     id: row.id,
     slug: row.slug,
     sceneId: row.scene_id,
+    hotspotId: row.hotspot_id,
     facultyId: row.faculty_id,
     draftData: row.draft_data,
     publishedData: row.published_data,

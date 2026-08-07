@@ -25,6 +25,7 @@ import { useTourStore } from '../src/stores/tour-store';
 import {
   createFallbackContentSnapshot,
   resolveInfoHotspot,
+  resolveTourScene,
   type PublicContentSnapshot
 } from '../src/content';
 import { ModalDialog } from './ModalDialog';
@@ -83,7 +84,7 @@ export default function TourApp() {
   const [content, setContent] = useState<PublicContentSnapshot>(FALLBACK_CONTENT);
   const [chatOpen, setChatOpen] = useState(false);
 
-  const scene = getScene(currentSceneId);
+  const scene = resolveTourScene(getScene(currentSceneId), content);
   const sceneInfoHotspots = getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content));
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
   const activeImage = imageViewer?.images[imageViewer.index];
@@ -200,7 +201,7 @@ export default function TourApp() {
     setCurrentScene(sceneId);
     cacheSceneForOffline(sceneId);
     const index = tourScenes.findIndex((item) => item.id === sceneId) + 1;
-    announce(sceneChanged(locale, index, tourScenes.length, localize(getScene(sceneId).title, locale)));
+    announce(sceneChanged(locale, index, tourScenes.length, localize(resolveTourScene(getScene(sceneId), content).title, locale)));
   };
 
   const handleStart = (): void => {
@@ -274,6 +275,7 @@ export default function TourApp() {
             <TourMap
               locale={locale}
               currentSceneId={currentSceneId}
+              content={content}
               onNavigate={(sceneId) => void navigate(sceneId)}
             />
           </aside>
@@ -307,7 +309,7 @@ export default function TourApp() {
                 <div className="compact-actions">
                   {getNavigationHotspots(scene).map((hotspot) => (
                     <button className="compact-action" type="button" key={hotspot.id} onClick={() => void navigate(hotspot.target)}>
-                      {localize(getScene(hotspot.target).title, locale)}
+                      {localize(resolveTourScene(getScene(hotspot.target), content).title, locale)}
                     </button>
                   ))}
                 </div>
@@ -493,21 +495,24 @@ export default function TourApp() {
         <h2 id="text-tour-title">{message(locale, 'textTourTitle')}</h2>
         <p className="dialog-description">{message(locale, 'textTourDescription')}</p>
         <div className="text-tour-content">
-          {tourScenes.map((item, index) => (
-            <article className="text-scene" key={item.id}>
-              <h3>{index + 1}. {localize(item.title, locale)}</h3>
-              <p className="scene-alt-title">{localize(item.title, alternativeLocale)}</p>
-              <p>{localize(item.description, locale)}</p>
-              <button className="compact-action" type="button" onClick={() => { closeDialog(); void navigate(item.id); }}>{goToScene(locale, localize(item.title, locale))}</button>
-              {getInfoHotspots(item).map((hotspot) => resolveInfoHotspot(hotspot, content)).map((hotspot) => (
-                <details key={hotspot.id}>
-                  <summary>{localize(hotspot.title, locale)}</summary>
-                  <p>{localize(hotspot.description, locale)}</p>
-                  <ReferenceLine reference={hotspot.reference} locale={locale} />
-                </details>
-              ))}
-            </article>
-          ))}
+          {tourScenes.map((baseItem, index) => {
+            const item = resolveTourScene(baseItem, content);
+            return (
+              <article className="text-scene" key={item.id}>
+                <h3>{index + 1}. {localize(item.title, locale)}</h3>
+                <p className="scene-alt-title">{localize(item.title, alternativeLocale)}</p>
+                <p>{localize(item.description, locale)}</p>
+                <button className="compact-action" type="button" onClick={() => { closeDialog(); void navigate(item.id); }}>{goToScene(locale, localize(item.title, locale))}</button>
+                {getInfoHotspots(baseItem).map((hotspot) => resolveInfoHotspot(hotspot, content)).map((hotspot) => (
+                  <details key={hotspot.id}>
+                    <summary>{localize(hotspot.title, locale)}</summary>
+                    <p>{localize(hotspot.description, locale)}</p>
+                    <ReferenceLine reference={hotspot.reference} locale={locale} />
+                  </details>
+                ))}
+              </article>
+            );
+          })}
         </div>
       </ModalDialog>
     </div>

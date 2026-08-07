@@ -1,5 +1,6 @@
-import type { AdminRole, ContentKind } from '../../src/content';
+import type { AdminRole, ContentImage, ContentKind } from '../../src/content';
 import type { AdminContentRow } from '../../src/server/admin-repository';
+import AdminImageGalleryFields from './AdminImageGalleryFields';
 import {
   archiveContentAction,
   deleteContentAction,
@@ -40,10 +41,30 @@ function source(data: Record<string, unknown>, kind: ContentKind): Record<string
   return object(data[kind === 'hotspot_contents' ? 'reference' : 'source']);
 }
 
+function contentImages(data: Record<string, unknown>): ContentImage[] {
+  if (!Array.isArray(data.images)) return [];
+  return data.images.flatMap((value) => {
+    const image = object(value);
+    const src = field(image, 'src');
+    const alt = object(image.alt);
+    if (!src || !field(alt, 'th') || !field(alt, 'en')) return [];
+    const caption = object(image.caption);
+    return [{
+      src,
+      alt: { th: field(alt, 'th'), en: field(alt, 'en') },
+      ...((field(caption, 'th') || field(caption, 'en')) ? {
+        caption: { th: field(caption, 'th'), en: field(caption, 'en') }
+      } : {})
+    }];
+  });
+}
+
 function DraftPreview({ kind, data }: { readonly kind: ContentKind; readonly data: Record<string, unknown> }) {
   const nameKey = kind === 'activities' || kind === 'hotspot_contents' ? 'title' : 'name';
-  const imageRows = Array.isArray(data.images) ? data.images.map(object) : [];
-  const imageUrl = kind === 'hotspot_contents' ? field(imageRows[0] ?? {}, 'src') : field(data, 'imageUrl');
+  const images = contentImages(data);
+  const imageUrl = kind === 'hotspot_contents' || kind === 'faculties'
+    ? images[0]?.src ?? ''
+    : field(data, 'imageUrl');
   const sourceData = source(data, kind);
   return (
     <details className="admin-preview">
@@ -98,11 +119,19 @@ function ContentFields({ kind, row, faculties = [] }: {
   const nameKey = kind === 'activities' || kind === 'hotspot_contents' ? 'title' : 'name';
 
   return <>
-    {kind !== 'hotspot_contents' ? (
+    {kind !== 'hotspot_contents' ? <>
       <TextField prefix={prefix} name="slug" label="Slug (อังกฤษ ตัวเล็ก และขีดกลาง)" value={row?.slug} required readOnly={Boolean(row)} />
-    ) : <>
+      {kind === 'faculties' && row?.sceneId ? <TextField prefix={prefix} name="linkedSceneId" label="Scene ID ที่เชื่อมอยู่" value={row.sceneId} readOnly /> : null}
+      {kind === 'faculties' && row?.hotspotId ? <TextField prefix={prefix} name="linkedHotspotId" label="Info hotspot ที่เชื่อมอยู่" value={row.hotspotId} readOnly /> : null}
+    </> : <>
       <TextField prefix={prefix} name="hotspotId" label="Hotspot ID" value={row?.id} readOnly />
       <TextField prefix={prefix} name="sceneId" label="Scene ID" value={row?.sceneId} readOnly />
+      <h3 className="admin-form-section">ข้อมูลบนการ์ดฉาก</h3>
+      <TextField prefix={prefix} name="sceneTitleTh" label="ชื่อฉาก (ไทย)" value={localized(data, 'sceneTitle', 'th')} required />
+      <TextField prefix={prefix} name="sceneTitleEn" label="Scene title (English)" value={localized(data, 'sceneTitle', 'en')} required />
+      <TextArea prefix={prefix} name="sceneDescriptionTh" label="คำอธิบายฉาก (ไทย)" value={localized(data, 'sceneDescription', 'th')} required rows={3} />
+      <TextArea prefix={prefix} name="sceneDescriptionEn" label="Scene description (English)" value={localized(data, 'sceneDescription', 'en')} required rows={3} />
+      <h3 className="admin-form-section">ข้อมูลในปุ่ม Info</h3>
     </>}
     {kind === 'programs' ? (
       <label htmlFor={inputId(prefix, 'facultyId')}>
@@ -113,7 +142,7 @@ function ContentFields({ kind, row, faculties = [] }: {
         </select>
       </label>
     ) : null}
-    <TextField prefix={prefix} name="nameTh" label={kind === 'activities' ? 'ชื่อกิจกรรม (ไทย)' : 'ชื่อ (ไทย)'} value={localized(data, nameKey, 'th')} required />
+    <TextField prefix={prefix} name="nameTh" label={kind === 'activities' ? 'ชื่อกิจกรรม (ไทย)' : kind === 'hotspot_contents' ? 'ชื่อ Info (ไทย)' : 'ชื่อ (ไทย)'} value={localized(data, nameKey, 'th')} required />
     <TextField prefix={prefix} name="nameEn" label={kind === 'activities' ? 'Activity name (English)' : 'Name (English)'} value={localized(data, nameKey, 'en')} required />
     {kind === 'programs' ? <>
       <TextField prefix={prefix} name="levelTh" label="ระดับการศึกษา (ไทย)" value={localized(data, 'level', 'th')} required />
@@ -134,8 +163,8 @@ function ContentFields({ kind, row, faculties = [] }: {
       <TextField prefix={prefix} name="endDate" label="วันสิ้นสุด" type="date" value={field(data, 'endDate')} />
       <TextField prefix={prefix} name="sceneId" label="Scene ID ที่เกี่ยวข้อง" value={field(data, 'sceneId')} />
     </> : null}
-    {kind === 'hotspot_contents' ? (
-      <TextArea prefix={prefix} name="imagesJson" label="รูปภาพ (JSON array จากหน้า Media)" value={JSON.stringify(data.images ?? [], null, 2)} required rows={8} />
+    {kind === 'hotspot_contents' || kind === 'faculties' ? (
+      <AdminImageGalleryFields images={contentImages(data)} />
     ) : (
       <TextField prefix={prefix} name="imageUrl" label="URL รูปภาพ" value={field(data, 'imageUrl')} />
     )}

@@ -18,6 +18,7 @@ interface CmsRow {
   readonly id: string;
   readonly slug?: string;
   readonly scene_id?: string;
+  readonly hotspot_id?: string;
   readonly faculty_id?: string;
   readonly published_data: unknown;
   readonly updated_at?: string;
@@ -26,7 +27,14 @@ interface CmsRow {
 function mapFaculty(row: CmsRow): FacultyContent | null {
   const parsed = facultyDataSchema.safeParse(row.published_data);
   if (!parsed.success || !row.slug) return null;
-  return { id: row.id, slug: row.slug, ...parsed.data };
+  const sceneId = row.scene_id && isSceneId(row.scene_id) ? row.scene_id : undefined;
+  return {
+    id: row.id,
+    slug: row.slug,
+    sceneId,
+    hotspotId: row.hotspot_id || undefined,
+    ...parsed.data
+  };
 }
 
 function mapProgram(row: CmsRow): ProgramContent | null {
@@ -64,9 +72,15 @@ export async function getPublicContentSnapshot(): Promise<PublicContentSnapshot>
 
   try {
     const supabase = createAdminSupabaseClient();
-    const [facultiesResult, programsResult, activitiesResult, hotspotsResult] = await Promise.all([
-      supabase.from('faculties').select('id,slug,published_data,updated_at')
-        .is('archived_at', null).not('published_data', 'is', null).order('slug'),
+    let facultiesResult = await supabase.from('faculties')
+      .select('id,slug,scene_id,hotspot_id,published_data,updated_at')
+      .is('archived_at', null).not('published_data', 'is', null).order('slug');
+    if (facultiesResult.error?.code === '42703') {
+      facultiesResult = await supabase.from('faculties')
+        .select('id,slug,published_data,updated_at')
+        .is('archived_at', null).not('published_data', 'is', null).order('slug') as typeof facultiesResult;
+    }
+    const [programsResult, activitiesResult, hotspotsResult] = await Promise.all([
       supabase.from('programs').select('id,slug,faculty_id,published_data,updated_at')
         .is('archived_at', null).not('published_data', 'is', null).order('slug'),
       supabase.from('activities').select('id,slug,published_data,updated_at')
@@ -89,12 +103,17 @@ export async function getPublicContentSnapshot(): Promise<PublicContentSnapshot>
       Math.max(latest, row.updated_at ? Date.parse(row.updated_at) : 0)
     ), 0);
 
+    const faculties = compact(((facultiesResult.data ?? []) as unknown as CmsRow[]).map(mapFaculty));
+    const publishedFacultyIds = new Set(faculties.map((faculty) => faculty.id));
+    const programs = compact(((programsResult.data ?? []) as unknown as CmsRow[]).map(mapProgram))
+      .filter((program) => publishedFacultyIds.has(program.facultyId));
+
     return {
       version: latestUpdate || Date.now(),
       generatedAt: new Date().toISOString(),
       source: 'database',
-      faculties: compact(((facultiesResult.data ?? []) as unknown as CmsRow[]).map(mapFaculty)),
-      programs: compact(((programsResult.data ?? []) as unknown as CmsRow[]).map(mapProgram)),
+      faculties,
+      programs,
       activities: compact(((activitiesResult.data ?? []) as unknown as CmsRow[]).map(mapActivity)),
       hotspots: compact(((hotspotsResult.data ?? []) as unknown as CmsRow[]).map(mapHotspot))
     };

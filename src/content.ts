@@ -4,8 +4,9 @@ import {
   tourScenes,
   type InfoHotspot,
   type Locale,
-  type SceneId
-} from './tour-data';
+  type SceneId,
+  type TourScene
+} from './tour-data.ts';
 
 export type AdminRole = 'admin' | 'editor';
 export type ContentKind = 'faculties' | 'programs' | 'activities' | 'hotspot_contents';
@@ -29,10 +30,12 @@ export interface ContentImage {
 export interface FacultyContent {
   readonly id: string;
   readonly slug: string;
+  readonly sceneId?: SceneId;
+  readonly hotspotId?: string;
   readonly name: LocalizedContent;
   readonly summary: LocalizedContent;
   readonly description: LocalizedContent;
-  readonly imageUrl?: string;
+  readonly images: readonly ContentImage[];
   readonly source: ContentSource;
 }
 
@@ -68,6 +71,8 @@ export interface HotspotContent {
   readonly hotspotId: string;
   readonly title: LocalizedContent;
   readonly description: LocalizedContent;
+  readonly sceneTitle?: LocalizedContent;
+  readonly sceneDescription?: LocalizedContent;
   readonly reference: ContentSource;
   readonly images: readonly ContentImage[];
 }
@@ -107,7 +112,7 @@ export const facultyDataSchema = z.object({
   name: requiredLocalizedSchema,
   summary: requiredLocalizedSchema,
   description: requiredLocalizedSchema,
-  imageUrl: optionalUrlSchema,
+  images: z.array(imageSchema).min(1).max(12),
   source: sourceSchema
 });
 
@@ -135,6 +140,8 @@ export const activityDataSchema = z.object({
 export const hotspotDataSchema = z.object({
   title: requiredLocalizedSchema,
   description: requiredLocalizedSchema,
+  sceneTitle: requiredLocalizedSchema.optional(),
+  sceneDescription: requiredLocalizedSchema.optional(),
   reference: sourceSchema,
   images: z.array(imageSchema).min(1).max(12)
 });
@@ -144,13 +151,26 @@ export type ProgramData = z.infer<typeof programDataSchema>;
 export type ActivityData = z.infer<typeof activityDataSchema>;
 export type HotspotData = z.infer<typeof hotspotDataSchema>;
 
-function staticHotspotContent(sceneId: SceneId, hotspot: InfoHotspot): HotspotContent {
+export function mergeMissingScenePresentation(
+  data: Record<string, unknown>,
+  scene: Pick<TourScene, 'title' | 'description'>
+): Record<string, unknown> {
+  return {
+    ...data,
+    sceneTitle: data.sceneTitle ?? scene.title,
+    sceneDescription: data.sceneDescription ?? scene.description
+  };
+}
+
+function staticHotspotContent(scene: TourScene, hotspot: InfoHotspot): HotspotContent {
   return {
     id: hotspot.id,
-    sceneId,
+    sceneId: scene.id,
     hotspotId: hotspot.id,
     title: hotspot.title,
     description: hotspot.description,
+    sceneTitle: scene.title,
+    sceneDescription: scene.description,
     reference: hotspot.reference,
     images: hotspot.images ?? []
   };
@@ -165,15 +185,41 @@ export function createFallbackContentSnapshot(): PublicContentSnapshot {
     programs: [],
     activities: [],
     hotspots: tourScenes.flatMap((scene) => (
-      getInfoHotspots(scene).map((hotspot) => staticHotspotContent(scene.id, hotspot))
+      getInfoHotspots(scene).map((hotspot) => staticHotspotContent(scene, hotspot))
     ))
   };
+}
+
+export function resolveTourScene(
+  scene: TourScene,
+  content: PublicContentSnapshot
+): TourScene {
+  const faculty = content.faculties.find((item) => item.sceneId === scene.id);
+  if (faculty) {
+    return { ...scene, title: faculty.name, description: faculty.summary };
+  }
+
+  const place = content.hotspots.find((item) => (
+    item.sceneId === scene.id && item.sceneTitle && item.sceneDescription
+  ));
+  if (!place?.sceneTitle || !place.sceneDescription) return scene;
+  return { ...scene, title: place.sceneTitle, description: place.sceneDescription };
 }
 
 export function resolveInfoHotspot(
   hotspot: InfoHotspot,
   content: PublicContentSnapshot
 ): InfoHotspot {
+  const faculty = content.faculties.find((item) => item.hotspotId === hotspot.id);
+  if (faculty) {
+    return {
+      ...hotspot,
+      title: faculty.name,
+      description: faculty.description,
+      reference: faculty.source,
+      images: faculty.images
+    };
+  }
   const override = content.hotspots.find((item) => item.hotspotId === hotspot.id);
   if (!override) return hotspot;
   return {

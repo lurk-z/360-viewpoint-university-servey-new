@@ -98,8 +98,9 @@ Service worker ทำงานเฉพาะ production โดย precache ห�
 1. คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ค่าของ Supabase และ Gemini โดยเก็บ `SUPABASE_SERVICE_ROLE_KEY` กับ `GEMINI_API_KEY` ไว้ฝั่งเซิร์ฟเวอร์เท่านั้น
 2. เปิด Supabase SQL Editor แล้วรัน `supabase/migrations/202608070001_cms.sql`
 3. สร้างผู้ใช้คนแรกใน Supabase Auth แล้วเพิ่ม UUID ของผู้ใช้นั้นเป็น role `admin` ตามคำสั่งตัวอย่างท้าย migration
-4. รัน `npm run seed:cms` เพื่อย้าย Info hotspot ที่มีอยู่ใน `tour-data.ts` เข้า draft/published content
-5. เข้า `/admin/login` เพื่อจัดการคณะ หลักสูตร กิจกรรม Info hotspot รูปภาพ บัญชี และสถิติ
+4. รัน migration `supabase/migrations/202608070002_linked_faculty_content.sql` สำหรับโปรเจกต์ที่เคยติดตั้ง CMS รุ่นแรกแล้ว
+5. รัน `npm run seed:cms` เพื่อสร้างคณะเริ่มต้น 2 รายการ ย้ายสถานที่สำคัญเดิม 12 จุด และเพิ่มหลักสูตรคณะบริหารธุรกิจและอุตสาหกรรมบริการ 6 รายการ โดยไม่เขียนทับข้อมูลที่ Admin เคยแก้
+6. เข้า `/admin/login` เพื่อจัดการคณะ หลักสูตร กิจกรรม สถานที่สำคัญ รูปภาพ บัญชี และสถิติ
 
 ตัวแปรสภาพแวดล้อมที่ต้องใช้:
 
