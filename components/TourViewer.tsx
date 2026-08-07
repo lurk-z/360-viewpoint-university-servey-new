@@ -42,6 +42,7 @@ import {
   getSceneTransitionOptions
 } from '../src/viewer-transition';
 import { installPanoramaEnhancement } from '../src/panorama-enhancement';
+import { resolveInfoHotspot, type PublicContentSnapshot } from '../src/content';
 
 export interface TourViewerHandle {
   navigate: (sceneId: SceneId) => Promise<void>;
@@ -55,6 +56,7 @@ export interface TourViewerHandle {
 
 interface TourViewerProps {
   readonly locale: Locale;
+  readonly content: PublicContentSnapshot;
   readonly onInfo: (hotspot: InfoHotspot) => void;
   readonly onProgress: (progress: number) => void;
   readonly onReady: (sceneId: SceneId) => void;
@@ -65,6 +67,7 @@ interface TourViewerProps {
 
 interface ViewerCallbacks {
   locale: Locale;
+  content: PublicContentSnapshot;
   onInfo: (hotspot: InfoHotspot) => void;
   onProgress: (progress: number) => void;
   onReady: (sceneId: SceneId) => void;
@@ -86,7 +89,7 @@ const buildTourNodes = (): VirtualTourNode[] => tourScenes.map((scene) => ({
 }));
 
 const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourViewer(
-  { locale, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate },
+  { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -95,8 +98,10 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
   const virtualTourRef = useRef<VirtualTourPlugin | null>(null);
   const autorotateRef = useRef<AutorotatePlugin | null>(null);
   const viewAnimationIdRef = useRef(0);
+  const refreshMarkersRef = useRef<(() => void) | null>(null);
   const callbacksRef = useRef<ViewerCallbacks>({
     locale,
+    content,
     onInfo,
     onProgress,
     onReady,
@@ -104,7 +109,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     onError,
     onAutorotate
   });
-  callbacksRef.current = { locale, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate };
+  callbacksRef.current = { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate };
 
   useImperativeHandle(ref, () => ({
     navigate: async (sceneId) => {
@@ -147,7 +152,9 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const container = containerRef.current;
     if (!container) return undefined;
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let cleanupViewer: (() => void) | undefined;
+    const initializeFrame = window.requestAnimationFrame(() => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const createArrowElement = (link: { nodeId: string }): HTMLElement => {
       const target = getScene(link.nodeId as SceneId);
       const targetTitle = localize(target.title, callbacksRef.current.locale);
@@ -243,7 +250,8 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       }
     };
 
-    const buildInfoMarkers = (sceneId: SceneId): MarkerConfig[] => getInfoHotspots(getScene(sceneId)).map((hotspot) => {
+    const buildInfoMarkers = (sceneId: SceneId): MarkerConfig[] => getInfoHotspots(getScene(sceneId)).map((baseHotspot) => {
+      const hotspot = resolveInfoHotspot(baseHotspot, callbacksRef.current.content);
       const element = document.createElement('button') as HTMLButtonElement & MarkerElement;
       const title = localize(hotspot.title, callbacksRef.current.locale);
       element.type = 'button';
@@ -292,17 +300,28 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
         });
       });
     });
+    refreshMarkersRef.current = () => {
+      const sceneId = virtualTourPlugin.getCurrentNode()?.id as SceneId | undefined;
+      if (sceneId) markersPlugin.setMarkers(buildInfoMarkers(sceneId));
+    };
     autorotatePlugin.addEventListener(autorotateEvents.AutorotateEvent.type, ({ autorotateEnabled }) => {
       callbacksRef.current.onAutorotate(autorotateEnabled);
     });
 
+      cleanupViewer = () => {
+        disposePanoramaEnhancement();
+        viewerRef.current = null;
+        markersRef.current = null;
+        virtualTourRef.current = null;
+        autorotateRef.current = null;
+        refreshMarkersRef.current = null;
+        viewer.destroy();
+      };
+    });
+
     return () => {
-      disposePanoramaEnhancement();
-      viewer.destroy();
-      viewerRef.current = null;
-      markersRef.current = null;
-      virtualTourRef.current = null;
-      autorotateRef.current = null;
+      window.cancelAnimationFrame(initializeFrame);
+      cleanupViewer?.();
     };
   }, []);
 
@@ -317,7 +336,8 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       const targetTitle = localize(target.title, locale);
       button.setAttribute('aria-label', goToScene(locale, targetTitle));
     });
-  }, [locale]);
+    refreshMarkersRef.current?.();
+  }, [locale, content]);
 
   return (
     <div

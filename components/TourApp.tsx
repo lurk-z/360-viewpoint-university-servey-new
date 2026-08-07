@@ -22,12 +22,19 @@ import {
   sceneCounter
 } from '../src/i18n';
 import { useTourStore } from '../src/stores/tour-store';
+import {
+  createFallbackContentSnapshot,
+  resolveInfoHotspot,
+  type PublicContentSnapshot
+} from '../src/content';
 import { ModalDialog } from './ModalDialog';
+import TourChat from './TourChat';
 import TourViewer, { type TourViewerHandle } from './TourViewer';
 import TourMap from './TourMap';
 
 type DialogName = 'info' | 'about' | 'text-tour' | null;
 const FITM_LOGO_URL = '/mainimages/Logo_FitM/FITM_LOGO.png';
+const FALLBACK_CONTENT = createFallbackContentSnapshot();
 
 interface ImageViewerState {
   readonly images: readonly InfoImage[];
@@ -73,8 +80,11 @@ export default function TourApp() {
   const [imageViewer, setImageViewer] = useState<ImageViewerState | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [content, setContent] = useState<PublicContentSnapshot>(FALLBACK_CONTENT);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const scene = getScene(currentSceneId);
+  const sceneInfoHotspots = getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content));
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
   const activeImage = imageViewer?.images[imageViewer.index];
 
@@ -84,6 +94,27 @@ export default function TourApp() {
 
   useEffect(() => {
     setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch('/api/content', { signal: controller.signal })
+      .then(async (response) => response.ok ? response.json() as Promise<PublicContentSnapshot> : FALLBACK_CONTENT)
+      .then((snapshot) => {
+        if (Array.isArray(snapshot.hotspots) && Array.isArray(snapshot.faculties)) setContent(snapshot);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const key = 'fitm-tour-visit-counted';
+    if (window.sessionStorage.getItem(key)) return;
+    void fetch('/api/visits', { method: 'POST', keepalive: true })
+      .then((response) => {
+        if (response.ok) window.sessionStorage.setItem(key, '1');
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -202,6 +233,10 @@ export default function TourApp() {
           </span>
         </a>
         <div className="header-actions">
+          <a className="header-button" href="/admin/login" aria-label={message(locale, 'adminLogin')}>
+            <Icon><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></Icon>
+            <span>{message(locale, 'adminLogin')}</span>
+          </a>
           <button className="header-button" type="button" onClick={() => setDialog('about')}>
             <Icon><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></Icon>
             <span>{message(locale, 'aboutButton')}</span>
@@ -214,10 +249,11 @@ export default function TourApp() {
       </header>
 
       <main className="tour-layout">
-        <section className="viewer-shell" aria-labelledby="scene-title">
+        <section className={`viewer-shell${chatOpen ? ' is-chat-open' : ''}`} aria-labelledby="scene-title">
           <TourViewer
             ref={viewerRef}
             locale={locale}
+            content={content}
             onInfo={openInfo}
             onProgress={setProgress}
             onReady={(sceneId) => {
@@ -276,10 +312,10 @@ export default function TourApp() {
                   ))}
                 </div>
               </div>
-              <div hidden={getInfoHotspots(scene).length === 0}>
+              <div hidden={sceneInfoHotspots.length === 0}>
                 <h2>{message(locale, 'information')}</h2>
                 <div className="compact-actions">
-                  {getInfoHotspots(scene).map((hotspot) => (
+                  {sceneInfoHotspots.map((hotspot) => (
                     <button className="compact-action" type="button" key={hotspot.id} onClick={() => openInfo(hotspot)}>
                       {localize(hotspot.title, locale)}
                     </button>
@@ -319,6 +355,14 @@ export default function TourApp() {
             <span className="spinner" aria-hidden="true" />
             <span>{message(locale, 'loadingScene')}</span>
           </div>
+
+          <TourChat
+            locale={locale}
+            sceneId={currentSceneId}
+            content={content}
+            onNavigate={(sceneId) => void navigate(sceneId)}
+            onOpenChange={setChatOpen}
+          />
 
           <section id="intro" className={`intro${introOpen ? '' : ' is-closing'}`} aria-labelledby="intro-title" hidden={!introOpen}>
             <div className="intro__card">
@@ -455,7 +499,7 @@ export default function TourApp() {
               <p className="scene-alt-title">{localize(item.title, alternativeLocale)}</p>
               <p>{localize(item.description, locale)}</p>
               <button className="compact-action" type="button" onClick={() => { closeDialog(); void navigate(item.id); }}>{goToScene(locale, localize(item.title, locale))}</button>
-              {getInfoHotspots(item).map((hotspot) => (
+              {getInfoHotspots(item).map((hotspot) => resolveInfoHotspot(hotspot, content)).map((hotspot) => (
                 <details key={hotspot.id}>
                   <summary>{localize(hotspot.title, locale)}</summary>
                   <p>{localize(hotspot.description, locale)}</p>

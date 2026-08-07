@@ -49,8 +49,9 @@ describe('FITM branding', () => {
     expect(manifest.icons[0]?.src).toBe('/fitm-favicon.svg');
     expect(favicon).toContain('aria-label="FITM"');
     expect(favicon).toContain('fill="#20b5e6"');
-    expect(serviceWorker).toContain("const CACHE_NAME = 'kmuntb-tour-v9'");
+    expect(serviceWorker).toContain("const CACHE_NAME = 'kmuntb-tour-v10'");
     expect(serviceWorker).toContain("'/fitm-favicon.svg'");
+    expect(serviceWorker).toContain("'/api/content'");
   });
 
   it('uses the FITM blue palette for the application chrome', () => {

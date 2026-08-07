@@ -13,25 +13,32 @@
     "typecheck": "tsc --noEmit --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "seed:cms": "node --experimental-strip-types scripts/seed-cms.ts",
     "check:workers": "node --check public/sw.js",
     "check:legacy": "node scripts/check-legacy.mjs",
     "check": "npm run typecheck && npm run test && npm run check:workers && npm run check:legacy && npm run build"
   },
   "dependencies": {
+    "@google/genai": "2.16.0",
     "@photo-sphere-viewer/autorotate-plugin": "5.14.3",
     "@photo-sphere-viewer/core": "5.14.3",
     "@photo-sphere-viewer/markers-plugin": "5.14.3",
     "@photo-sphere-viewer/virtual-tour-plugin": "5.14.3",
+    "@supabase/ssr": "0.12.4",
+    "@supabase/supabase-js": "2.112.2",
     "@tailwindcss/postcss": "4.3.3",
     "leaflet": "1.9.4",
-    "next": "16.2.10",
+    "next": "16.3.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "tailwindcss": "4.3.3",
     "three": "0.184.0",
+    "zod": "4.4.3",
     "zustand": "5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@types/leaflet": "1.9.21",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
@@ -41,6 +48,6 @@
     "vitest": "4.1.10"
   },
   "overrides": {
-    "postcss": "8.5.19"
+    "postcss": "8.5.23"
   }
 }

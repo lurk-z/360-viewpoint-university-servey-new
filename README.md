@@ -12,6 +12,9 @@
 - Leaflet 1.9 แบบ `CRS.Simple` สำหรับแผนที่ภาพที่ซูม ลาก และเลือกฉากได้
 - Zustand สำหรับ shared client state ของ locale, scene, loading และ viewer controls
 - Vitest สำหรับ scene graph และ localization tests
+- Supabase PostgreSQL, Auth, Storage และ RLS สำหรับระบบจัดการเนื้อหา
+- Gemini สำหรับ AI ถามตอบจากข้อมูลที่เผยแพร่แล้วเท่านั้น
+- Playwright สำหรับตรวจ responsive ของ Public, Chat และ Admin
 - Next Route Handler ที่ `/api/health` เป็น backend boundary เริ่มต้น
 - Custom service worker แบบ network-first สำหรับหน้าเว็บ และ cache panorama เมื่อเปิดใช้งาน
 - Vercel สำหรับ deployment
@@ -66,7 +69,7 @@ src/i18n.ts                 ข้อความ UI ภาษาไทย/อ�
 src/stores/tour-store.ts    Zustand store สำหรับ shared client state
 src/styles.css              Photo Sphere Viewer styles และ design system
 public/tour/                ไฟล์ legacy ที่แอป Next.js ไม่ได้อ้างอิง
-public/mainimages/          panorama ต้นฉบับทั้ง 25 ฉาก และโฟลเดอร์ map
+public/mainimages/          panorama ต้นฉบับทั้ง 34 ฉาก และโฟลเดอร์ map
 public/sw.js                offline cache strategy
 360-tour-offline.html       legacy single-file compatibility artifact
 ```
@@ -88,7 +91,37 @@ campus02: mainPanorama('campus-02.jpg')
 
 Service worker ทำงานเฉพาะ production โดย precache หน้าเริ่มต้น, manifest, icon และแผนที่ เมื่อผู้ใช้เปิดฉาก ระบบจะ cache panorama ต้นฉบับหนึ่งไฟล์ของฉากนั้นเบื้องหลัง ฉากที่เคยเปิดจึงหมุนดูได้ครบแบบออฟไลน์ ขณะ development ระบบจะถอน service worker และล้าง cache เก่าของโปรเจกต์เพื่อให้ refresh แล้วเห็นข้อมูลมุมล่าสุดทันที การเปิดผ่าน `file://` ไม่รองรับเพราะ WebGL, ES modules และ service worker ต้องใช้ HTTP origin
 
-เว็บไซต์ไม่มี analytics, marketing cookies หรือ tracking form ภาพทั้งหมดถูก serve จาก repository นี้ และไม่มี runtime request ไปยัง CDN ภายนอก
+เว็บไซต์ไม่มี marketing cookies หรือการติดตามรายบุคคล ระบบสถิติเก็บเพียงวันที่และยอดเข้าชมรวม โดยไม่นำ IP, user agent, session ID หรือข้อความสนทนาไปเก็บในฐานข้อมูล ภาพ panorama ถูก serve จาก repository ส่วนรูปเนื้อหาที่ Admin อัปโหลดจะมาจาก Supabase Storage
+
+## Supabase, Admin และ AI
+
+1. คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ค่าของ Supabase และ Gemini โดยเก็บ `SUPABASE_SERVICE_ROLE_KEY` กับ `GEMINI_API_KEY` ไว้ฝั่งเซิร์ฟเวอร์เท่านั้น
+2. เปิด Supabase SQL Editor แล้วรัน `supabase/migrations/202608070001_cms.sql`
+3. สร้างผู้ใช้คนแรกใน Supabase Auth แล้วเพิ่ม UUID ของผู้ใช้นั้นเป็น role `admin` ตามคำสั่งตัวอย่างท้าย migration
+4. รัน `npm run seed:cms` เพื่อย้าย Info hotspot ที่มีอยู่ใน `tour-data.ts` เข้า draft/published content
+5. เข้า `/admin/login` เพื่อจัดการคณะ หลักสูตร กิจกรรม Info hotspot รูปภาพ บัญชี และสถิติ
+
+ตัวแปรสภาพแวดล้อมที่ต้องใช้:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_DAILY_LIMIT=200
+```
+
+`Editor` แก้ draft และอัปโหลดรูปได้ ส่วน `Admin` จึงจะเผยแพร่ ยกเลิกเผยแพร่ เก็บเข้าคลัง ลบ และจัดการบัญชีได้ ตำแหน่ง `yaw/pitch`, เส้นทาง และพิกัดแผนที่ยังแก้เฉพาะใน `src/tour-data.ts` เพื่อรักษา topology ของทัวร์
+
+Public page อ่านข้อมูลผ่าน `/api/content` และยังใช้ข้อมูลเดิมในโค้ดได้เมื่อ Supabase ไม่พร้อม Service worker ใช้ network-first และเก็บ snapshot ล่าสุดสำหรับ offline ส่วน AI และ Admin ต้องเชื่อมต่ออินเทอร์เน็ต
+
+คำสั่งทดสอบ responsive แบบ browser:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
 
 ## Legacy
 

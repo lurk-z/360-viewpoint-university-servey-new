@@ -1,11 +1,12 @@
-const CACHE_NAME = 'kmuntb-tour-v9';
+const CACHE_NAME = 'kmuntb-tour-v10';
 const sceneCacheJobs = new Map();
 const SHELL_ASSETS = [
   '/',
   '/manifest.webmanifest',
   '/fitm-favicon.svg',
   '/mainimages/Logo_FitM/FITM_LOGO.png',
-  '/mainimages/map/mainmap.png'
+  '/mainimages/map/mainmap.png',
+  '/api/content'
 ];
 
 self.addEventListener('install', (event) => {
