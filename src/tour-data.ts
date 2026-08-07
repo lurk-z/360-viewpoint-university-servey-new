@@ -64,7 +64,11 @@ export const tourMedia = {
   campusRoad19: mainPanorama('temp4-3.jpg'),
   campusRoad20: mainPanorama('temp4-4.jpg'),
   campusRoad21: mainPanorama('temp4-5.jpg'),
-  campusRoad22: mainPanorama('temp4-6.jpg')
+  campusRoad22: mainPanorama('temp4-6.jpg'),
+  campusRoad23: mainPanorama('temp5-1.jpg'),
+  campusRoad24: mainPanorama('temp5-2.jpg'),
+  campusRoad25: mainPanorama('temp5-3.jpg'),
+  campusRoad26: mainPanorama('temp5-4.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -716,7 +720,8 @@ export const tourScenes = [
     mapPosition: { x: 351, y: 299 },
     hotspots: [
       { id: 'campus-road-16-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 230, pitch: -3 },
-      { id: 'campus-road-16-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 120, pitch: -3 }
+      { id: 'campus-road-16-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 120, pitch: -3 },
+      { id: 'campus-road-16-to-road-23', type: 'scene', target: 'campusRoad23', yaw: 0, pitch: -3 }
     ]
   },
   {
@@ -831,6 +836,7 @@ export const tourScenes = [
     mapPosition: { x: 250, y: 422 },
     hotspots: [
       { id: 'campus-road-22-to-road-21', type: 'scene', target: 'campusRoad21', yaw: 180, pitch: -3 },
+      { id: 'campus-road-22-to-road-26', type: 'scene', target: 'campusRoad26', yaw: 90, pitch: -3 },
        {
         id: 'Sirindhorn Building-info',
         type: 'info',
@@ -847,6 +853,156 @@ export const tourScenes = [
             src: tourMedia.campusRoad22.panorama,
             alt: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' },
             caption: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad23',
+    ...tourMedia.campusRoad23,
+    title: { th: 'บริเวณหอพระหลวงพ่อสิง', en: 'Luang Pho Sing Shrine Area' },
+    description: {
+      th: 'เส้นทางภายในวิทยาเขตบริเวณหอพระหลวงพ่อสิง เชื่อมต่อจากจุดที่ 16 ไปยังพื้นที่คณะเทคโนโลยี',
+      en: 'A campus route by the Luang Pho Sing Shrine, connecting Point 16 to the Faculty of Technology area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพระ', 'จุดที่ 23'], en: ['Route', 'Shrine', 'Point 23'] },
+    initialView: { yaw: 98, pitch: 0, zoom: 24 },
+    mapPosition: { x: 331, y: 324 },
+    hotspots: [
+      { id: 'campus-road-23-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 180, pitch: -3 },
+      { id: 'campus-road-23-to-road-24', type: 'scene', target: 'campusRoad24', yaw: 0, pitch: -3 },
+      {
+        id: 'luang-pho-sing-shrine-info',
+        type: 'info',
+        yaw: 98,
+        pitch: 4,
+        title: { th: 'หอพระหลวงพ่อสิง', en: 'Luang Pho Sing Shrine' },
+        description: {
+          th: 'หอพระหลวงพ่อสิงเป็นจุดสักการะภายในบริเวณมหาวิทยาลัย',
+          en: 'The Luang Pho Sing Shrine is a place of worship within the university grounds.'
+        },
+        reference: wikipediaReference,
+        images: [
+          {
+            src: tourMedia.campusRoad23.panorama,
+            alt: { th: 'หอพระหลวงพ่อสิงภายในบริเวณมหาวิทยาลัย', en: 'Luang Pho Sing Shrine on the university grounds' },
+            caption: { th: 'หอพระหลวงพ่อสิง', en: 'Luang Pho Sing Shrine' }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad24',
+    ...tourMedia.campusRoad24,
+    title: { th: 'ที่จอดรถยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Car Parking' },
+    description: {
+      th: 'เส้นทางบริเวณพื้นที่จอดรถยนต์ของคณะเทคโนโลยี เชื่อมต่อไปยังพื้นที่จอดรถจักรยานยนต์',
+      en: 'A route by the Faculty of Technology car park, continuing toward the motorcycle parking area.'
+    },
+    tags: { th: ['เส้นทาง', 'ที่จอดรถยนต์', 'จุดที่ 24'], en: ['Route', 'Car parking', 'Point 24'] },
+    initialView: { yaw: 108, pitch: 0, zoom: 24 },
+    mapPosition: { x: 311, y: 348 },
+    hotspots: [
+      { id: 'campus-road-24-to-road-23', type: 'scene', target: 'campusRoad23', yaw: 180, pitch: -3 },
+      { id: 'campus-road-24-to-road-25', type: 'scene', target: 'campusRoad25', yaw: 0, pitch: -3 },
+      {
+        id: 'faculty-technology-car-parking-info',
+        type: 'info',
+        yaw: 108,
+        pitch: 2,
+        title: { th: 'ที่จอดรถยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Car Parking' },
+        description: {
+          th: 'พื้นที่จอดรถยนต์ภายในบริเวณคณะเทคโนโลยี',
+          en: 'The car parking area within the Faculty of Technology.'
+        },
+        reference: wikipediaReference,
+        images: [
+          {
+            src: tourMedia.campusRoad24.panorama,
+            alt: { th: 'พื้นที่จอดรถยนต์ในคณะเทคโนโลยี', en: 'Car parking at the Faculty of Technology' },
+            caption: { th: 'ที่จอดรถยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Car Parking' }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad25',
+    ...tourMedia.campusRoad25,
+    title: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี จุดที่ 1', en: 'Faculty of Technology Motorcycle Parking Point 1' },
+    description: {
+      th: 'จุดแรกของเส้นทางบริเวณที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี',
+      en: 'The first route point by the motorcycle parking area at the Faculty of Technology.'
+    },
+    tags: { th: ['เส้นทาง', 'ที่จอดรถจักรยานยนต์', 'จุดที่ 25'], en: ['Route', 'Motorcycle parking', 'Point 25'] },
+    initialView: { yaw: 30, pitch: 0, zoom: 24 },
+    mapPosition: { x: 291, y: 373 },
+    hotspots: [
+      { id: 'campus-road-25-to-road-24', type: 'scene', target: 'campusRoad24', yaw: 150, pitch: -3 },
+      { id: 'campus-road-25-to-road-26', type: 'scene', target: 'campusRoad26', yaw: -50, pitch: -3 },
+      {
+        id: 'faculty-technology-motorcycle-parking-1-info',
+        type: 'info',
+        yaw: 30,
+        pitch: 1,
+        title: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Motorcycle Parking' },
+        description: {
+          th: 'พื้นที่จอดรถจักรยานยนต์ภายในบริเวณคณะเทคโนโลยี',
+          en: 'The motorcycle parking area within the Faculty of Technology.'
+        },
+        reference: wikipediaReference,
+        images: [
+          {
+            src: tourMedia.campusRoad25.panorama,
+            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 1', en: 'Faculty of Technology motorcycle parking from Point 1' },
+            caption: { th: 'มุมมองจากจุดที่ 1', en: 'View from Point 1' }
+          },
+          {
+            src: tourMedia.campusRoad26.panorama,
+            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 2', en: 'Faculty of Technology motorcycle parking from Point 2' },
+            caption: { th: 'มุมมองจากจุดที่ 2', en: 'View from Point 2' }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad26',
+    ...tourMedia.campusRoad26,
+    title: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี จุดที่ 2', en: 'Faculty of Technology Motorcycle Parking Point 2' },
+    description: {
+      th: 'จุดที่สองของพื้นที่จอดรถจักรยานยนต์ เชื่อมต่อไปยังอาคารสิรินธร',
+      en: 'The second motorcycle parking point, connecting onward to the Sirindhorn Building.'
+    },
+    tags: { th: ['เส้นทาง', 'ที่จอดรถจักรยานยนต์', 'จุดที่ 26'], en: ['Route', 'Motorcycle parking', 'Point 26'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 270, y: 398 },
+    hotspots: [
+      { id: 'campus-road-26-to-road-25', type: 'scene', target: 'campusRoad25', yaw: 85, pitch: -3 },
+      { id: 'campus-road-26-to-road-22', type: 'scene', target: 'campusRoad22', yaw: -90, pitch: -3 },
+      {
+        id: 'faculty-technology-motorcycle-parking-2-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 2,
+        title: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Motorcycle Parking' },
+        description: {
+          th: 'พื้นที่จอดรถจักรยานยนต์ภายในบริเวณคณะเทคโนโลยี',
+          en: 'The motorcycle parking area within the Faculty of Technology.'
+        },
+        reference: wikipediaReference,
+        images: [
+          {
+            src: tourMedia.campusRoad25.panorama,
+            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 1', en: 'Faculty of Technology motorcycle parking from Point 1' },
+            caption: { th: 'มุมมองจากจุดที่ 1', en: 'View from Point 1' }
+          },
+          {
+            src: tourMedia.campusRoad26.panorama,
+            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 2', en: 'Faculty of Technology motorcycle parking from Point 2' },
+            caption: { th: 'มุมมองจากจุดที่ 2', en: 'View from Point 2' }
           }
         ]
       }
@@ -941,6 +1097,9 @@ export function validateTour(): readonly string[] {
         errors.push(`Scene ${scene.id} links to missing scene ${hotspot.target}`);
       }
       if (hotspot.type === 'info') {
+        if (!hotspot.images?.length) {
+          errors.push(`Info hotspot ${hotspot.id} must include at least one image`);
+        }
         for (const locale of locales) {
           if (!hotspot.reference.label[locale].trim()) {
             errors.push(`Info hotspot ${hotspot.id} reference is missing ${locale} label`);

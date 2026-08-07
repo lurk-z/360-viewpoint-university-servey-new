@@ -73,7 +73,7 @@ export default function TourMap({ locale, currentSceneId, onNavigate }: TourMapP
           toLatLng(tourScenes.find((scene) => scene.id === edge.from)?.mapPosition ?? { x: 0, y: 0 }),
           toLatLng(tourScenes.find((scene) => scene.id === edge.to)?.mapPosition ?? { x: 0, y: 0 })
         ]),
-        { color: '#f97316', weight: 3, opacity: 0.78, dashArray: '8 6' }
+        { color: '#0ea5e9', weight: 3, opacity: 0.82, dashArray: '8 6' }
       ).addTo(map);
 
       for (const [index, scene] of tourScenes.entries()) {

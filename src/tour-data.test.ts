@@ -61,7 +61,7 @@ describe('tour configuration', () => {
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(30);
+    expect(tourScenes).toHaveLength(34);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
@@ -113,23 +113,66 @@ describe('tour configuration', () => {
     expect(getNavigationHotspots(getScene('campusRoad16')).map((item) => item.target)).toContain('campusRoad17');
 
     const expectedAngles = {
-      'campus-road-15-to-road-18': 0,
-      'campus-road-18-to-road-15': 180,
-      'campus-road-18-to-road-19': 0,
-      'campus-road-19-to-road-18': -90,
-      'campus-road-19-to-road-20': 90,
-      'campus-road-20-to-road-19': -150,
-      'campus-road-20-to-road-21': 30,
-      'campus-road-21-to-road-20': -90,
-      'campus-road-21-to-road-22': 90,
-      'campus-road-22-to-road-21': 180
+      'campus-road-15-to-road-18': { yaw: 0, pitch: -3 },
+      'campus-road-18-to-road-15': { yaw: 180, pitch: -3 },
+      'campus-road-18-to-road-19': { yaw: 0, pitch: -3 },
+      'campus-road-19-to-road-18': { yaw: -90, pitch: -3 },
+      'campus-road-19-to-road-20': { yaw: 90, pitch: -3 },
+      'campus-road-20-to-road-19': { yaw: 30, pitch: -3 },
+      'campus-road-20-to-road-21': { yaw: -200, pitch: 0 },
+      'campus-road-21-to-road-20': { yaw: -90, pitch: -3 },
+      'campus-road-21-to-road-22': { yaw: 90, pitch: -3 },
+      'campus-road-22-to-road-21': { yaw: 180, pitch: -3 }
     } as const;
 
     for (const sceneId of branch) {
       for (const hotspot of getNavigationHotspots(getScene(sceneId))) {
         if (hotspot.id in expectedAngles) {
-          expect(hotspot.yaw).toBe(expectedAngles[hotspot.id as keyof typeof expectedAngles]);
-          expect(hotspot.pitch).toBe(-3);
+          const expected = expectedAngles[hotspot.id as keyof typeof expectedAngles];
+          expect({ yaw: hotspot.yaw, pitch: hotspot.pitch }).toEqual(expected);
+        }
+      }
+    }
+  });
+
+  it('adds the reciprocal temp5 route between campus road points 16 and 22', () => {
+    const route = [
+      'campusRoad16',
+      'campusRoad23',
+      'campusRoad24',
+      'campusRoad25',
+      'campusRoad26',
+      'campusRoad22'
+    ] as const;
+
+    for (let index = 0; index < route.length - 1; index += 1) {
+      const from = route[index]!;
+      const to = route[index + 1]!;
+      expect(getNavigationHotspots(getScene(from)).map((item) => item.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((item) => item.target)).toContain(from);
+    }
+
+    expect(getNavigationHotspots(getScene('campusRoad16')).map((item) => item.target)).toContain('campusRoad17');
+    expect(getNavigationHotspots(getScene('campusRoad22')).map((item) => item.target)).toContain('campusRoad21');
+
+    const expectedAngles = {
+      'campus-road-16-to-road-23': { yaw: 0, pitch: -3 },
+      'campus-road-23-to-road-16': { yaw: 180, pitch: -3 },
+      'campus-road-23-to-road-24': { yaw: 0, pitch: -3 },
+      'campus-road-24-to-road-23': { yaw: 180, pitch: -3 },
+      'campus-road-24-to-road-25': { yaw: 0, pitch: -3 },
+      'campus-road-25-to-road-24': { yaw: 150, pitch: -3 },
+      'campus-road-25-to-road-26': { yaw: -50, pitch: -3 },
+      'campus-road-26-to-road-25': { yaw: 85, pitch: -3 },
+      'campus-road-26-to-road-22': { yaw: -90, pitch: -3 },
+      'campus-road-22-to-road-26': { yaw: 90, pitch: -3 }
+    } as const;
+
+    for (const sceneId of route) {
+      for (const hotspot of getNavigationHotspots(getScene(sceneId))) {
+        if (hotspot.id in expectedAngles) {
+          const expected = expectedAngles[hotspot.id as keyof typeof expectedAngles];
+          expect({ yaw: hotspot.yaw, pitch: hotspot.pitch }).toEqual(expected);
         }
       }
     }
@@ -165,10 +208,15 @@ describe('tour configuration', () => {
       'campusRoad15:campusRoad16',
       'campusRoad15:campusRoad18',
       'campusRoad16:campusRoad17',
+      'campusRoad16:campusRoad23',
       'campusRoad18:campusRoad19',
       'campusRoad19:campusRoad20',
       'campusRoad20:campusRoad21',
       'campusRoad21:campusRoad22',
+      'campusRoad22:campusRoad26',
+      'campusRoad23:campusRoad24',
+      'campusRoad24:campusRoad25',
+      'campusRoad25:campusRoad26',
       'entrance:entranceRoad',
       'entranceRoad:memorialPlaza',
       'memorial:memorialPlaza'
@@ -208,11 +256,11 @@ describe('tour configuration', () => {
     const sceneIds = ['campusRoad18', 'campusRoad19', 'campusRoad20', 'campusRoad21', 'campusRoad22'] as const;
     const expectedFiles = ['temp4-2.jpg', 'temp4-3.jpg', 'temp4-4.jpg', 'temp4-5.jpg', 'temp4-6.jpg'];
     const expectedPositions = [
-      { x: 389, y: 329 },
-      { x: 329, y: 364 },
-      { x: 297, y: 386 },
-      { x: 269, y: 410 },
-      { x: 231, y: 428 }
+      { x: 411, y: 449 },
+      { x: 388, y: 430 },
+      { x: 373, y: 418 },
+      { x: 352, y: 401 },
+      { x: 250, y: 422 }
     ];
 
     const scenes = sceneIds.map((sceneId) => getScene(sceneId));
@@ -226,10 +274,48 @@ describe('tour configuration', () => {
     }
   });
 
-  it('supports multiple localized images in every information hotspot', () => {
+  it('uses all four full-resolution temp5 panoramas with their map positions and information points', () => {
+    const ids = ['campusRoad23', 'campusRoad24', 'campusRoad25', 'campusRoad26'] as const;
+    const expectedFiles = ['temp5-1.jpg', 'temp5-2.jpg', 'temp5-3.jpg', 'temp5-4.jpg'];
+    const expectedPositions = [
+      { x: 331, y: 324 },
+      { x: 311, y: 348 },
+      { x: 291, y: 373 },
+      { x: 270, y: 398 }
+    ];
+    const expectedInfo = [
+      { title: 'หอพระหลวงพ่อสิง', yaw: 98, pitch: 4, images: 1 },
+      { title: 'ที่จอดรถยนต์ในคณะเทคโนโลยี', yaw: 108, pitch: 2, images: 1 },
+      { title: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', yaw: 30, pitch: 1, images: 2 },
+      { title: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', yaw: 0, pitch: 2, images: 2 }
+    ];
+
+    const scenes = ids.map((sceneId) => getScene(sceneId));
+    expect(scenes.map((scene) => new URL(scene.panorama, 'https://tour.local').pathname))
+      .toEqual(expectedFiles.map((file) => `/mainimages/${file}`));
+    expect(scenes.map((scene) => scene.mapPosition)).toEqual(expectedPositions);
+
+    scenes.forEach((scene, index) => {
+      const info = getInfoHotspots(scene);
+      expect(info).toHaveLength(1);
+      expect({
+        title: info[0]!.title.th,
+        yaw: info[0]!.yaw,
+        pitch: info[0]!.pitch,
+        images: info[0]!.images?.length
+      }).toEqual(expectedInfo[index]);
+    });
+
+    for (const file of expectedFiles) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
+  it('provides at least one clickable source image and supports multi-image information galleries', () => {
     for (const scene of tourScenes) {
       for (const hotspot of getInfoHotspots(scene)) {
-        expect(hotspot.images?.length, `${hotspot.id} needs a multi-image gallery`).toBeGreaterThanOrEqual(2);
+        expect(hotspot.images?.length, `${hotspot.id} needs an image`).toBeGreaterThanOrEqual(1);
         for (const image of hotspot.images ?? []) {
           expect(image.src).toMatch(/^\/mainimages\//);
           expect(image.src).not.toMatch(/^\/tour\/(?:pano|thumbs)\//);
@@ -241,12 +327,15 @@ describe('tour configuration', () => {
         }
       }
     }
+
+    expect(getInfoHotspots(getScene('campusRoad25'))[0]!.images).toHaveLength(2);
+    expect(getInfoHotspots(getScene('campusRoad26'))[0]!.images).toHaveLength(2);
   });
 
-  it('includes the temporary Wikipedia reference in all seven information hotspots', () => {
+  it('includes the temporary Wikipedia reference in all thirteen information hotspots', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
 
-    expect(infoHotspots).toHaveLength(7);
+    expect(infoHotspots).toHaveLength(13);
     for (const hotspot of infoHotspots) {
       expect(hotspot.reference).toEqual({
         label: { th: 'วิกิพีเดีย', en: 'Wikipedia' }
@@ -257,11 +346,11 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 30 versioned source panoramas from the tour assets API', async () => {
+  it('returns only the 34 versioned source panoramas from the tour assets API', async () => {
     const response = getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(30);
+    expect(new Set(body.assets).size).toBe(34);
     expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });

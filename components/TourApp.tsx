@@ -9,11 +9,13 @@ import {
   localize,
   tourScenes,
   type InfoHotspot,
+  type InfoImage,
   type InfoReference,
   type SceneId
 } from '../src/tour-data';
 import {
   goToScene,
+  imageCounter,
   loadingProgress,
   message,
   sceneChanged,
@@ -25,6 +27,12 @@ import TourViewer, { type TourViewerHandle } from './TourViewer';
 import TourMap from './TourMap';
 
 type DialogName = 'info' | 'about' | 'text-tour' | null;
+const FITM_LOGO_URL = '/mainimages/Logo_FitM/FITM_LOGO.png';
+
+interface ImageViewerState {
+  readonly images: readonly InfoImage[];
+  readonly index: number;
+}
 
 function Icon({ children }: { readonly children: ReactNode }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{children}</svg>;
@@ -62,11 +70,13 @@ export default function TourApp() {
   const viewerRef = useRef<TourViewerHandle>(null);
   const [dialog, setDialog] = useState<DialogName>(null);
   const [selectedInfo, setSelectedInfo] = useState<InfoHotspot | null>(null);
+  const [imageViewer, setImageViewer] = useState<ImageViewerState | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
 
   const scene = getScene(currentSceneId);
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
+  const activeImage = imageViewer?.images[imageViewer.index];
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -75,6 +85,25 @@ export default function TourApp() {
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!imageViewer) return;
+
+    const handleImageKeys = (event: KeyboardEvent): void => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      event.stopPropagation();
+      const direction = event.key === 'ArrowLeft' ? -1 : 1;
+      setImageViewer((current) => {
+        if (!current || current.images.length < 2) return current;
+        const index = (current.index + direction + current.images.length) % current.images.length;
+        return { ...current, index };
+      });
+    };
+
+    window.addEventListener('keydown', handleImageKeys, true);
+    return () => window.removeEventListener('keydown', handleImageKeys, true);
+  }, [imageViewer]);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -113,11 +142,25 @@ export default function TourApp() {
   };
 
   const openInfo = (hotspot: InfoHotspot): void => {
+    setImageViewer(null);
     setSelectedInfo(hotspot);
     setDialog('info');
   };
 
+  const openImage = (images: readonly InfoImage[], index: number): void => {
+    setImageViewer({ images, index });
+  };
+
+  const moveImage = (direction: -1 | 1): void => {
+    setImageViewer((current) => {
+      if (!current || current.images.length < 2) return current;
+      const index = (current.index + direction + current.images.length) % current.images.length;
+      return { ...current, index };
+    });
+  };
+
   const closeDialog = (): void => {
+    setImageViewer(null);
     setDialog(null);
     setSelectedInfo(null);
   };
@@ -149,12 +192,12 @@ export default function TourApp() {
       </div>
 
       <header className="app-header">
-        <a className="brand" href="#tour-viewer" aria-label="Virtual Open House KMUTNB">
-          <span className="brand__mark" aria-hidden="true">
-            <Icon><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" /></Icon>
+        <a className="brand" href="#tour-viewer" aria-label="FITM 360° Virtual Tour">
+          <span className="brand__mark brand__mark--fitm" aria-hidden="true">
+            <img src={FITM_LOGO_URL} alt="" width={200} height={117} />
           </span>
           <span className="brand__copy">
-            <strong>Virtual Open House</strong>
+            <strong>FITM 360° Virtual Tour</strong>
             <span>{message(locale, 'brandSubtitle')}</span>
           </span>
         </a>
@@ -280,7 +323,9 @@ export default function TourApp() {
           <section id="intro" className={`intro${introOpen ? '' : ' is-closing'}`} aria-labelledby="intro-title" hidden={!introOpen}>
             <div className="intro__card">
               <div className="intro__brand" aria-hidden="true">
-                <span className="brand__mark brand__mark--large"><Icon><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" /></Icon></span>
+                <span className="brand__mark brand__mark--fitm brand__mark--large">
+                  <img src={FITM_LOGO_URL} alt="" width={200} height={117} />
+                </span>
               </div>
               <p className="eyebrow">{message(locale, 'introEyebrow')}</p>
               <h2 id="intro-title">{message(locale, 'introTitle')}</h2>
@@ -310,7 +355,7 @@ export default function TourApp() {
 
       </main>
 
-      <ModalDialog open={dialog === 'info'} titleId="info-dialog-title" wide onClose={closeDialog}>
+      <ModalDialog open={dialog === 'info'} titleId="info-dialog-title" wide closeLabel={message(locale, 'close')} onClose={closeDialog}>
         {selectedInfo ? <>
           <p className="eyebrow">{message(locale, 'infoPoint')}</p>
           <h2 id="info-dialog-title">{localize(selectedInfo.title, locale)}</h2>
@@ -321,7 +366,18 @@ export default function TourApp() {
             <div className="info-gallery">
               {selectedInfo.images.map((image, index) => (
                 <figure key={`${image.src}-${index}`}>
-                  <img src={image.src} alt={localize(image.alt, locale)} loading="lazy" />
+                  <button
+                    className="info-gallery__button"
+                    type="button"
+                    aria-haspopup="dialog"
+                    aria-label={`${message(locale, 'openImage')}: ${localize(image.alt, locale)}`}
+                    onClick={() => openImage(selectedInfo.images ?? [], index)}
+                  >
+                    <img src={image.src} alt={localize(image.alt, locale)} loading="lazy" />
+                    <span className="info-gallery__zoom" aria-hidden="true">
+                      <Icon><path d="m15 15 5 5M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13ZM8 10.5h5M10.5 8v5" /></Icon>
+                    </span>
+                  </button>
                   {image.caption ? <figcaption>{localize(image.caption, locale)}</figcaption> : null}
                 </figure>
               ))}
@@ -330,7 +386,48 @@ export default function TourApp() {
         </> : null}
       </ModalDialog>
 
-      <ModalDialog open={dialog === 'about'} titleId="about-dialog-title" onClose={closeDialog}>
+      <ModalDialog
+        open={Boolean(imageViewer && activeImage)}
+        titleId="info-lightbox-title"
+        media
+        closeLabel={message(locale, 'close')}
+        onClose={() => setImageViewer(null)}
+      >
+        {imageViewer && activeImage ? (
+          <div className="info-lightbox">
+            <h2 className="sr-only" id="info-lightbox-title">{message(locale, 'imageViewerTitle')}</h2>
+            <div className="info-lightbox__stage">
+              {imageViewer.images.length > 1 ? (
+                <button
+                  className="info-lightbox__nav info-lightbox__nav--previous"
+                  type="button"
+                  aria-label={message(locale, 'previousImage')}
+                  onClick={() => moveImage(-1)}
+                >
+                  <Icon><path d="m15 18-6-6 6-6" /></Icon>
+                </button>
+              ) : null}
+              <img src={activeImage.src} alt={localize(activeImage.alt, locale)} />
+              {imageViewer.images.length > 1 ? (
+                <button
+                  className="info-lightbox__nav info-lightbox__nav--next"
+                  type="button"
+                  aria-label={message(locale, 'nextImage')}
+                  onClick={() => moveImage(1)}
+                >
+                  <Icon><path d="m9 18 6-6-6-6" /></Icon>
+                </button>
+              ) : null}
+            </div>
+            <div className="info-lightbox__meta" aria-live="polite">
+              <span>{imageCounter(locale, imageViewer.index + 1, imageViewer.images.length)}</span>
+              {activeImage.caption ? <strong>{localize(activeImage.caption, locale)}</strong> : null}
+            </div>
+          </div>
+        ) : null}
+      </ModalDialog>
+
+      <ModalDialog open={dialog === 'about'} titleId="about-dialog-title" closeLabel={message(locale, 'close')} onClose={closeDialog}>
         <p className="eyebrow">{message(locale, 'aboutEyebrow')}</p>
         <h2 id="about-dialog-title">{message(locale, 'aboutTitle')}</h2>
         <p className="dialog-description">{message(locale, 'aboutDescription')}</p>
@@ -347,7 +444,7 @@ export default function TourApp() {
         <p className="privacy-note">{message(locale, 'privacyNote')}</p>
       </ModalDialog>
 
-      <ModalDialog open={dialog === 'text-tour'} titleId="text-tour-title" wide onClose={closeDialog}>
+      <ModalDialog open={dialog === 'text-tour'} titleId="text-tour-title" wide closeLabel={message(locale, 'close')} onClose={closeDialog}>
         <p className="eyebrow">{message(locale, 'textTourEyebrow')}</p>
         <h2 id="text-tour-title">{message(locale, 'textTourTitle')}</h2>
         <p className="dialog-description">{message(locale, 'textTourDescription')}</p>

@@ -6,11 +6,21 @@ interface ModalDialogProps {
   readonly open: boolean;
   readonly titleId: string;
   readonly wide?: boolean;
+  readonly media?: boolean;
+  readonly closeLabel?: string;
   readonly onClose: () => void;
   readonly children: ReactNode;
 }
 
-export function ModalDialog({ open, titleId, wide = false, onClose, children }: ModalDialogProps) {
+export function ModalDialog({
+  open,
+  titleId,
+  wide = false,
+  media = false,
+  closeLabel = 'Close',
+  onClose,
+  children
+}: ModalDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -23,7 +33,7 @@ export function ModalDialog({ open, titleId, wide = false, onClose, children }: 
   return (
     <dialog
       ref={dialogRef}
-      className={`app-dialog${wide ? ' app-dialog--wide' : ''}`}
+      className={`app-dialog${wide ? ' app-dialog--wide' : ''}${media ? ' app-dialog--media' : ''}`}
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
@@ -33,8 +43,8 @@ export function ModalDialog({ open, titleId, wide = false, onClose, children }: 
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="dialog-card">
-        <button className="dialog-close close-icon" type="button" aria-label="Close" onClick={onClose}>
+      <div className={`dialog-card${media ? ' dialog-card--media' : ''}`}>
+        <button className="dialog-close close-icon" type="button" aria-label={closeLabel} onClick={onClose}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
         </button>
         {children}

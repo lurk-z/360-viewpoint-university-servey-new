@@ -18,7 +18,7 @@ export const messages = {
     showInfo: 'แสดงข้อมูลฉาก',
     hideInfo: 'ซ่อนข้อมูลฉาก',
     loadingScene: 'กำลังโหลดฉาก…',
-    introEyebrow: 'Virtual Open House · 360°',
+    introEyebrow: 'FITM Virtual Tour · 360°',
     introTitle: 'เยี่ยมชมมหาวิทยาลัยแบบเสมือนจริง',
     introDescription: 'สำรวจอาคารและพื้นที่ของ มจพ. วิทยาเขตปราจีนบุรี ผ่านภาพพาโนรามา 360 องศา',
     initialLoading: 'กำลังเตรียมฉากแรก…',
@@ -31,6 +31,10 @@ export const messages = {
     destinations: 'ไปยังฉาก',
     information: 'จุดข้อมูล',
     infoPoint: 'จุดข้อมูล',
+    imageViewerTitle: 'ดูรูปขนาดใหญ่',
+    openImage: 'เปิดดูรูปขนาดใหญ่',
+    previousImage: 'รูปก่อนหน้า',
+    nextImage: 'รูปถัดไป',
     sourceLabel: 'แหล่งอ้างอิง',
     tagListLabel: 'ป้ายกำกับ',
     mapTitle: 'แผนผังฉาก',
@@ -41,7 +45,7 @@ export const messages = {
     mapCopyCoordinates: 'คัดลอกพิกัด',
     mapCopied: 'คัดลอกแล้ว',
     aboutEyebrow: 'ข้อมูลโครงงาน',
-    aboutTitle: 'Virtual Open House KMUTNB',
+    aboutTitle: 'FITM 360° Virtual Tour',
     aboutDescription: 'การพัฒนามหาวิทยาลัยเสมือนจริงในรูปแบบ Open House ออนไลน์ เพื่อให้ผู้สนใจเข้าถึงบรรยากาศและพื้นที่ของมหาวิทยาลัยได้โดยไม่จำกัดเวลาและสถานที่',
     faculty: 'คณะ',
     facultyValue: 'เทคโนโลยีและการจัดการอุตสาหกรรม',
@@ -81,7 +85,7 @@ export const messages = {
     showInfo: 'Show scene information',
     hideInfo: 'Hide scene information',
     loadingScene: 'Loading scene…',
-    introEyebrow: 'Virtual Open House · 360°',
+    introEyebrow: 'FITM Virtual Tour · 360°',
     introTitle: 'Visit the campus virtually',
     introDescription: 'Explore the buildings and spaces of KMUTNB Prachinburi Campus through immersive 360-degree panoramas.',
     initialLoading: 'Preparing the first scene…',
@@ -94,6 +98,10 @@ export const messages = {
     destinations: 'Continue to',
     information: 'Information points',
     infoPoint: 'Information point',
+    imageViewerTitle: 'Large image viewer',
+    openImage: 'Open large image',
+    previousImage: 'Previous image',
+    nextImage: 'Next image',
     sourceLabel: 'Source',
     tagListLabel: 'Tags',
     mapTitle: 'Scene map',
@@ -104,7 +112,7 @@ export const messages = {
     mapCopyCoordinates: 'Copy coordinates',
     mapCopied: 'Copied',
     aboutEyebrow: 'About the project',
-    aboutTitle: 'Virtual Open House KMUTNB',
+    aboutTitle: 'FITM 360° Virtual Tour',
     aboutDescription: 'An online university Open House designed to make the campus atmosphere and facilities accessible without the limits of time or travel.',
     faculty: 'Faculty',
     facultyValue: 'Industrial Technology and Management',
@@ -137,6 +145,10 @@ export function message(locale: Locale, key: MessageKey): string {
 
 export function sceneCounter(locale: Locale, current: number, total: number): string {
   return locale === 'th' ? `ฉากที่ ${current} จาก ${total}` : `Scene ${current} of ${total}`;
+}
+
+export function imageCounter(locale: Locale, current: number, total: number): string {
+  return locale === 'th' ? `รูปที่ ${current} จาก ${total}` : `Image ${current} of ${total}`;
 }
 
 export function goToScene(locale: Locale, title: string): string {

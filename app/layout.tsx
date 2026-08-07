@@ -2,14 +2,19 @@ import type { Metadata, Viewport } from 'next';
 import '../src/styles.css';
 
 export const metadata: Metadata = {
-  title: 'Virtual Open House KMUTNB · Prachinburi',
-  description: 'Virtual Open House 360° ของมหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี',
-  icons: { icon: '/favicon.svg' },
+  title: 'FITM 360° Virtual Tour · KMUTNB Prachinburi',
+  description: 'ทัวร์เสมือนจริง 360° คณะเทคโนโลยีและการจัดการอุตสาหกรรม มจพ. วิทยาเขตปราจีนบุรี',
+  applicationName: 'FITM 360° Virtual Tour',
+  icons: {
+    icon: [{ url: '/fitm-favicon.svg', type: 'image/svg+xml' }],
+    shortcut: '/fitm-favicon.svg',
+    apple: '/mainimages/Logo_FitM/FITM_LOGO.png'
+  },
   manifest: '/manifest.webmanifest'
 };
 
 export const viewport: Viewport = {
-  themeColor: '#f0890b',
+  themeColor: '#082f49',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover'

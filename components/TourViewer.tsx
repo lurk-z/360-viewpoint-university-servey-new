@@ -41,6 +41,7 @@ import {
   ARROW_SETTLE_DURATION,
   getSceneTransitionOptions
 } from '../src/viewer-transition';
+import { installPanoramaEnhancement } from '../src/panorama-enhancement';
 
 export interface TourViewerHandle {
   navigate: (sceneId: SceneId) => Promise<void>;
@@ -175,7 +176,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       defaultZoomLvl: 22,
       minFov: 35,
       maxFov: 100,
-      canvasBackground: '#431407',
+      canvasBackground: '#082f49',
       adapter: EquirectangularAdapter.withConfig({
         shader: true,
         useXmpData: false
@@ -218,6 +219,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const markersPlugin = viewer.getPlugin<MarkersPlugin>(MarkersPlugin);
     const autorotatePlugin = viewer.getPlugin<AutorotatePlugin>(AutorotatePlugin);
     const virtualTourPlugin = viewer.getPlugin<VirtualTourPlugin>(VirtualTourPlugin);
+    const disposePanoramaEnhancement = installPanoramaEnhancement(viewer.renderer);
     viewerRef.current = viewer;
     markersRef.current = markersPlugin;
     autorotateRef.current = autorotatePlugin;
@@ -295,6 +297,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     });
 
     return () => {
+      disposePanoramaEnhancement();
       viewer.destroy();
       viewerRef.current = null;
       markersRef.current = null;

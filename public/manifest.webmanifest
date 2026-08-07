@@ -1,17 +1,17 @@
 {
-  "name": "Virtual Open House KMUTNB Prachinburi",
-  "short_name": "KMUTNB 360",
-  "description": "Virtual Open House 360° ของ KMUTNB วิทยาเขตปราจีนบุรี",
+  "name": "FITM 360° Virtual Tour · KMUTNB Prachinburi",
+  "short_name": "FITM 360°",
+  "description": "ทัวร์เสมือนจริง 360° คณะเทคโนโลยีและการจัดการอุตสาหกรรม มจพ. วิทยาเขตปราจีนบุรี",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "theme_color": "#9a3412",
-  "background_color": "#fff7ed",
+  "theme_color": "#082f49",
+  "background_color": "#f3f9fc",
   "lang": "th",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/fitm-favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
