@@ -13,6 +13,7 @@ import {
 } from '../content';
 import { createAdminSupabaseClient } from '../../lib/supabase/admin';
 import { isSupabaseConfigured } from '../../lib/supabase/env';
+import { isTourPlaceLink } from '../tour-places';
 
 interface CmsRow {
   readonly id: string;
@@ -54,7 +55,7 @@ function mapActivity(row: CmsRow): ActivityContent | null {
 
 function mapHotspot(row: CmsRow): HotspotContent | null {
   const parsed = hotspotDataSchema.safeParse(row.published_data);
-  if (!parsed.success || !row.scene_id || !isSceneId(row.scene_id)) return null;
+  if (!parsed.success || !row.scene_id || !isSceneId(row.scene_id) || !isTourPlaceLink(row.id, row.scene_id)) return null;
   return {
     id: row.id,
     sceneId: row.scene_id,

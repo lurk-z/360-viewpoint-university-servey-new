@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import AdminTourPlaceSync from '../../../components/admin/AdminTourPlaceSync';
 import { getVisitStatistics, listAdminContent } from '../../../src/server/admin-repository';
 import { requireStaff } from '../../../src/server/auth';
+import { getTourPlaceSyncStatus } from '../../../src/tour-places';
 
 export default async function AdminDashboardPage() {
   const session = await requireStaff();
@@ -14,10 +16,15 @@ export default async function AdminDashboardPage() {
   const maximum = Math.max(1, ...stats.last7Days.map((day) => day.count));
   const managedHotspotIds = new Set(faculties.flatMap((row) => row.hotspotId ? [row.hotspotId] : []));
   const places = hotspots.filter((row) => !managedHotspotIds.has(row.id));
+  const tourPlaceSyncStatus = getTourPlaceSyncStatus(hotspots.map((row) => ({
+    id: row.id,
+    sceneId: row.sceneId
+  })));
 
   return (
     <section className="admin-page">
       <header className="admin-page__header"><div><p>DASHBOARD</p><h1>ภาพรวมระบบ</h1><span>สวัสดี {session.displayName || session.email}</span></div><a href="/" target="_blank">ดูเว็บไซต์ ↗</a></header>
+      <AdminTourPlaceSync status={tourPlaceSyncStatus} role={session.role} />
       <div className="admin-stats">
         <article><span>เข้าชมวันนี้</span><strong>{stats.today.toLocaleString()}</strong><small>ครั้ง</small></article>
         <article><span>เข้าชมทั้งหมด</span><strong>{stats.total.toLocaleString()}</strong><small>ครั้ง</small></article>

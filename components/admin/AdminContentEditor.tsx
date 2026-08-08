@@ -1,13 +1,17 @@
+'use client';
+
+import { useActionState, type FormEvent, type ReactNode } from 'react';
 import type { AdminRole, ContentImage, ContentKind } from '../../src/content';
 import type { AdminContentRow } from '../../src/server/admin-repository';
-import AdminImageGalleryFields from './AdminImageGalleryFields';
+import AdminImageGalleryFields, { type AdminMediaOption } from './AdminImageGalleryFields';
 import {
   archiveContentAction,
   deleteContentAction,
   publishContentAction,
   restoreContentAction,
   saveContentAction,
-  unpublishContentAction
+  unpublishContentAction,
+  type AdminActionState
 } from '../../app/admin/actions';
 
 interface FacultyOption {
@@ -22,7 +26,14 @@ interface AdminContentEditorProps {
   readonly rows: readonly AdminContentRow[];
   readonly role: AdminRole;
   readonly faculties?: readonly FacultyOption[];
+  readonly facultyProgramStats?: Readonly<Record<string, { readonly total: number; readonly published: number }>>;
+  readonly facultyFilter?: FacultyOption;
+  readonly media?: readonly AdminMediaOption[];
+  readonly placeStatuses?: Readonly<Record<string, { readonly orphaned: boolean; readonly draftReady: boolean }>>;
 }
+
+type ContentAction = (previousState: AdminActionState, formData: FormData) => Promise<AdminActionState>;
+const INITIAL_ACTION_STATE: AdminActionState = { status: 'idle', message: '' };
 
 function object(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -108,10 +119,11 @@ function TextArea({ prefix, name, label, value = '', required = false, rows = 3 
   return <label className="admin-field--wide" htmlFor={id}><span>{label}</span><textarea id={id} name={name} defaultValue={value} required={required} rows={rows} /></label>;
 }
 
-function ContentFields({ kind, row, faculties = [] }: {
+function ContentFields({ kind, row, faculties = [], media = [] }: {
   readonly kind: ContentKind;
   readonly row?: AdminContentRow;
   readonly faculties?: readonly FacultyOption[];
+  readonly media?: readonly AdminMediaOption[];
 }) {
   const data = row?.draftData ?? {};
   const sourceData = source(data, kind);
@@ -164,7 +176,7 @@ function ContentFields({ kind, row, faculties = [] }: {
       <TextField prefix={prefix} name="sceneId" label="Scene ID ที่เกี่ยวข้อง" value={field(data, 'sceneId')} />
     </> : null}
     {kind === 'hotspot_contents' || kind === 'faculties' ? (
-      <AdminImageGalleryFields images={contentImages(data)} />
+      <AdminImageGalleryFields images={contentImages(data)} media={media} />
     ) : (
       <TextField prefix={prefix} name="imageUrl" label="URL รูปภาพ" value={field(data, 'imageUrl')} />
     )}
@@ -174,23 +186,95 @@ function ContentFields({ kind, row, faculties = [] }: {
   </>;
 }
 
-function ActionForm({ action, kind, id, label, danger = false }: {
-  readonly action: (formData: FormData) => Promise<void>;
+function ActionMessage({ state }: { readonly state: AdminActionState }) {
+  if (state.status === 'idle' || !state.message) return null;
+  return <p className={`admin-action-message is-${state.status}`} role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>;
+}
+
+function SaveForm({ kind, id, children, label }: {
   readonly kind: ContentKind;
-  readonly id: string;
+  readonly id?: string;
+  readonly children: ReactNode;
   readonly label: string;
-  readonly danger?: boolean;
 }) {
+  const [state, action, pending] = useActionState(saveContentAction, INITIAL_ACTION_STATE);
   return (
-    <form action={action}>
+    <form action={action} className="admin-form">
       <input type="hidden" name="kind" value={kind} />
-      <input type="hidden" name="id" value={id} />
-      <button className={danger ? 'admin-button admin-button--danger' : 'admin-button admin-button--secondary'} type="submit">{label}</button>
+      {id ? <input type="hidden" name="id" value={id} /> : null}
+      {children}
+      <div className="admin-form__actions">
+        <button className="admin-button" type="submit" disabled={pending}>{pending ? 'กำลังบันทึก…' : label}</button>
+        <ActionMessage state={state} />
+      </div>
     </form>
   );
 }
 
-export default function AdminContentEditor({ kind, title, description, rows, role, faculties = [] }: AdminContentEditorProps) {
+function ActionForm({
+  action,
+  kind,
+  id,
+  label,
+  pendingLabel,
+  danger = false,
+  available = true,
+  disabled = false,
+  disabledMessage,
+  helpHref,
+  confirmMessage
+}: {
+  readonly action: ContentAction;
+  readonly kind: ContentKind;
+  readonly id: string;
+  readonly label: string;
+  readonly pendingLabel: string;
+  readonly danger?: boolean;
+  readonly available?: boolean;
+  readonly disabled?: boolean;
+  readonly disabledMessage?: string;
+  readonly helpHref?: string;
+  readonly confirmMessage?: string;
+}) {
+  const [state, formAction, pending] = useActionState(action, INITIAL_ACTION_STATE);
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    if (confirmMessage && !window.confirm(confirmMessage)) event.preventDefault();
+  };
+  return (
+    <form action={formAction} className={`admin-action-form${available ? '' : ' is-unavailable'}`} onSubmit={handleSubmit}>
+      <input type="hidden" name="kind" value={kind} />
+      <input type="hidden" name="id" value={id} />
+      {available ? (
+        <button
+          className={danger ? 'admin-button admin-button--danger' : 'admin-button admin-button--secondary'}
+          type="submit"
+          disabled={pending || disabled}
+        >
+          {pending ? pendingLabel : label}
+        </button>
+      ) : null}
+      {disabled && disabledMessage ? (
+        <p className="admin-action-message is-warning">
+          {disabledMessage} {helpHref ? <a href={helpHref}>ไปจัดการหลักสูตร</a> : null}
+        </p>
+      ) : null}
+      <ActionMessage state={state} />
+    </form>
+  );
+}
+
+export default function AdminContentEditor({
+  kind,
+  title,
+  description,
+  rows,
+  role,
+  faculties = [],
+  facultyProgramStats = {},
+  facultyFilter,
+  media = [],
+  placeStatuses = {}
+}: AdminContentEditorProps) {
   return (
     <section className="admin-page">
       <header className="admin-page__header"><div><p>CONTENT MANAGEMENT</p><h1>{title}</h1><span>{description}</span></div></header>
@@ -198,35 +282,48 @@ export default function AdminContentEditor({ kind, title, description, rows, rol
       {kind !== 'hotspot_contents' ? (
         <details className="admin-editor admin-editor--new">
           <summary>+ เพิ่มรายการใหม่</summary>
-          <form action={saveContentAction} className="admin-form">
-            <input type="hidden" name="kind" value={kind} />
-            <ContentFields kind={kind} faculties={faculties} />
-            <div className="admin-form__actions"><button className="admin-button" type="submit">บันทึกเป็นฉบับร่าง</button></div>
-          </form>
+          <SaveForm kind={kind} label="บันทึกเป็นฉบับร่าง">
+            <ContentFields kind={kind} faculties={faculties} media={media} />
+          </SaveForm>
         </details>
       ) : null}
+
+      {facultyFilter ? (
+        <div className="admin-filter-note">
+          <span>กำลังแสดงหลักสูตรของ <strong>{facultyFilter.label}</strong></span>
+          <a href="/admin/programs">แสดงหลักสูตรทั้งหมด</a>
+        </div>
+      ) : null}
+
+      <p className="admin-workflow-note">
+        แก้ไขและบันทึกฉบับร่างได้โดยไม่ต้องนำรายการออกจากหน้าเว็บ เมื่อพร้อมแล้วจึงกด “อัปเดตข้อมูลที่เผยแพร่”
+      </p>
 
       <div className="admin-editor-list">
         {rows.map((row) => {
           const nameKey = kind === 'activities' || kind === 'hotspot_contents' ? 'title' : 'name';
           const label = localized(row.draftData, nameKey, 'th') || row.slug || row.id;
           const published = Boolean(row.publishedData) && !row.archivedAt;
+          const placeStatus = kind === 'hotspot_contents' ? placeStatuses[row.id] : undefined;
+          const programStats = kind === 'faculties'
+            ? facultyProgramStats[row.id] ?? { total: 0, published: 0 }
+            : { total: 0, published: 0 };
+          const affectedProgramsMessage = kind === 'faculties' && programStats.published > 0
+            ? `คณะนี้มีหลักสูตรเผยแพร่ ${programStats.published} รายการ หลักสูตรทั้งหมดจะถูกซ่อนจาก Tour และ AI ชั่วคราว ต้องการดำเนินการต่อหรือไม่?`
+            : undefined;
           return (
             <article className={`admin-editor${row.archivedAt ? ' is-archived' : ''}`} key={row.id}>
               <header>
                 <div><h2>{label}</h2><code>{row.slug ?? row.id}</code></div>
-                <span className={`admin-status ${row.archivedAt ? 'is-archived' : published ? 'is-published' : 'is-draft'}`}>
-                  {row.archivedAt ? 'เก็บในคลัง' : published ? 'เผยแพร่แล้ว' : 'ฉบับร่าง'}
+                <span className={`admin-status ${row.archivedAt ? 'is-archived' : placeStatus?.orphaned ? 'is-warning' : !placeStatus?.draftReady && kind === 'hotspot_contents' ? 'is-pending' : published ? 'is-published' : 'is-draft'}`}>
+                  {row.archivedAt ? 'เก็บในคลัง' : placeStatus?.orphaned ? 'ไม่พบในทัวร์' : !placeStatus?.draftReady && kind === 'hotspot_contents' ? 'รอกรอกข้อมูล' : published ? 'เผยแพร่แล้ว' : 'ฉบับร่าง'}
                 </span>
               </header>
               <details>
                 <summary>แก้ไขฉบับร่าง</summary>
-                <form action={saveContentAction} className="admin-form">
-                  <input type="hidden" name="kind" value={kind} />
-                  <input type="hidden" name="id" value={row.id} />
-                  <ContentFields kind={kind} row={row} faculties={faculties} />
-                  <div className="admin-form__actions"><button className="admin-button" type="submit">บันทึกฉบับร่าง</button></div>
-                </form>
+                <SaveForm kind={kind} id={row.id} label="บันทึกการแก้ไขเป็นฉบับร่าง">
+                  <ContentFields kind={kind} row={row} faculties={faculties} media={media} />
+                </SaveForm>
               </details>
               <DraftPreview kind={kind} data={row.draftData} />
               {row.publishedData ? (
@@ -235,14 +332,71 @@ export default function AdminContentEditor({ kind, title, description, rows, rol
                   <pre>{JSON.stringify(row.publishedData, null, 2)}</pre>
                 </details>
               ) : null}
+              {kind === 'faculties' && !published && programStats.published > 0 ? (
+                <p className="admin-dependency-note">
+                  หลักสูตรเผยแพร่ {programStats.published} รายการกำลังถูกซ่อนจาก Tour และ AI เมื่อเผยแพร่คณะนี้อีกครั้ง หลักสูตรจะกลับมาแสดงโดยอัตโนมัติ
+                </p>
+              ) : null}
               {role === 'admin' ? (
                 <div className="admin-record-actions">
-                  {!row.archivedAt ? <ActionForm action={publishContentAction} kind={kind} id={row.id} label="เผยแพร่ฉบับร่าง" /> : null}
-                  {published ? <ActionForm action={unpublishContentAction} kind={kind} id={row.id} label="ยกเลิกเผยแพร่" /> : null}
-                  {!row.archivedAt ? <ActionForm action={archiveContentAction} kind={kind} id={row.id} label="เก็บเข้าคลัง" danger /> : <>
-                    <ActionForm action={restoreContentAction} kind={kind} id={row.id} label="คืนข้อมูล" />
-                    <ActionForm action={deleteContentAction} kind={kind} id={row.id} label="ลบถาวร" danger />
-                  </>}
+                  <ActionForm
+                    action={publishContentAction}
+                    kind={kind}
+                    id={row.id}
+                    label={published ? 'อัปเดตข้อมูลที่เผยแพร่' : 'เผยแพร่ครั้งแรก'}
+                    pendingLabel="กำลังเผยแพร่…"
+                    available={!row.archivedAt}
+                    disabled={Boolean(placeStatus?.orphaned || (kind === 'hotspot_contents' && !placeStatus?.draftReady))}
+                    disabledMessage={placeStatus?.orphaned
+                      ? 'เผยแพร่ไม่ได้ เพราะไม่พบ Scene ID และ Hotspot ID คู่นี้ในโครงสร้างทัวร์'
+                      : kind === 'hotspot_contents' && !placeStatus?.draftReady
+                        ? 'กรุณากรอกข้อมูลไทย–อังกฤษ รูปอย่างน้อยหนึ่งรูป และแหล่งอ้างอิงให้ครบก่อนเผยแพร่'
+                        : undefined}
+                  />
+                  <ActionForm
+                    action={unpublishContentAction}
+                    kind={kind}
+                    id={row.id}
+                    label="นำออกจากหน้าเว็บ"
+                    pendingLabel="กำลังนำออก…"
+                    available={published}
+                    confirmMessage={affectedProgramsMessage}
+                  />
+                  <ActionForm
+                    action={archiveContentAction}
+                    kind={kind}
+                    id={row.id}
+                    label="เก็บเข้าคลัง"
+                    pendingLabel="กำลังเก็บ…"
+                    danger
+                    available={!row.archivedAt}
+                    confirmMessage={affectedProgramsMessage}
+                  />
+                  <ActionForm
+                    action={restoreContentAction}
+                    kind={kind}
+                    id={row.id}
+                    label="คืนข้อมูลจากคลัง"
+                    pendingLabel="กำลังคืนข้อมูล…"
+                    available={Boolean(row.archivedAt)}
+                  />
+                  <ActionForm
+                    action={deleteContentAction}
+                    kind={kind}
+                    id={row.id}
+                    label="ลบถาวร"
+                    pendingLabel="กำลังลบ…"
+                    danger
+                    available={Boolean(row.archivedAt) || (kind === 'faculties' && programStats.total > 0)}
+                    disabled={kind === 'faculties' && programStats.total > 0}
+                    disabledMessage={kind === 'faculties' && programStats.total > 0
+                      ? `ยังลบคณะไม่ได้ เพราะมีหลักสูตรอ้างอิง ${programStats.total} รายการ`
+                      : undefined}
+                    helpHref={kind === 'faculties' && programStats.total > 0
+                      ? `/admin/programs?faculty=${encodeURIComponent(row.id)}`
+                      : undefined}
+                    confirmMessage="การลบถาวรไม่สามารถย้อนกลับได้ ต้องการดำเนินการต่อหรือไม่?"
+                  />
                 </div>
               ) : <p className="admin-editor-note">Editor บันทึกฉบับร่างได้ การเผยแพร่ต้องให้ Admin ตรวจสอบ</p>}
             </article>

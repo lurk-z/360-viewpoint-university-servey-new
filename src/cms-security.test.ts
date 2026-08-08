@@ -11,6 +11,12 @@ const linkedContentMigration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/202608070002_linked_faculty_content.sql'),
   'utf8'
 );
+const adminActions = readFileSync(resolve(process.cwd(), 'app/admin/actions.ts'), 'utf8');
+const adminEditor = readFileSync(resolve(process.cwd(), 'components/admin/AdminContentEditor.tsx'), 'utf8');
+const adminSectionPage = readFileSync(resolve(process.cwd(), 'app/admin/(protected)/[section]/page.tsx'), 'utf8');
+const publicContentRepository = readFileSync(resolve(process.cwd(), 'src/server/content-repository.ts'), 'utf8');
+const mediaGallery = readFileSync(resolve(process.cwd(), 'components/admin/AdminImageGalleryFields.tsx'), 'utf8');
+const cmsSeed = readFileSync(resolve(process.cwd(), 'scripts/seed-cms.ts'), 'utf8');
 
 describe('CMS security and aggregate visits', () => {
   it('keeps public tables behind RLS and restricts privileged RPCs to service_role', () => {
@@ -34,6 +40,49 @@ describe('CMS security and aggregate visits', () => {
     expect(linkedContentMigration).toContain('add column if not exists hotspot_id text');
     expect(linkedContentMigration).toContain('faculties_scene_id_unique_idx');
     expect(linkedContentMigration).not.toMatch(/\b(yaw|pitch|map_position)\b/);
+  });
+
+  it('allows a faculty to be hidden without deleting its published programs', () => {
+    expect(adminActions).not.toContain('assertNoPublishedPrograms');
+    expect(adminActions).toContain("kind === 'faculties'");
+    expect(adminActions).toContain('หลักสูตรของคณะถูกซ่อนชั่วคราว');
+    expect(adminActions).toContain(".from('programs')");
+    expect(adminActions).toContain('ยังลบคณะไม่ได้');
+  });
+
+  it('returns inline action feedback and links faculty program counts to the editor', () => {
+    expect(adminActions).toContain('Promise<AdminActionState>');
+    expect(adminEditor).toContain('useActionState');
+    expect(adminEditor).toContain('admin-action-message');
+    expect(adminEditor).toContain('หลักสูตรทั้งหมดจะถูกซ่อนจาก Tour และ AI ชั่วคราว');
+    expect(adminSectionPage).toContain('facultyProgramStats');
+    expect(adminSectionPage).toContain("row.facultyId === facultyFilter.id");
+  });
+
+  it('keeps tour-place synchronization admin-only and validates structural links before publishing', () => {
+    expect(adminActions).toContain('syncTourPlacesAction');
+    expect(adminActions).toContain('const session = await requireAdmin()');
+    expect(adminActions).toContain('validatePublishData(kind, draftData)');
+    expect(adminActions).toContain('isTourPlaceLink(id, data.scene_id)');
+    expect(publicContentRepository).toContain('isTourPlaceLink(row.id, row.scene_id)');
+    expect(mediaGallery).toContain('เลือกจาก Media Library');
+  });
+
+  it('seeds the four digital agro-industry programs as non-destructive drafts', () => {
+    for (const slug of [
+      'food-technology-supply-chain-management-ftscm',
+      'food-and-beauty-product-innovation-fain',
+      'food-science-and-nutrition-fsn',
+      'food-science-and-industry-mfsi'
+    ]) {
+      expect(cmsSeed.match(new RegExp(`slug: '${slug}'`, 'g'))).toHaveLength(1);
+    }
+    expect(cmsSeed).toContain('const digitalAgroProgramSeeds: readonly ProgramSeed[]');
+    expect(cmsSeed.match(/publishOnInsert: false/g)).toHaveLength(4);
+    expect(cmsSeed).toContain('published_data: seed.publishOnInsert === false ? null : seed.data');
+    expect(cmsSeed).toContain('const digitalAgroFacultyId = await ensureFaculty');
+    expect(cmsSeed).toContain("slug: 'digital-agro-industry'");
+    expect(cmsSeed).toContain("const missing = seeds.filter((seed) => !existingBySlug.has(seed.slug))");
   });
 
   it('fills missing dates with zero for fixed 7/30-day dashboard series', () => {

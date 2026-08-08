@@ -123,16 +123,24 @@ const wikipediaReference: InfoReference = {
   label: { th: 'วิกิพีเดีย', en: 'Wikipedia' }
 };
 
-export interface InfoHotspot extends HotspotBase {
+/** Structural Info point stored with tour geometry. Presentation is resolved from CMS content. */
+export interface InfoHotspotDefinition extends HotspotBase {
   readonly type: 'info';
-  readonly title: LocalizedText;
-  readonly description: LocalizedText;
-  readonly reference: InfoReference;
-  /** One or more supporting images shown in the centered information gallery. */
+  /** Optional emergency fallback for existing locations. New points may omit all presentation fields. */
+  readonly title?: LocalizedText;
+  readonly description?: LocalizedText;
+  readonly reference?: InfoReference;
   readonly images?: readonly InfoImage[];
 }
 
-export type Hotspot = SceneHotspot | InfoHotspot;
+/** Complete Info point passed to viewer components after CMS/fallback resolution. */
+export interface InfoHotspot extends InfoHotspotDefinition {
+  readonly title: LocalizedText;
+  readonly description: LocalizedText;
+  readonly reference: InfoReference;
+}
+
+export type Hotspot = SceneHotspot | InfoHotspotDefinition;
 
 export interface TourScene {
   readonly id: SceneId;
@@ -1028,8 +1036,8 @@ export function getNavigationHotspots(scene: TourScene): readonly SceneHotspot[]
   return scene.hotspots.filter((hotspot): hotspot is SceneHotspot => hotspot.type === 'scene');
 }
 
-export function getInfoHotspots(scene: TourScene): readonly InfoHotspot[] {
-  return scene.hotspots.filter((hotspot): hotspot is InfoHotspot => hotspot.type === 'info');
+export function getInfoHotspots(scene: TourScene): readonly InfoHotspotDefinition[] {
+  return scene.hotspots.filter((hotspot): hotspot is InfoHotspotDefinition => hotspot.type === 'info');
 }
 
 export function getSceneEdges(): readonly SceneEdge[] {
@@ -1097,15 +1105,21 @@ export function validateTour(): readonly string[] {
         errors.push(`Scene ${scene.id} links to missing scene ${hotspot.target}`);
       }
       if (hotspot.type === 'info') {
-        if (!hotspot.images?.length) {
-          errors.push(`Info hotspot ${hotspot.id} must include at least one image`);
-        }
-        for (const locale of locales) {
-          if (!hotspot.reference.label[locale].trim()) {
-            errors.push(`Info hotspot ${hotspot.id} reference is missing ${locale} label`);
+        const hasFallbackContent = Boolean(hotspot.title || hotspot.description || hotspot.reference || hotspot.images?.length);
+        if (hasFallbackContent) {
+          if (!hotspot.title || !hotspot.description || !hotspot.reference || !hotspot.images?.length) {
+            errors.push(`Info hotspot ${hotspot.id} fallback content must be complete when provided`);
+          }
+          for (const locale of locales) {
+            if (!hotspot.title?.[locale].trim() || !hotspot.description?.[locale].trim()) {
+              errors.push(`Info hotspot ${hotspot.id} fallback content is missing ${locale} text`);
+            }
+            if (!hotspot.reference?.label[locale].trim()) {
+              errors.push(`Info hotspot ${hotspot.id} reference is missing ${locale} label`);
+            }
           }
         }
-        if (hotspot.reference.url !== undefined) {
+        if (hotspot.reference?.url !== undefined) {
           try {
             const referenceUrl = new URL(hotspot.reference.url);
             if (referenceUrl.protocol !== 'http:' && referenceUrl.protocol !== 'https:') {

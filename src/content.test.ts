@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createFallbackContentSnapshot,
+  createFallbackHotspotContent,
   facultyDataSchema,
   hotspotDataSchema,
   mergeMissingScenePresentation,
@@ -16,6 +17,22 @@ describe('public CMS content', () => {
     expect(snapshot.source).toBe('fallback');
     expect(snapshot.hotspots).toHaveLength(hotspotCount);
     expect(snapshot.faculties).toEqual([]);
+  });
+
+  it('supports geometry-only Info points with generic emergency content', () => {
+    const scene = getScene('entrance');
+    const fallback = createFallbackHotspotContent(scene, {
+      id: 'future-place-info',
+      type: 'info',
+      yaw: 12,
+      pitch: 3
+    });
+    expect(fallback).toMatchObject({
+      hotspotId: 'future-place-info',
+      sceneId: scene.id,
+      title: { th: 'ข้อมูลสถานที่', en: 'Place information' },
+      images: []
+    });
   });
 
   it('merges published text and media without changing hotspot geometry', () => {

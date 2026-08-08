@@ -3,6 +3,7 @@ import {
   getInfoHotspots,
   tourScenes,
   type InfoHotspot,
+  type InfoHotspotDefinition,
   type Locale,
   type SceneId,
   type TourScene
@@ -162,16 +163,28 @@ export function mergeMissingScenePresentation(
   };
 }
 
-function staticHotspotContent(scene: TourScene, hotspot: InfoHotspot): HotspotContent {
+const genericInfoTitle: LocalizedContent = { th: 'ข้อมูลสถานที่', en: 'Place information' };
+const genericInfoDescription: LocalizedContent = {
+  th: 'รายละเอียดของสถานที่นี้ยังอยู่ระหว่างการจัดทำ',
+  en: 'Information about this place is being prepared.'
+};
+const pendingReference: ContentSource = {
+  label: { th: 'ยังไม่ระบุแหล่งอ้างอิง', en: 'Source pending' }
+};
+
+export function createFallbackHotspotContent(
+  scene: TourScene,
+  hotspot: InfoHotspotDefinition
+): HotspotContent {
   return {
     id: hotspot.id,
     sceneId: scene.id,
     hotspotId: hotspot.id,
-    title: hotspot.title,
-    description: hotspot.description,
+    title: hotspot.title ?? genericInfoTitle,
+    description: hotspot.description ?? genericInfoDescription,
     sceneTitle: scene.title,
     sceneDescription: scene.description,
-    reference: hotspot.reference,
+    reference: hotspot.reference ?? pendingReference,
     images: hotspot.images ?? []
   };
 }
@@ -185,7 +198,7 @@ export function createFallbackContentSnapshot(): PublicContentSnapshot {
     programs: [],
     activities: [],
     hotspots: tourScenes.flatMap((scene) => (
-      getInfoHotspots(scene).map((hotspot) => staticHotspotContent(scene, hotspot))
+      getInfoHotspots(scene).map((hotspot) => createFallbackHotspotContent(scene, hotspot))
     ))
   };
 }
@@ -207,7 +220,7 @@ export function resolveTourScene(
 }
 
 export function resolveInfoHotspot(
-  hotspot: InfoHotspot,
+  hotspot: InfoHotspotDefinition,
   content: PublicContentSnapshot
 ): InfoHotspot {
   const faculty = content.faculties.find((item) => item.hotspotId === hotspot.id);
@@ -221,7 +234,15 @@ export function resolveInfoHotspot(
     };
   }
   const override = content.hotspots.find((item) => item.hotspotId === hotspot.id);
-  if (!override) return hotspot;
+  if (!override) {
+    return {
+      ...hotspot,
+      title: hotspot.title ?? genericInfoTitle,
+      description: hotspot.description ?? genericInfoDescription,
+      reference: hotspot.reference ?? pendingReference,
+      images: hotspot.images ?? []
+    };
+  }
   return {
     ...hotspot,
     title: override.title,

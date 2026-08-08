@@ -10,6 +10,7 @@ interface DisplayMessage extends ChatTurn {
   readonly id: number;
   readonly citations?: readonly Citation[];
   readonly relatedSceneIds?: readonly SceneId[];
+  readonly relatedProgramIds?: readonly string[];
   readonly fallback?: boolean;
 }
 
@@ -18,21 +19,18 @@ interface TourChatProps {
   readonly sceneId: SceneId;
   readonly content: PublicContentSnapshot;
   readonly onNavigate: (sceneId: SceneId) => void;
+  readonly onOpenProgram: (programId: string) => void;
   readonly onOpenChange?: (open: boolean) => void;
 }
 
 function citationSceneId(citation: Citation, content: PublicContentSnapshot): SceneId | undefined {
   if (citation.kind === 'faculty') return content.faculties.find((item) => item.id === citation.id)?.sceneId;
-  if (citation.kind === 'program') {
-    const program = content.programs.find((item) => item.id === citation.id);
-    return content.faculties.find((item) => item.id === program?.facultyId)?.sceneId;
-  }
   if (citation.kind === 'hotspot') return content.hotspots.find((item) => item.id === citation.id)?.sceneId;
   if (citation.kind === 'activity') return content.activities.find((item) => item.id === citation.id)?.sceneId;
   return undefined;
 }
 
-export default function TourChat({ locale, sceneId, content, onNavigate, onOpenChange }: TourChatProps) {
+export default function TourChat({ locale, sceneId, content, onNavigate, onOpenProgram, onOpenChange }: TourChatProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -82,6 +80,7 @@ export default function TourChat({ locale, sceneId, content, onNavigate, onOpenC
         text: result.answer,
         citations: result.citations,
         relatedSceneIds: result.relatedSceneIds,
+        relatedProgramIds: Array.isArray(result.relatedProgramIds) ? result.relatedProgramIds : [],
         fallback: result.fallback
       }]);
     } catch {
@@ -140,6 +139,9 @@ export default function TourChat({ locale, sceneId, content, onNavigate, onOpenC
                 <div className="tour-chat__citations">
                   <strong>{message(locale, 'aiSources')}</strong>
                   {item.citations.map((citation) => {
+                    if (citation.kind === 'program' && content.programs.some((program) => program.id === citation.id)) {
+                      return <button type="button" key={`${citation.kind}-${citation.id}`} onClick={() => onOpenProgram(citation.id)}>{localizeContent(citation.title, locale)}</button>;
+                    }
                     const targetSceneId = citationSceneId(citation, content);
                     const label = localizeContent(citation.title, locale);
                     if (targetSceneId) {
@@ -149,6 +151,19 @@ export default function TourChat({ locale, sceneId, content, onNavigate, onOpenC
                       return <a key={`${citation.kind}-${citation.id}`} href={citation.url} target="_blank" rel="noopener noreferrer">{label}</a>;
                     }
                     return <span key={`${citation.kind}-${citation.id}`}>{label}</span>;
+                  })}
+                </div>
+              ) : null}
+              {item.relatedProgramIds?.length ? (
+                <div className="tour-chat__programs">
+                  <strong>{message(locale, 'aiRelatedPrograms')}</strong>
+                  {item.relatedProgramIds.flatMap((programId) => {
+                    const program = content.programs.find((item) => item.id === programId);
+                    return program ? [
+                      <button type="button" key={program.id} onClick={() => onOpenProgram(program.id)}>
+                        {localizeContent(program.name, locale)}
+                      </button>
+                    ] : [];
                   })}
                 </div>
               ) : null}

@@ -28,6 +28,7 @@ export interface ChatResponse {
   readonly answer: string;
   readonly citations: readonly Citation[];
   readonly relatedSceneIds: readonly SceneId[];
+  readonly relatedProgramIds: readonly string[];
   readonly fallback: boolean;
 }
 

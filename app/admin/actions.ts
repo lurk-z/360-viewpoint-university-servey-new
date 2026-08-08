@@ -14,9 +14,33 @@ import {
   type ContentKind
 } from '../../src/content';
 import { requireAdmin, requireStaff } from '../../src/server/auth';
+import { syncTourPlaces } from '../../src/server/tour-place-sync';
+import { isTourPlaceLink } from '../../src/tour-places';
 
 const contentKindSchema = z.enum(['faculties', 'programs', 'activities', 'hotspot_contents']);
 const slugSchema = z.string().trim().min(2).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+export interface AdminActionState {
+  readonly status: 'idle' | 'success' | 'error';
+  readonly message: string;
+}
+
+class AdminActionError extends Error {}
+
+function actionSuccess(message: string): AdminActionState {
+  return { status: 'success', message };
+}
+
+function actionFailure(error: unknown, fallback: string): AdminActionState {
+  if (error instanceof AdminActionError) return { status: 'error', message: error.message };
+  if (error instanceof z.ZodError) {
+    return { status: 'error', message: 'กรุณาตรวจสอบข้อมูลบังคับภาษาไทยและอังกฤษ รูปภาพ แหล่งอ้างอิง รูปแบบ URL และ Slug ให้ครบถ้วน' };
+  }
+  const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : '';
+  if (code === '23505') return { status: 'error', message: 'Slug นี้ถูกใช้งานแล้ว กรุณาใช้ Slug อื่น' };
+  console.error('Admin content action failed', error);
+  return { status: 'error', message: fallback };
+}
 
 function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
@@ -88,6 +112,13 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
   });
 }
 
+function validatePublishData(kind: ContentKind, value: unknown): Record<string, unknown> {
+  if (kind === 'faculties') return facultyDataSchema.parse(value);
+  if (kind === 'programs') return programDataSchema.parse(value);
+  if (kind === 'activities') return activityDataSchema.parse(value);
+  return hotspotDataSchema.parse(value);
+}
+
 function revalidateAdmin(kind?: ContentKind): void {
   revalidatePath('/');
   revalidatePath('/admin');
@@ -105,20 +136,7 @@ async function assertPublishedFaculty(
     .not('published_data', 'is', null)
     .maybeSingle();
   if (error) throw error;
-  if (!data) throw new Error('ต้องเผยแพร่คณะที่สังกัดก่อนเผยแพร่หลักสูตร');
-}
-
-async function assertNoPublishedPrograms(
-  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
-  facultyId: string
-): Promise<void> {
-  const { count, error } = await supabase.from('programs')
-    .select('id', { count: 'exact', head: true })
-    .eq('faculty_id', facultyId)
-    .is('archived_at', null)
-    .not('published_data', 'is', null);
-  if (error) throw error;
-  if ((count ?? 0) > 0) throw new Error('กรุณายกเลิกเผยแพร่หลักสูตรของคณะนี้ก่อน');
+  if (!data) throw new AdminActionError('ต้องเผยแพร่คณะที่สังกัดก่อน จึงจะเผยแพร่หลักสูตรนี้ได้');
 }
 
 export async function loginAction(formData: FormData): Promise<void> {
@@ -138,129 +156,205 @@ export async function logoutAction(): Promise<void> {
   redirect('/admin/login');
 }
 
-export async function saveContentAction(formData: FormData): Promise<void> {
+export async function saveContentAction(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
   const session = await requireStaff();
-  const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const id = text(formData, 'id');
-  const draftData = parseDraftData(kind, formData);
-  const supabase = await createServerSupabaseClient();
+  try {
+    const kind = contentKindSchema.parse(text(formData, 'kind'));
+    const id = text(formData, 'id');
+    const draftData = parseDraftData(kind, formData);
+    const supabase = await createServerSupabaseClient();
 
-  if (id) {
-    const updatePayload = kind === 'programs'
-      ? {
+    if (id) {
+      const updatePayload = kind === 'programs'
+        ? {
+          draft_data: draftData,
+          faculty_id: z.uuid().parse(text(formData, 'facultyId')),
+          updated_by: session.userId
+        }
+        : {
+          draft_data: draftData,
+          updated_by: session.userId
+        };
+      const { error } = await supabase.from(kind).update(updatePayload).eq('id', id);
+      if (error) throw error;
+    } else {
+      if (kind === 'hotspot_contents') throw new AdminActionError('ไม่สามารถเพิ่มตำแหน่งสถานที่สำคัญจาก Admin ได้');
+      const slug = slugSchema.parse(text(formData, 'slug'));
+      const base = {
+        slug,
         draft_data: draftData,
-        faculty_id: z.uuid().parse(text(formData, 'facultyId')),
+        created_by: session.userId,
         updated_by: session.userId
-      }
-      : {
-      draft_data: draftData,
-      updated_by: session.userId
       };
-    const { error } = await supabase.from(kind).update(updatePayload).eq('id', id);
-    if (error) throw error;
-  } else {
-    if (kind === 'hotspot_contents') throw new Error('Hotspot geometry must already exist in tour-data.ts');
-    const slug = slugSchema.parse(text(formData, 'slug'));
-    const base = {
-      slug,
-      draft_data: draftData,
-      created_by: session.userId,
+      const payload = kind === 'programs'
+        ? { ...base, faculty_id: z.uuid().parse(text(formData, 'facultyId')) }
+        : base;
+      const { error } = await supabase.from(kind).insert(payload);
+      if (error) throw error;
+    }
+    revalidateAdmin(kind);
+    return actionSuccess(id ? 'บันทึกการแก้ไขเป็นฉบับร่างแล้ว ข้อมูลหน้า Tour ยังไม่เปลี่ยนจนกว่าจะกดอัปเดตข้อมูลที่เผยแพร่' : 'สร้างฉบับร่างใหม่แล้ว');
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถบันทึกฉบับร่างได้ กรุณาลองอีกครั้ง');
+  }
+}
+
+export async function publishContentAction(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
+  const session = await requireAdmin();
+  try {
+    const kind = contentKindSchema.parse(text(formData, 'kind'));
+    const id = text(formData, 'id');
+    const supabase = await createServerSupabaseClient();
+    let draftData: unknown;
+    if (kind === 'programs') {
+      const { data, error } = await supabase.from('programs')
+        .select('draft_data,faculty_id')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      await assertPublishedFaculty(supabase, data.faculty_id);
+      draftData = data.draft_data;
+    } else if (kind === 'hotspot_contents') {
+      const { data, error } = await supabase.from('hotspot_contents')
+        .select('draft_data,scene_id')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      if (!isTourPlaceLink(id, data.scene_id)) {
+        throw new AdminActionError('เผยแพร่ไม่ได้ เพราะไม่พบ Scene ID และ Hotspot ID คู่นี้ในโครงสร้างทัวร์');
+      }
+      draftData = data.draft_data;
+    } else {
+      const { data, error } = await supabase.from(kind).select('draft_data').eq('id', id).single();
+      if (error) throw error;
+      draftData = data.draft_data;
+    }
+    draftData = validatePublishData(kind, draftData);
+    const { error } = await supabase.from(kind).update({
+      published_data: draftData,
+      archived_at: null,
       updated_by: session.userId
-    };
-    const payload = kind === 'programs'
-      ? { ...base, faculty_id: z.uuid().parse(text(formData, 'facultyId')) }
-      : base;
-    const { error } = await supabase.from(kind).insert(payload);
+    }).eq('id', id);
     if (error) throw error;
+    revalidateAdmin(kind);
+    return actionSuccess('อัปเดตข้อมูลที่เผยแพร่แล้ว หน้า Tour จะใช้ข้อมูลฉบับล่าสุด');
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถเผยแพร่ข้อมูลได้ กรุณาลองอีกครั้ง');
   }
-  revalidateAdmin(kind);
 }
 
-export async function publishContentAction(formData: FormData): Promise<void> {
+export async function syncTourPlacesAction(
+  _previousState: AdminActionState,
+  _formData: FormData
+): Promise<AdminActionState> {
   const session = await requireAdmin();
-  const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const id = text(formData, 'id');
-  const supabase = await createServerSupabaseClient();
-  let draftData: unknown;
-  if (kind === 'programs') {
-    const { data, error } = await supabase.from('programs')
-      .select('draft_data,faculty_id')
-      .eq('id', id)
-      .single();
-    if (error) throw error;
-    await assertPublishedFaculty(supabase, data.faculty_id);
-    draftData = data.draft_data;
-  } else {
-    const { data, error } = await supabase.from(kind).select('draft_data').eq('id', id).single();
-    if (error) throw error;
-    draftData = data.draft_data;
+  try {
+    const result = await syncTourPlaces(await createServerSupabaseClient(), session.userId);
+    revalidateAdmin('hotspot_contents');
+    return actionSuccess(
+      result.inserted || result.relinked
+        ? `ซิงก์สำเร็จ: เพิ่มสถานที่ใหม่ ${result.inserted} รายการ และอัปเดต Scene ID ${result.relinked} รายการ`
+        : 'ข้อมูลสถานที่ตรงกับโครงสร้างทัวร์ล่าสุดแล้ว ไม่มีรายการใหม่'
+    );
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถซิงก์สถานที่ได้ กรุณาตรวจการเชื่อมต่อ Supabase แล้วลองอีกครั้ง');
   }
-  const { error } = await supabase.from(kind).update({
-    published_data: draftData,
-    archived_at: null,
-    updated_by: session.userId
-  }).eq('id', id);
-  if (error) throw error;
-  revalidateAdmin(kind);
 }
 
-export async function unpublishContentAction(formData: FormData): Promise<void> {
+export async function unpublishContentAction(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
   const session = await requireAdmin();
-  const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const id = text(formData, 'id');
-  const supabase = await createServerSupabaseClient();
-  if (kind === 'faculties') await assertNoPublishedPrograms(supabase, id);
-  const { error } = await supabase.from(kind).update({
-    published_data: null,
-    updated_by: session.userId
-  }).eq('id', id);
-  if (error) throw error;
-  revalidateAdmin(kind);
+  try {
+    const kind = contentKindSchema.parse(text(formData, 'kind'));
+    const { error } = await (await createServerSupabaseClient()).from(kind).update({
+      published_data: null,
+      updated_by: session.userId
+    }).eq('id', text(formData, 'id'));
+    if (error) throw error;
+    revalidateAdmin(kind);
+    return actionSuccess(kind === 'faculties'
+      ? 'นำคณะออกจากหน้าเว็บแล้ว หลักสูตรของคณะถูกซ่อนชั่วคราวและจะกลับมาเมื่อเผยแพร่คณะอีกครั้ง'
+      : 'นำรายการออกจากหน้าเว็บแล้ว');
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถนำรายการออกจากหน้าเว็บได้ กรุณาลองอีกครั้ง');
+  }
 }
 
-export async function archiveContentAction(formData: FormData): Promise<void> {
+export async function archiveContentAction(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
   const session = await requireAdmin();
-  const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const id = text(formData, 'id');
-  const supabase = await createServerSupabaseClient();
-  if (kind === 'faculties') await assertNoPublishedPrograms(supabase, id);
-  const { error } = await supabase.from(kind).update({
-    archived_at: new Date().toISOString(),
-    published_data: null,
-    updated_by: session.userId
-  }).eq('id', id);
-  if (error) throw error;
-  revalidateAdmin(kind);
+  try {
+    const kind = contentKindSchema.parse(text(formData, 'kind'));
+    const { error } = await (await createServerSupabaseClient()).from(kind).update({
+      archived_at: new Date().toISOString(),
+      published_data: null,
+      updated_by: session.userId
+    }).eq('id', text(formData, 'id'));
+    if (error) throw error;
+    revalidateAdmin(kind);
+    return actionSuccess(kind === 'faculties'
+      ? 'เก็บคณะเข้าคลังแล้ว หลักสูตรของคณะถูกซ่อนชั่วคราว'
+      : 'เก็บรายการเข้าคลังแล้ว');
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถเก็บรายการเข้าคลังได้ กรุณาลองอีกครั้ง');
+  }
 }
 
-export async function restoreContentAction(formData: FormData): Promise<void> {
+export async function restoreContentAction(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
   const session = await requireAdmin();
-  const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const { error } = await (await createServerSupabaseClient()).from(kind).update({
-    archived_at: null,
-    updated_by: session.userId
-  }).eq('id', text(formData, 'id'));
-  if (error) throw error;
-  revalidateAdmin(kind);
+  try {
+    const kind = contentKindSchema.parse(text(formData, 'kind'));
+    const { error } = await (await createServerSupabaseClient()).from(kind).update({
+      archived_at: null,
+      updated_by: session.userId
+    }).eq('id', text(formData, 'id'));
+    if (error) throw error;
+    revalidateAdmin(kind);
+    return actionSuccess('คืนข้อมูลจากคลังแล้ว กรุณากดเผยแพร่เมื่อตรวจสอบฉบับร่างเรียบร้อย');
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถคืนข้อมูลจากคลังได้ กรุณาลองอีกครั้ง');
+  }
 }
 
-export async function deleteContentAction(formData: FormData): Promise<void> {
+export async function deleteContentAction(
+  _previousState: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
   await requireAdmin();
-  const kind = contentKindSchema.parse(text(formData, 'kind'));
-  const supabase = await createServerSupabaseClient();
-  const id = text(formData, 'id');
-  const { data } = await supabase.from(kind).select('archived_at').eq('id', id).single();
-  if (!data?.archived_at) throw new Error('Content must be archived before permanent deletion');
-  if (kind === 'faculties') {
-    const { count, error: countError } = await supabase.from('programs')
-      .select('id', { count: 'exact', head: true })
-      .eq('faculty_id', id);
-    if (countError) throw countError;
-    if ((count ?? 0) > 0) throw new Error('กรุณาย้ายหรือลบหลักสูตรของคณะนี้ก่อนลบคณะ');
+  try {
+    const kind = contentKindSchema.parse(text(formData, 'kind'));
+    const supabase = await createServerSupabaseClient();
+    const id = text(formData, 'id');
+    const { data, error: readError } = await supabase.from(kind).select('archived_at').eq('id', id).single();
+    if (readError) throw readError;
+    if (!data.archived_at) throw new AdminActionError('ต้องเก็บรายการเข้าคลังก่อนจึงจะลบถาวรได้');
+    if (kind === 'faculties') {
+      const { count, error: countError } = await supabase.from('programs')
+        .select('id', { count: 'exact', head: true })
+        .eq('faculty_id', id);
+      if (countError) throw countError;
+      if ((count ?? 0) > 0) throw new AdminActionError(`ยังลบคณะไม่ได้ เนื่องจากมีหลักสูตรอ้างอิงอยู่ ${count} รายการ กรุณาย้ายหรือลบหลักสูตรก่อน`);
+    }
+    const { error } = await supabase.from(kind).delete().eq('id', id);
+    if (error) throw error;
+    revalidateAdmin(kind);
+    return actionSuccess('ลบรายการถาวรแล้ว');
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถลบรายการได้ กรุณาลองอีกครั้ง');
   }
-  const { error } = await supabase.from(kind).delete().eq('id', id);
-  if (error) throw error;
-  revalidateAdmin(kind);
 }
 
 export async function inviteUserAction(formData: FormData): Promise<void> {

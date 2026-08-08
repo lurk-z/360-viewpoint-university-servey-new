@@ -53,6 +53,89 @@ function tokens(value: string): string[] {
   return value.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter((token) => token.length > 1) ?? [];
 }
 
+function compactLookup(value: string): string {
+  return value.normalize('NFKC').toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+}
+
+function includesCode(question: string, code: string): boolean {
+  const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(question);
+}
+
+function facultyLookupTerms(name: string, slug: string): string[] {
+  const withoutPrefix = name.replace(/^คณะ/u, '').trim();
+  const firstThaiPart = withoutPrefix.split('และ')[0]?.trim();
+  const withoutEnglishPrefix = name.replace(/^faculty\s+of\s+/i, '').trim();
+  const firstEnglishPart = withoutEnglishPrefix.split(/\s+and\s+/i)[0]?.trim();
+  return [
+    name,
+    withoutPrefix,
+    firstThaiPart ? `คณะ${firstThaiPart}` : '',
+    withoutEnglishPrefix,
+    firstEnglishPart ?? '',
+    slug
+  ]
+    .map(compactLookup)
+    .filter((term) => term.length >= 6);
+}
+
+function mentionedProgramIds(question: string, content: PublicContentSnapshot): string[] {
+  const compactQuestion = compactLookup(question);
+  return content.programs.flatMap((program) => {
+    const code = program.name.en.match(/\(([^)]+)\)\s*$/)?.[1];
+    const named = [program.name.th, program.name.en, program.slug]
+      .map(compactLookup)
+      .some((name) => name.length >= 6 && compactQuestion.includes(name));
+    return named || (code && includesCode(question, code)) ? [program.id] : [];
+  });
+}
+
+export function findRelatedProgramIds(
+  request: ChatRequest,
+  content: PublicContentSnapshot,
+  citations: readonly Citation[] = []
+): string[] {
+  const validProgramIds = new Set(content.programs.map((program) => program.id));
+  const specificProgramIds = new Set(mentionedProgramIds(request.message, content));
+  if (specificProgramIds.size > 0) {
+    return content.programs.flatMap((program) => specificProgramIds.has(program.id) ? [program.id] : []);
+  }
+
+  const compactQuestion = compactLookup(request.message);
+  const facultyIds = new Set(citations.flatMap((citation) => (
+    citation.kind === 'faculty' && content.faculties.some((faculty) => faculty.id === citation.id)
+      ? [citation.id]
+      : []
+  )));
+  for (const faculty of content.faculties) {
+    const terms = [
+      ...facultyLookupTerms(faculty.name.th, faculty.slug),
+      ...facultyLookupTerms(faculty.name.en, faculty.slug)
+    ];
+    if (terms.some((term) => compactQuestion.includes(term))) facultyIds.add(faculty.id);
+  }
+
+  const hasAcademicIntent = /(คณะ|หลักสูตร|สาขา|เปิดสอน|เรียน|faculty|program|course|degree|study)/iu
+    .test(request.message);
+  if (facultyIds.size === 0 && hasAcademicIntent) {
+    for (const faculty of content.faculties) {
+      if (faculty.sceneId === request.sceneId) facultyIds.add(faculty.id);
+    }
+  }
+
+  if (facultyIds.size === 0 && /(หลักสูตร|เปิดสอน|program|course|degree)/iu.test(request.message)) {
+    return content.programs.map((program) => program.id);
+  }
+  if (facultyIds.size > 0) {
+    return content.programs.flatMap((program) => facultyIds.has(program.facultyId) ? [program.id] : []);
+  }
+
+  const citedProgramIds = new Set(citations.flatMap((citation) => (
+    citation.kind === 'program' && validProgramIds.has(citation.id) ? [citation.id] : []
+  )));
+  return content.programs.flatMap((program) => citedProgramIds.has(program.id) ? [program.id] : []);
+}
+
 function selectKnowledge(
   documents: readonly KnowledgeDocument[],
   question: string,
@@ -81,14 +164,16 @@ export function createFallbackChatResponse(
   content: PublicContentSnapshot
 ): ChatResponse {
   const documents = selectKnowledge(buildKnowledgeDocuments(content), request.message, request.sceneId).slice(0, 4);
+  const citations = documents.map((document) => document.citation);
   const answer = request.locale === 'th'
     ? 'ขณะนี้ AI ยังไม่พร้อมใช้งาน คุณสามารถเปิดข้อมูลที่เกี่ยวข้องด้านล่างแทนได้'
     : 'The AI assistant is currently unavailable. You can open the related information below instead.';
   return {
     answered: false,
     answer,
-    citations: documents.map((document) => document.citation),
+    citations,
     relatedSceneIds: [...new Set(documents.flatMap((document) => document.sceneId ? [document.sceneId] : []))],
+    relatedProgramIds: findRelatedProgramIds(request, content, citations),
     fallback: true
   };
 }
@@ -96,7 +181,7 @@ export function createFallbackChatResponse(
 export function validateGroundedAnswer(
   value: unknown,
   documents: readonly KnowledgeDocument[]
-): Omit<ChatResponse, 'fallback'> | null {
+): Omit<ChatResponse, 'fallback' | 'relatedProgramIds'> | null {
   const parsed = geminiAnswerSchema.safeParse(value);
   if (!parsed.success) return null;
   const citationById = new Map(documents.map((document) => [document.citation.id, document.citation]));
@@ -148,6 +233,7 @@ ${languageInstruction}. The visitor is viewing scene "${sceneTitle}" (${request.
 Answer ONLY from the supplied documents. Never use outside knowledge and never invent facts.
 If the documents do not contain the answer, set answered=false and clearly say that the information is unavailable.
 Return citationIds only from document id attributes. relatedSceneIds may only use scene IDs explicitly present in documents.
+When the visitor asks which programs a faculty offers, list every supplied PROGRAM document for that faculty.
 Do not request or repeat personal data.
 
 RECENT CONVERSATION:
@@ -188,6 +274,7 @@ ${request.message}`;
     if (!grounded) return createFallbackChatResponse(request, content);
     return {
       ...grounded,
+      relatedProgramIds: findRelatedProgramIds(request, content, grounded.citations),
       fallback: false
     };
   } catch {

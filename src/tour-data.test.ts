@@ -299,7 +299,7 @@ describe('tour configuration', () => {
       const info = getInfoHotspots(scene);
       expect(info).toHaveLength(1);
       expect({
-        title: info[0]!.title.th,
+        title: info[0]!.title!.th,
         yaw: info[0]!.yaw,
         pitch: info[0]!.pitch,
         images: info[0]!.images?.length
@@ -341,7 +341,7 @@ describe('tour configuration', () => {
         label: { th: 'วิกิพีเดีย', en: 'Wikipedia' }
       });
       for (const locale of locales) {
-        expect(hotspot.reference.label[locale].trim()).not.toBe('');
+        expect(hotspot.reference!.label[locale].trim()).not.toBe('');
       }
     }
   });

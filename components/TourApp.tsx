@@ -29,17 +29,23 @@ import {
   type PublicContentSnapshot
 } from '../src/content';
 import { ModalDialog } from './ModalDialog';
+import FacultyProgramsDialog from './FacultyProgramsDialog';
 import TourChat from './TourChat';
 import TourViewer, { type TourViewerHandle } from './TourViewer';
 import TourMap from './TourMap';
 
-type DialogName = 'info' | 'about' | 'text-tour' | null;
+type DialogName = 'info' | 'academics' | 'about' | 'text-tour' | null;
 const FITM_LOGO_URL = '/mainimages/Logo_FitM/FITM_LOGO.png';
 const FALLBACK_CONTENT = createFallbackContentSnapshot();
 
 interface ImageViewerState {
   readonly images: readonly InfoImage[];
   readonly index: number;
+}
+
+interface AcademicSelection {
+  readonly facultyId?: string;
+  readonly programId?: string;
 }
 
 function Icon({ children }: { readonly children: ReactNode }) {
@@ -83,9 +89,11 @@ export default function TourApp() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [content, setContent] = useState<PublicContentSnapshot>(FALLBACK_CONTENT);
   const [chatOpen, setChatOpen] = useState(false);
+  const [academicSelection, setAcademicSelection] = useState<AcademicSelection>({});
 
   const scene = resolveTourScene(getScene(currentSceneId), content);
   const sceneInfoHotspots = getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content));
+  const sceneFaculty = content.faculties.find((faculty) => faculty.sceneId === scene.id);
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
   const activeImage = imageViewer?.images[imageViewer.index];
 
@@ -191,10 +199,16 @@ export default function TourApp() {
     });
   };
 
+  const openAcademics = (facultyId?: string, programId?: string): void => {
+    setAcademicSelection({ facultyId, programId });
+    setDialog('academics');
+  };
+
   const closeDialog = (): void => {
     setImageViewer(null);
     setDialog(null);
     setSelectedInfo(null);
+    setAcademicSelection({});
   };
 
   const handleSceneChange = (sceneId: SceneId): void => {
@@ -234,6 +248,10 @@ export default function TourApp() {
           </span>
         </a>
         <div className="header-actions">
+          <button className="header-button" type="button" aria-label={message(locale, 'academicsButton')} onClick={() => openAcademics()}>
+            <Icon><path d="m3 9 9-5 9 5-9 5-9-5ZM7 12v4c3 2 7 2 10 0v-4M21 9v6" /></Icon>
+            <span>{message(locale, 'academicsButton')}</span>
+          </button>
           <a className="header-button" href="/admin/login" aria-label={message(locale, 'adminLogin')}>
             <Icon><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></Icon>
             <span>{message(locale, 'adminLogin')}</span>
@@ -324,6 +342,16 @@ export default function TourApp() {
                   ))}
                 </div>
               </div>
+              {sceneFaculty ? (
+                <div>
+                  <h2>{message(locale, 'academicsEyebrow')}</h2>
+                  <div className="compact-actions">
+                    <button className="compact-action" type="button" onClick={() => openAcademics(sceneFaculty.id)}>
+                      {message(locale, 'academicsButton')}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </section>
 
@@ -363,6 +391,10 @@ export default function TourApp() {
             sceneId={currentSceneId}
             content={content}
             onNavigate={(sceneId) => void navigate(sceneId)}
+            onOpenProgram={(programId) => {
+              const program = content.programs.find((item) => item.id === programId);
+              if (program) openAcademics(program.facultyId, program.id);
+            }}
             onOpenChange={setChatOpen}
           />
 
@@ -431,6 +463,15 @@ export default function TourApp() {
           ) : null}
         </> : null}
       </ModalDialog>
+
+      <FacultyProgramsDialog
+        open={dialog === 'academics'}
+        locale={locale}
+        content={content}
+        initialFacultyId={academicSelection.facultyId}
+        initialProgramId={academicSelection.programId}
+        onClose={closeDialog}
+      />
 
       <ModalDialog
         open={Boolean(imageViewer && activeImage)}
