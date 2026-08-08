@@ -21,7 +21,6 @@ function isContentSnapshot(value: unknown): value is PublicContentSnapshot {
 
 export interface PublicContentState {
   readonly content: PublicContentSnapshot;
-  readonly livePreview: boolean;
 }
 
 export function usePublicContent(): PublicContentState {
@@ -104,5 +103,5 @@ export function usePublicContent(): PublicContentState {
     return () => window.clearInterval(interval);
   }, [livePreview, refresh]);
 
-  return { content, livePreview };
+  return { content };
 }

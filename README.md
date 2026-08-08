@@ -68,7 +68,6 @@ src/tour-data.ts            source of truth ของ scene, hotspot และ r
 src/i18n.ts                 ข้อความ UI ภาษาไทย/อังกฤษ
 src/stores/tour-store.ts    Zustand store สำหรับ shared client state
 src/styles.css              Photo Sphere Viewer styles และ design system
-public/tour/                ไฟล์ legacy ที่แอป Next.js ไม่ได้อ้างอิง
 public/mainimages/          panorama ต้นฉบับทั้ง 34 ฉาก และโฟลเดอร์ map
 public/sw.js                offline cache strategy
 360-tour-offline.html       legacy single-file compatibility artifact

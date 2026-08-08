@@ -150,8 +150,6 @@ export interface TourScene {
   readonly tags: Readonly<Record<Locale, readonly string[]>>;
   readonly initialView: InitialView;
   readonly mapPosition: MapPosition;
-  /** Optional degrees added to viewer yaw so 0 degrees points to the top of the map. */
-  readonly mapHeadingOffset?: number;
   /** Shows this scene as a named destination marker on the map. */
   readonly mapLandmark?: boolean;
   readonly hotspots: readonly Hotspot[];
@@ -1042,7 +1040,6 @@ export function getTourStructureSignature(): string {
     title: scene.title,
     initialView: scene.initialView,
     mapPosition: scene.mapPosition,
-    mapHeadingOffset: (scene as TourScene).mapHeadingOffset,
     mapLandmark: (scene as TourScene).mapLandmark,
     hotspots: scene.hotspots.map((hotspot) => ({
       id: hotspot.id,
@@ -1123,10 +1120,6 @@ export function validateTour(): readonly string[] {
     }
     if (scene.mapPosition.y < 0 || scene.mapPosition.y > tourMap.height) {
       errors.push(`Scene ${scene.id} map y is outside the image`);
-    }
-    const mapHeadingOffset = (scene as TourScene).mapHeadingOffset;
-    if (mapHeadingOffset !== undefined && !Number.isFinite(mapHeadingOffset)) {
-      errors.push(`Scene ${scene.id} map heading offset is invalid`);
     }
     const mapLandmark = (scene as TourScene).mapLandmark;
     if (mapLandmark !== undefined && typeof mapLandmark !== 'boolean') {

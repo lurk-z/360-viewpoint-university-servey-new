@@ -443,8 +443,7 @@ svg {
   gap: 7px;
 }
 
-.compact-action,
-.text-button {
+.compact-action {
   border: 0;
   background: transparent;
   color: var(--orange-900);
@@ -1777,25 +1776,6 @@ svg {
   color: var(--ink);
   font-family: inherit;
   font-weight: 750;
-}
-
-.map-reset {
-  position: absolute;
-  z-index: 500;
-  top: 12px;
-  right: 12px;
-  padding: 8px 11px;
-  border: 1px solid rgb(255 255 255 / 72%);
-  border-radius: 10px;
-  background: rgb(248 252 255 / 92%);
-  box-shadow: var(--shadow-sm);
-  color: var(--orange-900);
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.map-reset:hover {
-  background: var(--orange-100);
 }
 
 .map-controls {
