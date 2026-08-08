@@ -5,10 +5,12 @@ import { GET as getTourAssets } from '../app/api/tour-assets/route';
 import { messages } from './i18n';
 import {
   getInfoHotspots,
+  getMapLandmarkScenes,
   getNavigationHotspots,
   getScene,
   getSceneAssetUrls,
   getSceneEdges,
+  getTourStructureSignature,
   locales,
   sceneIds,
   toDegrees,
@@ -64,6 +66,47 @@ describe('tour configuration', () => {
     expect(tourScenes).toHaveLength(34);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
+  });
+
+  it('shows only the nine major campus landmarks on the map', () => {
+    expect(getMapLandmarkScenes().map((scene) => scene.id)).toEqual([
+      'entrance',
+      'memorial',
+      'vallayaHotel',
+      'campusBuilding1',
+      'campusBuilding2',
+      'campusBuilding3',
+      'campusRoad19',
+      'campusRoad21',
+      'campusRoad22'
+    ]);
+    expect(getMapLandmarkScenes().every((scene) => scene.mapLandmark)).toBe(true);
+  });
+
+  it('includes viewer geometry in the Fast Refresh structure signature', () => {
+    const signature = getTourStructureSignature();
+    const parsed = JSON.parse(signature) as Array<{
+      id: string;
+      panorama: string;
+      initialView: { yaw: number; pitch: number; zoom: number };
+      mapPosition: { x: number; y: number };
+      mapLandmark?: boolean;
+      hotspots: Array<{ id: string; yaw: number; pitch: number; target?: string }>;
+    }>;
+    expect(parsed).toHaveLength(tourScenes.length);
+    expect(parsed[0]).toMatchObject({
+      id: 'entrance',
+      panorama: getScene('entrance').panorama,
+      initialView: getScene('entrance').initialView,
+      mapPosition: getScene('entrance').mapPosition,
+      mapLandmark: true
+    });
+    expect(parsed[0]?.hotspots).toContainEqual(expect.objectContaining({
+      id: 'entrance-to-road',
+      target: 'entranceRoad',
+      yaw: -40,
+      pitch: -3
+    }));
   });
 
   it('keeps the temp3 sequence reciprocal and preserves its current entry loop', () => {

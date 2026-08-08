@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { requireStaff } from '../../../src/server/auth';
 import { logoutAction } from '../actions';
+import AdminLiveRefresh from '../../../components/admin/AdminLiveRefresh';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,10 +29,10 @@ export default async function ProtectedAdminLayout({ children }: { readonly chil
           <span>{session.displayName || session.email}</span>
           <strong>{session.role === 'admin' ? 'Admin' : 'Editor'}</strong>
           <form action={logoutAction}><button type="submit">ออกจากระบบ</button></form>
-          <a href="/" target="_blank">เปิดหน้าทัวร์ ↗</a>
+          <a href="/?preview=admin" target="_blank">เปิดหน้าทัวร์แบบสด ↗</a>
         </footer>
       </aside>
-      <main className="admin-main">{children}</main>
+      <main className="admin-main"><AdminLiveRefresh>{children}</AdminLiveRefresh></main>
     </div>
   );
 }

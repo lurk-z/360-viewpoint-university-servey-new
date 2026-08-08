@@ -23,20 +23,24 @@ import {
 } from '../src/i18n';
 import { useTourStore } from '../src/stores/tour-store';
 import {
-  createFallbackContentSnapshot,
   resolveInfoHotspot,
-  resolveTourScene,
-  type PublicContentSnapshot
+  resolveTourScene
 } from '../src/content';
 import { ModalDialog } from './ModalDialog';
+import ActivitiesDialog from './ActivitiesDialog';
 import FacultyProgramsDialog from './FacultyProgramsDialog';
 import TourChat from './TourChat';
 import TourViewer, { type TourViewerHandle } from './TourViewer';
 import TourMap from './TourMap';
+import { usePublicContent } from './usePublicContent';
 
-type DialogName = 'info' | 'academics' | 'about' | 'text-tour' | null;
+type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | null;
 const FITM_LOGO_URL = '/mainimages/Logo_FitM/FITM_LOGO.png';
-const FALLBACK_CONTENT = createFallbackContentSnapshot();
+
+interface InfoSelection {
+  readonly sceneId: SceneId;
+  readonly hotspotId: string;
+}
 
 interface ImageViewerState {
   readonly images: readonly InfoImage[];
@@ -83,17 +87,29 @@ export default function TourApp() {
   const setAutorotate = useTourStore((state) => state.setAutorotate);
   const viewerRef = useRef<TourViewerHandle>(null);
   const [dialog, setDialog] = useState<DialogName>(null);
-  const [selectedInfo, setSelectedInfo] = useState<InfoHotspot | null>(null);
+  const [selectedInfoSelection, setSelectedInfoSelection] = useState<InfoSelection | null>(null);
   const [imageViewer, setImageViewer] = useState<ImageViewerState | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
-  const [content, setContent] = useState<PublicContentSnapshot>(FALLBACK_CONTENT);
+  const { content } = usePublicContent();
   const [chatOpen, setChatOpen] = useState(false);
   const [academicSelection, setAcademicSelection] = useState<AcademicSelection>({});
+  const [mapExpanded, setMapExpanded] = useState(false);
 
-  const scene = resolveTourScene(getScene(currentSceneId), content);
+  const activeSceneId = tourScenes.some((item) => item.id === currentSceneId)
+    ? currentSceneId
+    : tourScenes[0]?.id ?? 'entrance';
+  const scene = resolveTourScene(getScene(activeSceneId), content);
   const sceneInfoHotspots = getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content));
   const sceneFaculty = content.faculties.find((faculty) => faculty.sceneId === scene.id);
+  const selectedInfoScene = selectedInfoSelection
+    ? tourScenes.find((item) => item.id === selectedInfoSelection.sceneId)
+    : undefined;
+  const selectedInfo = selectedInfoSelection && selectedInfoScene
+    ? getInfoHotspots(selectedInfoScene)
+      .find((hotspot) => hotspot.id === selectedInfoSelection.hotspotId)
+    : undefined;
+  const resolvedSelectedInfo = selectedInfo ? resolveInfoHotspot(selectedInfo, content) : undefined;
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
   const activeImage = imageViewer?.images[imageViewer.index];
 
@@ -102,18 +118,11 @@ export default function TourApp() {
   }, [locale]);
 
   useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+    if (currentSceneId !== activeSceneId) setCurrentScene(activeSceneId);
+  }, [activeSceneId, currentSceneId, setCurrentScene]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    void fetch('/api/content', { signal: controller.signal })
-      .then(async (response) => response.ok ? response.json() as Promise<PublicContentSnapshot> : FALLBACK_CONTENT)
-      .then((snapshot) => {
-        if (Array.isArray(snapshot.hotspots) && Array.isArray(snapshot.faculties)) setContent(snapshot);
-      })
-      .catch(() => undefined);
-    return () => controller.abort();
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -146,21 +155,16 @@ export default function TourApp() {
   }, [imageViewer]);
 
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
+    if (!mapExpanded) return;
+    const closeExpandedMap = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') setMapExpanded(false);
+    };
+    window.addEventListener('keydown', closeExpandedMap);
+    return () => window.removeEventListener('keydown', closeExpandedMap);
+  }, [mapExpanded]);
 
-    if (process.env.NODE_ENV === 'development') {
-      const clearDevelopmentCaches = async (): Promise<void> => {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map((registration) => registration.unregister()));
-        if ('caches' in window) {
-          const keys = await window.caches.keys();
-          await Promise.all(keys.filter((key) => key.startsWith('kmuntb-tour-')).map((key) => window.caches.delete(key)));
-        }
-      };
-      void clearDevelopmentCaches().catch(() => undefined);
-      return;
-    }
-
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' || !('serviceWorker' in navigator)) return;
     void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
   }, []);
 
@@ -170,7 +174,7 @@ export default function TourApp() {
   };
 
   const navigate = async (sceneId: SceneId): Promise<void> => {
-    if (sceneId === currentSceneId) {
+    if (sceneId === activeSceneId) {
       viewerRef.current?.reset(sceneId, true);
       return;
     }
@@ -183,7 +187,7 @@ export default function TourApp() {
 
   const openInfo = (hotspot: InfoHotspot): void => {
     setImageViewer(null);
-    setSelectedInfo(hotspot);
+    setSelectedInfoSelection({ sceneId: activeSceneId, hotspotId: hotspot.id });
     setDialog('info');
   };
 
@@ -207,7 +211,7 @@ export default function TourApp() {
   const closeDialog = (): void => {
     setImageViewer(null);
     setDialog(null);
-    setSelectedInfo(null);
+    setSelectedInfoSelection(null);
     setAcademicSelection({});
   };
 
@@ -248,14 +252,18 @@ export default function TourApp() {
           </span>
         </a>
         <div className="header-actions">
-          <button className="header-button" type="button" aria-label={message(locale, 'academicsButton')} onClick={() => openAcademics()}>
-            <Icon><path d="m3 9 9-5 9 5-9 5-9-5ZM7 12v4c3 2 7 2 10 0v-4M21 9v6" /></Icon>
-            <span>{message(locale, 'academicsButton')}</span>
-          </button>
           <a className="header-button" href="/admin/login" aria-label={message(locale, 'adminLogin')}>
             <Icon><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></Icon>
             <span>{message(locale, 'adminLogin')}</span>
           </a>
+          <button className="header-button" type="button" aria-label={message(locale, 'academicsButton')} onClick={() => openAcademics()}>
+            <Icon><path d="m3 9 9-5 9 5-9 5-9-5ZM7 12v4c3 2 7 2 10 0v-4M21 9v6" /></Icon>
+            <span>{message(locale, 'academicsButton')}</span>
+          </button>
+          <button className="header-button" type="button" aria-label={message(locale, 'activitiesButton')} onClick={() => setDialog('activities')}>
+            <Icon><path d="M5 5h14v15H5zM8 3v4M16 3v4M5 9h14M8 13h3M13 13h3M8 16h3" /></Icon>
+            <span>{message(locale, 'activitiesButton')}</span>
+          </button>
           <button className="header-button" type="button" onClick={() => setDialog('about')}>
             <Icon><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></Icon>
             <span>{message(locale, 'aboutButton')}</span>
@@ -288,13 +296,15 @@ export default function TourApp() {
           />
           <div className="viewer-vignette" aria-hidden="true" />
 
-          <aside className="persistent-tour-map" aria-labelledby="persistent-map-title">
+          <aside className={`persistent-tour-map${mapExpanded ? ' is-expanded' : ''}`} aria-labelledby="persistent-map-title">
             <h2 id="persistent-map-title" className="tour-map-title">{message(locale, 'mapTitle')}</h2>
             <TourMap
               locale={locale}
-              currentSceneId={currentSceneId}
+              currentSceneId={activeSceneId}
               content={content}
               onNavigate={(sceneId) => void navigate(sceneId)}
+              expanded={mapExpanded}
+              onExpandedChange={setMapExpanded}
             />
           </aside>
 
@@ -370,7 +380,7 @@ export default function TourApp() {
             <button type="button" aria-label={message(locale, 'zoomOut')} data-tooltip={message(locale, 'zoomOut')} onClick={() => viewerRef.current?.zoomOut()}>
               <Icon><circle cx="11" cy="11" r="7" /><path d="M8 11h6M21 21l-4.3-4.3" /></Icon>
             </button>
-            <button type="button" aria-label={message(locale, 'reset')} data-tooltip={message(locale, 'reset')} onClick={() => viewerRef.current?.reset(currentSceneId, true)}>
+            <button type="button" aria-label={message(locale, 'reset')} data-tooltip={message(locale, 'reset')} onClick={() => viewerRef.current?.reset(activeSceneId, true)}>
               <Icon><path d="M3 12a9 9 0 1 1 9 9M3 12V7M3 12h5" /></Icon>
             </button>
             <button type="button" aria-label={message(locale, 'enterFullscreen')} data-tooltip={message(locale, 'enterFullscreen')} onClick={() => viewerRef.current?.toggleFullscreen()}>
@@ -388,7 +398,7 @@ export default function TourApp() {
 
           <TourChat
             locale={locale}
-            sceneId={currentSceneId}
+            sceneId={activeSceneId}
             content={content}
             onNavigate={(sceneId) => void navigate(sceneId)}
             onOpenProgram={(programId) => {
@@ -434,22 +444,22 @@ export default function TourApp() {
       </main>
 
       <ModalDialog open={dialog === 'info'} titleId="info-dialog-title" wide closeLabel={message(locale, 'close')} onClose={closeDialog}>
-        {selectedInfo ? <>
+        {resolvedSelectedInfo ? <>
           <p className="eyebrow">{message(locale, 'infoPoint')}</p>
-          <h2 id="info-dialog-title">{localize(selectedInfo.title, locale)}</h2>
-          <p className="scene-alt-title">{localize(selectedInfo.title, alternativeLocale)}</p>
-          <p className="dialog-description">{localize(selectedInfo.description, locale)}</p>
-          <ReferenceLine reference={selectedInfo.reference} locale={locale} />
-          {selectedInfo.images?.length ? (
+          <h2 id="info-dialog-title">{localize(resolvedSelectedInfo.title, locale)}</h2>
+          <p className="scene-alt-title">{localize(resolvedSelectedInfo.title, alternativeLocale)}</p>
+          <p className="dialog-description">{localize(resolvedSelectedInfo.description, locale)}</p>
+          <ReferenceLine reference={resolvedSelectedInfo.reference} locale={locale} />
+          {resolvedSelectedInfo.images?.length ? (
             <div className="info-gallery">
-              {selectedInfo.images.map((image, index) => (
+              {resolvedSelectedInfo.images.map((image, index) => (
                 <figure key={`${image.src}-${index}`}>
                   <button
                     className="info-gallery__button"
                     type="button"
                     aria-haspopup="dialog"
                     aria-label={`${message(locale, 'openImage')}: ${localize(image.alt, locale)}`}
-                    onClick={() => openImage(selectedInfo.images ?? [], index)}
+                    onClick={() => openImage(resolvedSelectedInfo.images ?? [], index)}
                   >
                     <img src={image.src} alt={localize(image.alt, locale)} loading="lazy" />
                     <span className="info-gallery__zoom" aria-hidden="true">
@@ -471,6 +481,22 @@ export default function TourApp() {
         initialFacultyId={academicSelection.facultyId}
         initialProgramId={academicSelection.programId}
         onClose={closeDialog}
+      />
+
+      <ActivitiesDialog
+        open={dialog === 'activities'}
+        locale={locale}
+        content={content}
+        onClose={closeDialog}
+        onNavigate={(sceneId) => void navigate(sceneId)}
+        onOpenImage={(activity) => {
+          if (!activity.imageUrl) return;
+          openImage([{
+            src: activity.imageUrl,
+            alt: activity.title,
+            caption: activity.title
+          }], 0);
+        }}
       />
 
       <ModalDialog

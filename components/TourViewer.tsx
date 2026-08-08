@@ -29,6 +29,7 @@ import {
   getInfoHotspots,
   getNavigationHotspots,
   getScene,
+  getTourStructureSignature,
   localize,
   toDegrees,
   tourScenes,
@@ -76,6 +77,13 @@ interface ViewerCallbacks {
   onAutorotate: (enabled: boolean) => void;
 }
 
+interface PreservedViewerState {
+  readonly sceneId: SceneId;
+  readonly yaw: number;
+  readonly pitch: number;
+  readonly zoom: number;
+}
+
 const buildTourNodes = (): VirtualTourNode[] => tourScenes.map((scene) => ({
   id: scene.id,
   panorama: scene.panorama,
@@ -98,6 +106,8 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
   const virtualTourRef = useRef<VirtualTourPlugin | null>(null);
   const autorotateRef = useRef<AutorotatePlugin | null>(null);
   const viewAnimationIdRef = useRef(0);
+  const viewerGenerationRef = useRef(0);
+  const preservedViewerStateRef = useRef<PreservedViewerState | null>(null);
   const refreshMarkersRef = useRef<(() => void) | null>(null);
   const callbacksRef = useRef<ViewerCallbacks>({
     locale,
@@ -110,14 +120,17 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     onAutorotate
   });
   callbacksRef.current = { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate };
+  const tourStructureSignature = getTourStructureSignature();
 
   useImperativeHandle(ref, () => ({
     navigate: async (sceneId) => {
       const plugin = virtualTourRef.current;
-      if (!plugin) return;
+      const viewer = viewerRef.current;
+      if (!plugin || !viewer) return;
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       viewAnimationIdRef.current += 1;
-      await viewerRef.current?.stopAnimation();
+      await viewer.stopAnimation();
+      if (viewerRef.current !== viewer || virtualTourRef.current !== plugin) return;
       await plugin.setCurrentNode(sceneId, getSceneTransitionOptions(false, reducedMotion));
     },
     reset: (sceneId, animate = false) => {
@@ -152,8 +165,17 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const container = containerRef.current;
     if (!container) return undefined;
 
+    const generation = ++viewerGenerationRef.current;
+    const preservedState = preservedViewerStateRef.current;
+    const startSceneId = preservedState && tourScenes.some((scene) => scene.id === preservedState.sceneId)
+      ? preservedState.sceneId
+      : 'entrance';
+    const settleFrames = new Set<number>();
+    let disposed = false;
+    let restoringInitialView = Boolean(preservedState && preservedState.sceneId === startSceneId);
     let cleanupViewer: (() => void) | undefined;
     const initializeFrame = window.requestAnimationFrame(() => {
+      if (disposed || viewerGenerationRef.current !== generation) return;
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const createArrowElement = (link: { nodeId: string }): HTMLElement => {
       const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);
@@ -201,7 +223,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
         }),
         VirtualTourPlugin.withConfig({
           nodes: buildTourNodes(),
-          startNodeId: 'entrance',
+          startNodeId: startSceneId,
           positionMode: 'manual',
           renderMode: '2d',
           preload: false,
@@ -275,30 +297,50 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     });
 
     viewer.addEventListener(viewerEvents.LoadProgressEvent.type, ({ progress }) => {
+      if (disposed) return;
       callbacksRef.current.onProgress(Math.max(0, Math.min(100, Math.round(progress))));
     });
-    viewer.addEventListener(viewerEvents.PanoramaErrorEvent.type, () => callbacksRef.current.onError());
+    viewer.addEventListener(viewerEvents.PanoramaErrorEvent.type, () => {
+      if (!disposed) callbacksRef.current.onError();
+    });
     viewer.addEventListener(viewerEvents.ReadyEvent.type, () => {
+      if (disposed) return;
       const node = virtualTourPlugin.getCurrentNode();
-      const sceneId = (node?.id as SceneId | undefined) ?? 'entrance';
+      const sceneId = (node?.id as SceneId | undefined) ?? startSceneId;
       callbacksRef.current.onReady(sceneId);
       markersPlugin.setMarkers(buildInfoMarkers(sceneId));
-      setInitialView(sceneId);
+      if (preservedState && sceneId === preservedState.sceneId) {
+        viewer.rotate({ yaw: preservedState.yaw, pitch: preservedState.pitch });
+        viewer.zoom(preservedState.zoom);
+      } else {
+        setInitialView(sceneId);
+      }
+      const restoreFrame = window.requestAnimationFrame(() => {
+        settleFrames.delete(restoreFrame);
+        restoringInitialView = false;
+      });
+      settleFrames.add(restoreFrame);
     }, { once: true });
-    viewer.addEventListener(viewerEvents.PanoramaLoadedEvent.type, () => viewer.hideError());
+    viewer.addEventListener(viewerEvents.PanoramaLoadedEvent.type, () => {
+      if (!disposed) viewer.hideError();
+    });
     virtualTourPlugin.addEventListener(virtualTourEvents.NodeChangedEvent.type, ({ node, data }) => {
+      if (disposed) return;
       const sceneId = node.id as SceneId;
       callbacksRef.current.onSceneChange(sceneId);
       markersPlugin.setMarkers(buildInfoMarkers(sceneId));
+      if (restoringInitialView && sceneId === startSceneId) return;
       const animationId = ++viewAnimationIdRef.current;
       const settleAfterArrow = Boolean(data.fromLink) && !reducedMotion;
-      window.requestAnimationFrame(() => {
-        if (animationId !== viewAnimationIdRef.current) return;
-        void viewer.stopAnimation().then(() => {
-          if (animationId !== viewAnimationIdRef.current) return;
+      const settleFrame = window.requestAnimationFrame(() => {
+        settleFrames.delete(settleFrame);
+        if (disposed || animationId !== viewAnimationIdRef.current) return;
+        void Promise.resolve(viewer.stopAnimation()).then(() => {
+          if (disposed || animationId !== viewAnimationIdRef.current) return;
           setInitialView(sceneId, settleAfterArrow, ARROW_SETTLE_DURATION);
-        });
+        }).catch(() => undefined);
       });
+      settleFrames.add(settleFrame);
     });
     refreshMarkersRef.current = () => {
       const sceneId = virtualTourPlugin.getCurrentNode()?.id as SceneId | undefined;
@@ -309,21 +351,46 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     });
 
       cleanupViewer = () => {
+        if (disposed) return;
+        disposed = true;
+        viewAnimationIdRef.current += 1;
+        settleFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+        settleFrames.clear();
+        try {
+          const sceneId = virtualTourPlugin.getCurrentNode()?.id as SceneId | undefined;
+          if (sceneId) {
+            const position = viewer.getPosition();
+            preservedViewerStateRef.current = {
+              sceneId,
+              yaw: position.yaw,
+              pitch: position.pitch,
+              zoom: viewer.getZoomLevel()
+            };
+          }
+        } catch {
+          preservedViewerStateRef.current = null;
+        }
         disposePanoramaEnhancement();
         viewerRef.current = null;
         markersRef.current = null;
         virtualTourRef.current = null;
         autorotateRef.current = null;
         refreshMarkersRef.current = null;
+        void Promise.resolve(viewer.stopAnimation()).catch(() => undefined);
         viewer.destroy();
       };
     });
 
     return () => {
+      viewerGenerationRef.current += 1;
       window.cancelAnimationFrame(initializeFrame);
-      cleanupViewer?.();
+      if (cleanupViewer) {
+        cleanupViewer();
+      } else {
+        disposed = true;
+      }
     };
-  }, []);
+  }, [tourStructureSignature]);
 
   useEffect(() => {
     const container = containerRef.current;

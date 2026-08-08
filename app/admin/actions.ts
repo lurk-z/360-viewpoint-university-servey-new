@@ -16,6 +16,7 @@ import {
 import { requireAdmin, requireStaff } from '../../src/server/auth';
 import { syncTourPlaces } from '../../src/server/tour-place-sync';
 import { isTourPlaceLink } from '../../src/tour-places';
+import { getMediaUsageIndex } from '../../src/server/media-usage';
 
 const contentKindSchema = z.enum(['faculties', 'programs', 'activities', 'hotspot_contents']);
 const slugSchema = z.string().trim().min(2).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -384,11 +385,20 @@ export async function changeUserRoleAction(formData: FormData): Promise<void> {
   revalidatePath('/admin/users');
 }
 
-export async function deleteMediaAction(formData: FormData): Promise<void> {
+export async function deleteMediaAction(formData: FormData): Promise<AdminActionState> {
   await requireAdmin();
-  const path = text(formData, 'path');
-  if (!path || path.includes('..')) throw new Error('Invalid media path');
-  const { error } = await createAdminSupabaseClient().storage.from('content-media').remove([path]);
-  if (error) throw error;
-  revalidatePath('/admin/media');
+  try {
+    const path = text(formData, 'path');
+    if (!path || path.includes('..')) throw new AdminActionError('ชื่อไฟล์ไม่ถูกต้อง');
+    const admin = createAdminSupabaseClient();
+    const publicUrl = admin.storage.from('content-media').getPublicUrl(path).data.publicUrl;
+    const usage = (await getMediaUsageIndex([{ path, publicUrl }]))[path] ?? [];
+    if (usage.length) throw new AdminActionError(`ยังลบรูปไม่ได้ เนื่องจากมีข้อมูลอ้างอิงรูปนี้อยู่ ${usage.length} รายการ`);
+    const { error } = await admin.storage.from('content-media').remove([path]);
+    if (error) throw error;
+    revalidatePath('/admin/media');
+    return actionSuccess('ลบรูปแล้ว');
+  } catch (error) {
+    return actionFailure(error, 'ไม่สามารถลบรูปได้ กรุณาลองอีกครั้ง');
+  }
 }

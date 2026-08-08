@@ -7,6 +7,7 @@ import {
 } from '../../app/admin/actions';
 import type { AdminRole } from '../../src/content';
 import type { TourPlaceSyncStatus } from '../../src/tour-places';
+import { useAdminActionRefresh } from './useAdminActionRefresh';
 
 const initialState: AdminActionState = { status: 'idle', message: '' };
 
@@ -18,6 +19,7 @@ export default function AdminTourPlaceSync({
   readonly role: AdminRole;
 }) {
   const [state, action, pending] = useActionState(syncTourPlacesAction, initialState);
+  useAdminActionRefresh(state, { scope: 'draft', kind: 'tour' });
   const needsSync = status.missing.length > 0 || status.moved.length > 0;
 
   return (

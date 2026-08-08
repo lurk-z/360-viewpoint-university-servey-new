@@ -23,7 +23,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <section className="admin-page">
-      <header className="admin-page__header"><div><p>DASHBOARD</p><h1>ภาพรวมระบบ</h1><span>สวัสดี {session.displayName || session.email}</span></div><a href="/" target="_blank">ดูเว็บไซต์ ↗</a></header>
+      <header className="admin-page__header"><div><p>DASHBOARD</p><h1>ภาพรวมระบบ</h1><span>สวัสดี {session.displayName || session.email}</span></div><a href="/?preview=admin" target="_blank">ดูเว็บไซต์แบบสด ↗</a></header>
       <AdminTourPlaceSync status={tourPlaceSyncStatus} role={session.role} />
       <div className="admin-stats">
         <article><span>เข้าชมวันนี้</span><strong>{stats.today.toLocaleString()}</strong><small>ครั้ง</small></article>

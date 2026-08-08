@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserSupabaseClient } from '../../lib/supabase/client';
+import { broadcastContentUpdate } from '../../src/content-updates';
+import { ADMIN_ACTION_SETTLED_EVENT } from './useAdminActionRefresh';
 
 export default function AdminMediaUploader() {
   const router = useRouter();
@@ -24,6 +26,8 @@ export default function AdminMediaUploader() {
       });
       if (error) throw error;
       setStatus('อัปโหลดสำเร็จ');
+      window.dispatchEvent(new Event(ADMIN_ACTION_SETTLED_EVENT));
+      broadcastContentUpdate({ scope: 'draft', kind: 'media', id: path });
       router.refresh();
     } catch {
       setStatus('อัปโหลดไม่สำเร็จ กรุณาตรวจสิทธิ์และการเชื่อมต่อ');

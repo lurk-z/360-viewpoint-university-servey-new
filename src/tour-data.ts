@@ -150,6 +150,10 @@ export interface TourScene {
   readonly tags: Readonly<Record<Locale, readonly string[]>>;
   readonly initialView: InitialView;
   readonly mapPosition: MapPosition;
+  /** Optional degrees added to viewer yaw so 0 degrees points to the top of the map. */
+  readonly mapHeadingOffset?: number;
+  /** Shows this scene as a named destination marker on the map. */
+  readonly mapLandmark?: boolean;
   readonly hotspots: readonly Hotspot[];
 }
 
@@ -182,6 +186,7 @@ export const tourScenes = [
     tags: { th: ['ทางเข้า', 'ป้ายมหาวิทยาลัย', 'กลางแจ้ง'], en: ['Entrance', 'Landmark', 'Outdoor'] },
     initialView: { yaw: 0, pitch: 0, zoom: 22 },
     mapPosition: {   x: 1054, y: 159   },
+    mapLandmark: true,
     hotspots: [
       { id: 'entrance-to-road', type: 'scene', target: 'entranceRoad', yaw: -40, pitch: -3 },
       
@@ -283,6 +288,7 @@ export const tourScenes = [
     tags: { th: ['อนุสรณ์', 'จุดสำคัญ', 'กลางแจ้ง'], en: ['Memorial', 'Landmark', 'Outdoor'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: {  x: 1007, y: 193  },
+    mapLandmark: true,
     hotspots: [
       { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 120, pitch: 0 },
       {
@@ -338,6 +344,7 @@ export const tourScenes = [
     tags: { th: ['โรงแรม', 'อาคาร', 'จุดบริการ'], en: ['Hotel', 'Building', 'Service'] },
     initialView: { yaw: 0, pitch: 1, zoom: 24 },
     mapPosition: {  x: 926, y: 249  },
+    mapLandmark: true,
     hotspots: [
       { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
       {
@@ -429,6 +436,7 @@ export const tourScenes = [
     tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 1'], en: ['Building', 'Academic', 'Point 1'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: {  x: 895, y: 260  },
+    mapLandmark: true,
     hotspots: [
       { id: 'building-1-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       { id: 'building-1-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: 90 ,pitch: 0 },
@@ -469,6 +477,7 @@ export const tourScenes = [
     tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 2'], en: ['Building', 'Academic', 'Point 2'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: {  x: 857, y: 283  },
+    mapLandmark: true,
     hotspots: [
       { id: 'building-2-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       {
@@ -558,6 +567,7 @@ export const tourScenes = [
     tags: { th: ['อาคาร', 'ลาน', 'จุดที่ 3'], en: ['Building', 'Forecourt', 'Point 3'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: { x: 701, y: 288 },
+    mapLandmark: true,
     hotspots: [
       { id: 'building-3-to-campus-road-7', type: 'scene', target: 'campusRoad7', yaw: 180, pitch: -3 },
       {
@@ -774,6 +784,7 @@ export const tourScenes = [
     tags: { th: ['อาคาร', 'คณะ', 'จุดที่ 19'], en: ['Building', 'Faculty', 'Point 19'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: { x: 388, y: 430 },
+    mapLandmark: true,
     hotspots: [
       { id: 'campus-road-19-to-road-18', type: 'scene', target: 'campusRoad18', yaw: -90, pitch: -3 },
       { id: 'campus-road-19-to-road-20', type: 'scene', target: 'campusRoad20', yaw: 90, pitch: -3 }
@@ -806,6 +817,7 @@ export const tourScenes = [
     tags: { th: ['อาคาร', 'บริหาร', 'จุดที่ 21'], en: ['Building', 'Administration', 'Point 21'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: { x: 352, y: 401 },
+    mapLandmark: true,
     hotspots: [
       { id: 'campus-road-21-to-road-20', type: 'scene', target: 'campusRoad20', yaw: -90, pitch: -3 },
       { id: 'campus-road-21-to-road-22', type: 'scene', target: 'campusRoad22', yaw: 90, pitch: -3 },
@@ -842,6 +854,7 @@ export const tourScenes = [
     tags: { th: ['อาคาร', 'หอสมุด'], en: ['Building', 'Library'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
     mapPosition: { x: 250, y: 422 },
+    mapLandmark: true,
     hotspots: [
       { id: 'campus-road-22-to-road-21', type: 'scene', target: 'campusRoad21', yaw: 180, pitch: -3 },
       { id: 'campus-road-22-to-road-26', type: 'scene', target: 'campusRoad26', yaw: 90, pitch: -3 },
@@ -1018,6 +1031,29 @@ export const tourScenes = [
   }
 ] as const satisfies readonly TourScene[];
 
+/**
+ * Changes whenever viewer geometry or media changes. React Fast Refresh uses this
+ * signature to rebuild the imperative Photo Sphere Viewer without a page reload.
+ */
+export function getTourStructureSignature(): string {
+  return JSON.stringify(tourScenes.map((scene) => ({
+    id: scene.id,
+    panorama: scene.panorama,
+    title: scene.title,
+    initialView: scene.initialView,
+    mapPosition: scene.mapPosition,
+    mapHeadingOffset: (scene as TourScene).mapHeadingOffset,
+    mapLandmark: (scene as TourScene).mapLandmark,
+    hotspots: scene.hotspots.map((hotspot) => ({
+      id: hotspot.id,
+      type: hotspot.type,
+      yaw: hotspot.yaw,
+      pitch: hotspot.pitch,
+      ...(hotspot.type === 'scene' ? { target: hotspot.target } : {})
+    }))
+  })));
+}
+
 const sceneById = new Map<SceneId, TourScene>(tourScenes.map((scene) => [scene.id, scene]));
 
 export function getScene(id: SceneId): TourScene {
@@ -1026,6 +1062,10 @@ export function getScene(id: SceneId): TourScene {
     throw new Error(`Unknown scene: ${id}`);
   }
   return scene;
+}
+
+export function getMapLandmarkScenes(): readonly TourScene[] {
+  return tourScenes.filter((scene) => (scene as TourScene).mapLandmark === true);
 }
 
 export function localize(text: LocalizedText, locale: Locale): string {
@@ -1083,6 +1123,14 @@ export function validateTour(): readonly string[] {
     }
     if (scene.mapPosition.y < 0 || scene.mapPosition.y > tourMap.height) {
       errors.push(`Scene ${scene.id} map y is outside the image`);
+    }
+    const mapHeadingOffset = (scene as TourScene).mapHeadingOffset;
+    if (mapHeadingOffset !== undefined && !Number.isFinite(mapHeadingOffset)) {
+      errors.push(`Scene ${scene.id} map heading offset is invalid`);
+    }
+    const mapLandmark = (scene as TourScene).mapLandmark;
+    if (mapLandmark !== undefined && typeof mapLandmark !== 'boolean') {
+      errors.push(`Scene ${scene.id} map landmark flag is invalid`);
     }
 
     for (const locale of locales) {

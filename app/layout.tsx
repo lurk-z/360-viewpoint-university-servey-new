@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import '../src/styles.css';
+import DevelopmentRuntime from '../components/DevelopmentRuntime';
 
 export const metadata: Metadata = {
   title: 'FITM 360° Virtual Tour · KMUTNB Prachinburi',
@@ -23,7 +24,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="th">
-      <body>{children}</body>
+      <body><DevelopmentRuntime />{children}</body>
     </html>
   );
 }

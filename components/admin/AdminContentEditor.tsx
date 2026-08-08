@@ -1,9 +1,11 @@
 'use client';
 
-import { useActionState, type FormEvent, type ReactNode } from 'react';
+import { useActionState, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import type { AdminRole, ContentImage, ContentKind } from '../../src/content';
 import type { AdminContentRow } from '../../src/server/admin-repository';
 import AdminImageGalleryFields, { type AdminMediaOption } from './AdminImageGalleryFields';
+import { useAdminActionRefresh } from './useAdminActionRefresh';
+import type { ContentUpdateScope } from '../../src/content-updates';
 import {
   archiveContentAction,
   deleteContentAction,
@@ -198,6 +200,7 @@ function SaveForm({ kind, id, children, label }: {
   readonly label: string;
 }) {
   const [state, action, pending] = useActionState(saveContentAction, INITIAL_ACTION_STATE);
+  useAdminActionRefresh(state, { scope: 'draft', kind, id });
   return (
     <form action={action} className="admin-form">
       <input type="hidden" name="kind" value={kind} />
@@ -222,7 +225,8 @@ function ActionForm({
   disabled = false,
   disabledMessage,
   helpHref,
-  confirmMessage
+  confirmMessage,
+  scope = 'public'
 }: {
   readonly action: ContentAction;
   readonly kind: ContentKind;
@@ -235,8 +239,10 @@ function ActionForm({
   readonly disabledMessage?: string;
   readonly helpHref?: string;
   readonly confirmMessage?: string;
+  readonly scope?: ContentUpdateScope;
 }) {
   const [state, formAction, pending] = useActionState(action, INITIAL_ACTION_STATE);
+  useAdminActionRefresh(state, { scope, kind, id });
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     if (confirmMessage && !window.confirm(confirmMessage)) event.preventDefault();
   };
@@ -275,6 +281,34 @@ export default function AdminContentEditor({
   media = [],
   placeStatuses = {}
 }: AdminContentEditorProps) {
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'archived' | 'pending' | 'orphaned'>('all');
+  const filteredRows = useMemo(() => {
+    const keyword = query.trim().toLocaleLowerCase('th');
+    return rows.filter((row) => {
+      const placeStatus = kind === 'hotspot_contents' ? placeStatuses[row.id] : undefined;
+      const published = Boolean(row.publishedData) && !row.archivedAt;
+      const status = row.archivedAt
+        ? 'archived'
+        : placeStatus?.orphaned
+          ? 'orphaned'
+          : kind === 'hotspot_contents' && !placeStatus?.draftReady
+            ? 'pending'
+            : published ? 'published' : 'draft';
+      if (statusFilter !== 'all' && status !== statusFilter) return false;
+      if (!keyword) return true;
+      const searchable = [
+        row.id,
+        row.slug,
+        row.sceneId,
+        row.hotspotId,
+        JSON.stringify(row.draftData),
+        JSON.stringify(row.publishedData)
+      ].filter(Boolean).join(' ').toLocaleLowerCase('th');
+      return searchable.includes(keyword);
+    });
+  }, [kind, placeStatuses, query, rows, statusFilter]);
+
   return (
     <section className="admin-page">
       <header className="admin-page__header"><div><p>CONTENT MANAGEMENT</p><h1>{title}</h1><span>{description}</span></div></header>
@@ -295,12 +329,25 @@ export default function AdminContentEditor({
         </div>
       ) : null}
 
+      <div className="admin-search-tools">
+        <label><span>ค้นหาข้อมูล</span><input type="search" value={query} placeholder="ชื่อไทย อังกฤษ Slug, ID หรือ Scene ID" onChange={(event) => setQuery(event.target.value)} /></label>
+        <label><span>สถานะ</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}>
+          <option value="all">ทั้งหมด</option>
+          <option value="published">เผยแพร่แล้ว</option>
+          <option value="draft">ฉบับร่าง</option>
+          <option value="archived">เก็บในคลัง</option>
+          {kind === 'hotspot_contents' ? <><option value="pending">รอกรอกข้อมูล</option><option value="orphaned">ไม่พบในทัวร์</option></> : null}
+        </select></label>
+        <span>แสดง {filteredRows.length} จาก {rows.length} รายการ</span>
+        {(query || statusFilter !== 'all') ? <button type="button" onClick={() => { setQuery(''); setStatusFilter('all'); }}>ล้างตัวกรอง</button> : null}
+      </div>
+
       <p className="admin-workflow-note">
         แก้ไขและบันทึกฉบับร่างได้โดยไม่ต้องนำรายการออกจากหน้าเว็บ เมื่อพร้อมแล้วจึงกด “อัปเดตข้อมูลที่เผยแพร่”
       </p>
 
       <div className="admin-editor-list">
-        {rows.map((row) => {
+        {filteredRows.map((row) => {
           const nameKey = kind === 'activities' || kind === 'hotspot_contents' ? 'title' : 'name';
           const label = localized(row.draftData, nameKey, 'th') || row.slug || row.id;
           const published = Boolean(row.publishedData) && !row.archivedAt;
@@ -374,6 +421,7 @@ export default function AdminContentEditor({
                   />
                   <ActionForm
                     action={restoreContentAction}
+                    scope="draft"
                     kind={kind}
                     id={row.id}
                     label="คืนข้อมูลจากคลัง"
@@ -402,7 +450,7 @@ export default function AdminContentEditor({
             </article>
           );
         })}
-        {rows.length === 0 ? <div className="admin-empty">ยังไม่มีข้อมูลในหมวดนี้</div> : null}
+        {filteredRows.length === 0 ? <div className="admin-empty">{rows.length ? 'ไม่พบข้อมูลตามตัวกรอง' : 'ยังไม่มีข้อมูลในหมวดนี้'}</div> : null}
       </div>
     </section>
   );
