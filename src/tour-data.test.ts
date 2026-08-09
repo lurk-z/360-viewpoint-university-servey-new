@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { GET as getTourAssets } from '../app/api/tour-assets/route';
+import { placeContentBootstrap } from '../scripts/place-seed-data';
+import { hotspotDataSchema } from './content';
 import { messages } from './i18n';
 import {
   getInfoHotspots,
@@ -396,10 +398,10 @@ describe('tour configuration', () => {
       { x: 270, y: 398 }
     ];
     const expectedInfo = [
-      { title: 'หอพระหลวงพ่อสิง', yaw: 98, pitch: 4, images: 1 },
-      { title: 'ที่จอดรถยนต์ในคณะเทคโนโลยี', yaw: 108, pitch: 2, images: 1 },
-      { title: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', yaw: 30, pitch: 1, images: 2 },
-      { title: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', yaw: 0, pitch: 2, images: 2 }
+      { id: 'luang-pho-sing-shrine-info', yaw: 98, pitch: 4 },
+      { id: 'faculty-technology-car-parking-info', yaw: 108, pitch: 2 },
+      { id: 'faculty-technology-motorcycle-parking-1-info', yaw: 30, pitch: 1 },
+      { id: 'faculty-technology-motorcycle-parking-2-info', yaw: 0, pitch: 2 }
     ];
 
     const scenes = ids.map((sceneId) => getScene(sceneId));
@@ -411,10 +413,9 @@ describe('tour configuration', () => {
       const info = getInfoHotspots(scene);
       expect(info).toHaveLength(1);
       expect({
-        title: info[0]!.title!.th,
+        id: info[0]!.id,
         yaw: info[0]!.yaw,
-        pitch: info[0]!.pitch,
-        images: info[0]!.images?.length
+        pitch: info[0]!.pitch
       }).toEqual(expectedInfo[index]);
     });
 
@@ -424,46 +425,30 @@ describe('tour configuration', () => {
     }
   });
 
-  it('provides at least one clickable source image and supports multi-image information galleries', () => {
-    for (const scene of tourScenes) {
-      for (const hotspot of getInfoHotspots(scene)) {
-        expect(hotspot.images?.length, `${hotspot.id} needs an image`).toBeGreaterThanOrEqual(1);
-        for (const image of hotspot.images ?? []) {
-          expect(image.src).toMatch(/^\/mainimages\//);
-          expect(image.src).not.toMatch(/^\/tour\/(?:pano|thumbs)\//);
+  it('keeps every Info definition geometry-only and stores its install content in the bootstrap', () => {
+    const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
+    expect(infoHotspots).toHaveLength(21);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(21);
+    expect(Object.keys(placeContentBootstrap).sort()).toEqual(
+      infoHotspots.map((hotspot) => hotspot.id).sort()
+    );
+
+    for (const hotspot of infoHotspots) {
+      expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);
+      const bootstrap = placeContentBootstrap[hotspot.id as keyof typeof placeContentBootstrap];
+      const parsed = hotspotDataSchema.parse(bootstrap);
+      expect(parsed.images.length, `${hotspot.id} needs a bootstrap image`).toBeGreaterThanOrEqual(1);
+      for (const image of parsed.images) {
+        expect(image.src).toMatch(/^(?:\/mainimages\/|https:\/\/)/);
+        expect(image.src).not.toMatch(/^\/tour\/(?:pano|thumbs)\//);
+        if (image.src.startsWith('/mainimages/')) {
           expect(existsSync(publicAssetPath(image.src)), `${image.src} is missing`).toBe(true);
-          for (const locale of locales) {
-            expect(image.alt[locale].trim()).not.toBe('');
-            if (image.caption) expect(image.caption[locale].trim()).not.toBe('');
-          }
         }
       }
-    }
-
-    expect(getInfoHotspots(getScene('campusRoad25'))[0]!.images).toHaveLength(2);
-    expect(getInfoHotspots(getScene('campusRoad26'))[0]!.images).toHaveLength(2);
-  });
-
-  it('keeps legacy references and uses the project survey source for the eight new information hotspots', () => {
-    const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    const surveyIds = new Set([
-      'fitm-parking-1-info',
-      'fitm-parking-2-info',
-      'fitm-parking-3-info',
-      'fitm-parking-4-info',
-      'fitm-front-parking-info',
-      'orange-blossom-room-info',
-      'faculty-of-engineering-info',
-      'university-cafeteria-info'
-    ]);
-
-    expect(infoHotspots).toHaveLength(21);
-    for (const hotspot of infoHotspots) {
-      expect(hotspot.reference).toEqual(surveyIds.has(hotspot.id)
-        ? { label: { th: 'ข้อมูลและภาพถ่ายจากการสำรวจโครงการ', en: 'Project survey data and photographs' } }
-        : { label: { th: 'วิกิพีเดีย', en: 'Wikipedia' } });
       for (const locale of locales) {
-        expect(hotspot.reference!.label[locale].trim()).not.toBe('');
+        expect(parsed.title[locale].trim()).not.toBe('');
+        expect(parsed.description[locale].trim()).not.toBe('');
+        expect(parsed.reference.label[locale].trim()).not.toBe('');
       }
     }
   });

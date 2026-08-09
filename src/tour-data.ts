@@ -17,16 +17,6 @@ function mainPanorama(fileName: string): SceneMedia {
   return { panorama: `${mainImage(fileName)}?v=${PANORAMA_ASSET_VERSION}` };
 }
 
-function busImage(fileName: string): string {
-  return `/mainimages/bus/${fileName}`;
-}
-
-const infoMedia = {
-  busPage1: busImage('page1.jpg'),
-  busPage2: busImage('page2.jpg'),
-  busPage3: busImage('page3.jpg')
-} as const;
-
 export const tourMap = {
   image: mainImage('map/mainmap.png'),
   width: 1150,
@@ -137,25 +127,9 @@ export interface InfoReference {
   readonly url?: string;
 }
 
-const wikipediaReference: InfoReference = {
-  label: { th: 'วิกิพีเดีย', en: 'Wikipedia' }
-};
-
-const projectSurveyReference: InfoReference = {
-  label: {
-    th: 'ข้อมูลและภาพถ่ายจากการสำรวจโครงการ',
-    en: 'Project survey data and photographs'
-  }
-};
-
 /** Structural Info point stored with tour geometry. Presentation is resolved from CMS content. */
 export interface InfoHotspotDefinition extends HotspotBase {
   readonly type: 'info';
-  /** Optional emergency fallback for existing locations. New points may omit all presentation fields. */
-  readonly title?: LocalizedText;
-  readonly description?: LocalizedText;
-  readonly reference?: InfoReference;
-  readonly images?: readonly InfoImage[];
 }
 
 /** Complete Info point passed to viewer components after CMS/fallback resolution. */
@@ -163,6 +137,7 @@ export interface InfoHotspot extends InfoHotspotDefinition {
   readonly title: LocalizedText;
   readonly description: LocalizedText;
   readonly reference: InfoReference;
+  readonly images: readonly InfoImage[];
 }
 
 export type Hotspot = SceneHotspot | InfoHotspotDefinition;
@@ -217,25 +192,7 @@ export const tourScenes = [
         id: 'entrance-landmark-info',
         type: 'info',
         yaw: 10,
-        pitch: 1,
-        title: { th: 'ป้ายมหาวิทยาลัย', en: 'KMUTNB landmark' },
-        description: {
-          th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
-          en: 'The KMUTNB landmark identifies the main entrance to the Prachinburi campus.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.entrance.panorama,
-            alt: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'Front view of the university landmark' },
-            caption: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'University landmark' }
-          },
-          {
-            src: tourMedia.entranceRoad.panorama,
-            alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
-            caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
-          }
-        ]
+        pitch: 1
       }
     ]
   },
@@ -252,35 +209,8 @@ export const tourScenes = [
     mapPosition: { x: 1046, y: 159  },
     hotspots: [
       { id: 'road-to-entrance', type: 'scene', target: 'entrance', yaw: 200, pitch: 1 },
-      { id: 'road-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: -50, pitch: -2 },{
-        id: 'bus-landmark-info',
-        type: 'info',
-        yaw: 130,
-        pitch: 1,
-        title: { th: 'จุดขึ้นรถเมล์เที่ยวรอบปราจีนบุรี', en: 'Bus boarding point for the Prachinburi sightseeing tour' },
-        description: {
-          th: 'จุดเด่นบริเวณทางเข้าที่แสดงอักษรย่อ KMUTNB และต้อนรับผู้มาเยือนวิทยาเขตปราจีนบุรี',
-          en: 'The KMUTNB landmark identifies the main entrance to the Prachinburi campus.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: infoMedia.busPage1,
-            alt: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'Front view of the university landmark' },
-            caption: { th: 'มุมหน้าป้ายมหาวิทยาลัย', en: 'University landmark' }
-          },
-          {
-            src: infoMedia.busPage2,
-            alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
-            caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
-          },
-          {
-            src: infoMedia.busPage3,
-            alt: { th: 'ถนนบริเวณทางเข้ามหาวิทยาลัย', en: 'Road by the university entrance' },
-            caption: { th: 'ถนนบริเวณทางเข้า', en: 'Entrance road' }
-          }
-        ]
-      }
+      { id: 'road-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: -50, pitch: -2 },
+      { id: 'bus-landmark-info', type: 'info', yaw: 130, pitch: 1 }
     ]
   },
   {
@@ -318,25 +248,7 @@ export const tourScenes = [
         id: 'memorial-info',
         type: 'info',
         yaw: 0,
-        pitch: 5,
-        title: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' },
-        description: {
-          th: 'อนุสรณ์เป็นหนึ่งในจุดสำคัญของพื้นที่ลานภายในมหาวิทยาลัย',
-          en: 'The memorial is one of the notable landmarks in the campus plaza.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.memorial.panorama,
-            alt: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' },
-            caption: { th: 'อนุสรณ์ประจำวิทยาเขต', en: 'Campus memorial' }
-          },
-          {
-            src: tourMedia.memorialPlaza.panorama,
-            alt: { th: 'ลานบริเวณอนุสรณ์', en: 'Plaza surrounding the memorial' },
-            caption: { th: 'ลานอนุสรณ์', en: 'Memorial plaza' }
-          }
-        ]
+        pitch: 5
       }
     ]
   },
@@ -374,25 +286,7 @@ export const tourScenes = [
         id: 'hotel-info',
         type: 'info',
         yaw: 0,
-        pitch: 4,
-        title: { th: 'อาคารโรงแรมวิลลาวิชาลัย', en: 'Villa Wichalai Hotel building' },
-        description: {
-          th: 'อาคารปฏิบัติการการท่องเที่ยวและโรงแรม วิลลาวิชาลัยเปิดให้บริการห้องพัก จำนวนถึง 33 ห้อง ท่ามกลางบรรยากาศร่มรื่น ทุกห้องสามารถมองเห็นวิววนอุทยานเขาอีโต้ สะดวกสบายด้วยการรักษาความปลอดภัยตลอด 24 ชั่วโมง อีกทั้งสถานที่ตั้งของโรงแรมอยู่ใกล้ทางขึ้นอุทยานแห่งชาติเขาใหญ่เพียง 10 นาที',
-          en: 'Villa Wichalai, a tourism and hotel training facility, offers 33 guest rooms set amidst a lush, shady atmosphere. Every room features a view of Khao E-To Forest Park, and guests enjoy the convenience of 24-hour security. Additionally, the hotel is located just 10 minutes from the entrance to Khao Yai National Park.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.vallayaHotel.panorama,
-            alt: { th: 'อาคารโรงแรมวิลลาวิชาลัย', en: 'Villa Wichalai Hotel building' },
-            caption: { th: 'อาคารโรงแรม', en: 'Hotel building' }
-          },
-          {
-            src: tourMedia.campusRoad1.panorama,
-            alt: { th: 'ถนนใกล้อาคารโรงแรม', en: 'Road near the hotel building' },
-            caption: { th: 'ถนนสายหลักใกล้อาคาร', en: 'Nearby main road' }
-          }
-        ]
+        pitch: 4
       }
     ]
   },
@@ -467,25 +361,7 @@ export const tourScenes = [
         id: 'building-1-info',
         type: 'info',
         yaw: 0,
-        pitch: 5,
-        title: { th: 'คณะบริหารธุรกิจและอุตสาหกรรมบริการ', en: 'Faculty of Business Administration and Industrial Services' },
-        description: {
-          th: 'ภาควิชาการจัดการอุตสาหกรรมการท่องเที่ยวและการโรงแรมแขนงวิชาการจัดการธุรกิจ (ในภาควิชาการจัดการอุตสาหกรรม) โครงสร้างคณะ: ประกอบด้วย 3 ส่วนงานคือ สำนักงานคณบดี, ภาควิชาบริหารธุรกิจท่องเที่ยวและโรงแรม และภาควิชาบริหารธุรกิจอุตสาหกรรมและการค้า หลักสูตรที่เปิดสอน: เริ่มเปิดสอนในปีการศึกษา 2559 ในระดับปริญญาตรี (บริหารธุรกิจบัณฑิต - บธ.บ.) 2 สาขาวิชา คือ: สาขาการจัดการอุตสาหกรรมการท่องเที่ยวและโรงแรม สาขาบริหารธุรกิจอุตสาหกรรมและการค้า',
-          en: 'Department of Tourism and Hotel Industry Management (under the Industrial Management Department); Faculty Structure: Comprises three units—the Office of the Dean, the Department of Tourism and Hotel Business Administration, and the Department of Industrial and Trade Business Administration. Programs Offered: Instruction began in the 2016 academic year at the bachelor\'s degree level (Bachelor of Business Administration - B.B.A.) in two majors: Tourism and Hotel Industry Management, and Industrial and Trade Business Administration.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusBuilding1.panorama,
-            alt: { th: 'อาคารคณะบริหารธุรกิจและอุตสาหกรรมบริการ', en: 'Faculty of Business Administration and Service Industries Building' },
-            caption: { th: 'มุมหน้าอาคาร', en: 'Building view' }
-          },
-          {
-            src: tourMedia.campusRoad4.panorama,
-            alt: { th: 'ถนนทางแยกใกล้อาคารจุดที่ 1', en: 'Road junction near building point 1' },
-            caption: { th: 'ทางเข้าจากถนนสายหลัก', en: 'Approach from the main road' }
-          }
-        ]
+        pitch: 5
       }
     ]
   },
@@ -507,25 +383,7 @@ export const tourScenes = [
         id: 'building-2-info',
         type: 'info',
         yaw: 0,
-        pitch: 5,
-        title: { th: 'อุทยานเทคโนโลยี มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ', en: 'KMUTNB Techno Park' },
-        description: {
-          th: 'เป็นหน่วยงานกลาง (One Stop Service) ที่เป็นศูนย์รวมประสานงานการให้บริการวิชาการ งานวิจัยระดับสูง และพัฒนานวัตกรรมเพื่ออุตสาหกรรมที่มหาวิทยาลัยมีความเชี่ยวชาญเฉพาะ เป็นศูนย์รวมประสานงานการให้บริการวิชาการ งานวิจัยระดับสูง ให้สามารถนำไปใช้ประโยชน์ในเชิงพาณิชย์ และสร้างเครือข่ายความร่วมมือในลักษณะพันธมิตรอุตสาหกรรมระหว่างสถาบันการศึกษา ภาครัฐและเอกชน รวมถึงเป็นการผสมผสานระหว่างความเชี่ยวชาญในสาขาต่าง ๆ ของมหาวิทยาลัยกับภาคธุรกิจอุตสาหกรรม แบ่งเป็น 6 คลัสเตอร์ 25 ศูนย์ปฏิบัติการ 1 สถาบัน และ 1 หลักสูตร',
-          en: 'It is a central agency (One Stop Service) that coordinates academic services, advanced research, and innovation development for industry in which the university has specialized expertise. It serves as a central hub for coordinating academic services and advanced research to facilitate commercialization and build collaborative networks in the form of industrial partnerships between educational institutions, the public and private sectors. It also integrates the expertise of the university in various fields with the business and industrial sectors, divided into 6 clusters, 25 operational centers, 1 institute, and 1 program.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusBuilding2.panorama,
-            alt: { th: 'อาคารภายในวิทยาเขตจุดที่ 2', en: 'Campus building point 2' },
-            caption: { th: 'มุมหน้าอาคาร', en: 'Building view' }
-          },
-          {
-            src: tourMedia.campusRoad4.panorama,
-            alt: { th: 'ถนนทางแยกใกล้อาคารจุดที่ 2', en: 'Road junction near building point 2' },
-            caption: { th: 'ทางเข้าจากถนนสายหลัก', en: 'Approach from the main road' }
-          }
-        ]
+        pitch: 5
       }
     ]
   },
@@ -597,25 +455,7 @@ export const tourScenes = [
         id: 'building-3-info',
         type: 'info',
         yaw: 0,
-        pitch: 5,
-        title: { th: 'อาคารหอประชุมเเละกิจการนักศึกษา', en: 'Auditorium and Student Affairs Building' },
-        description: {
-          th: 'อาคารหอประชุมเเละกิจการนักศึกษา เป็นอาคารที่ทำกิจการต่างๆภายใน',
-          en: 'The Auditorium and Student Affairs Building is a building that houses various activities within the organization.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusBuilding3.panorama,
-            alt: { th: 'อาคารบริเวณปลายเส้นทาง', en: 'Building at the end of the route' },
-            caption: { th: 'อาคารปลายเส้นทาง', en: 'Route-end building' }
-          },
-          {
-            src: tourMedia.campusRoad7.panorama,
-            alt: { th: 'ถนนใกล้อาคารปลายเส้นทาง', en: 'Road near the route-end building' },
-            caption: { th: 'ทางแยกก่อนถึงอาคาร', en: 'Junction before the building' }
-          }
-        ]
+        pitch: 5
       }
     ]
   },
@@ -865,20 +705,7 @@ export const tourScenes = [
         id: 'Administration Building-info',
         type: 'info',
         yaw: 0,
-        pitch: 5,
-        title: { th: 'อาคารบริหาร', en: 'Administration Building' },
-        description: {
-          th: 'อาคารบริหารใน มจพ. วิทยาเขตปราจีนบุรี ใช้เป็นศูนย์กลางการให้บริการนักศึกษา งานกิจการนักศึกษา ทุนการศึกษา และห้องประชุมสำคัญของมหาวิทยาลัยงานบริการและกิจกรรมหลักกองกิจการนักศึกษาและสวัสดิการ: ให้บริการเรื่องกู้ยืมเงิน กยศ. ทุนการศึกษา และการผ่อนผันการเกณฑ์ทหารงานพยาบาลเบื้องต้น: ให้บริการตรวจรักษาพยาบาลเบื้องต้น ทำแผล และจ่ายยาห้องประชุมใหญ่: ใช้จัดกิจกรรมอบรม สัมมนานักศึกษาใหม่ และพิธีการต่างๆ ของมหาวิทยาลัยจุดติดต่อส่วนกลาง: เป็นสถานที่ประสานงานและติดต่อราชการภายในวิทยาเขต',
-          en: 'The administrative building at KMUTT Prachinburi Campus serves as a central hub for student services, student affairs, scholarships, and important university meeting rooms. Key services and activities include: Student Affairs and Welfare Division: providing services related to student loans (Government Student Loan Fund), scholarships, and military service deferment; Basic Medical Services: providing basic medical check-ups, wound care, and medication; Main Meeting Room: used for training activities, seminars for new students, and various university ceremonies; Central Contact Point: serving as the location for coordinating and contacting government agencies within the campus.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusRoad21.panorama,
-            alt: { th: 'อาคารบริหาร', en: 'Administration Building' },
-            caption: { th: 'อาคารบริหาร', en: 'Administration Building' }
-          }
-        ]
+        pitch: 5
       }
       
     ]
@@ -899,24 +726,11 @@ export const tourScenes = [
       { id: 'campus-road-22-to-road-21', type: 'scene', target: 'campusRoad21', yaw: 180, pitch: -3 },
       { id: 'campus-road-22-to-road-26', type: 'scene', target: 'campusRoad26', yaw: 90, pitch: -3 },
        {
-        id: 'Sirindhorn Building-info',
-        type: 'info',
-        yaw: 0,
-        pitch: 5,
-        title: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' },
-        description: {
-          th: 'อาคารสิรินธร ในมหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (มจพ.) วิทยาเขตปราจีนบุรี หลักๆ ใช้เป็น สำนักหอสมุดกลาง สำหรับค้นคว้าและอ่านหนังสือ รวมถึงเป็นที่ตั้งของ สำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ บนชั้น 6 ที่มีบริการห้องคอมพิวเตอร์และพื้นที่การเรียนรู้หน้าที่และบริการภายในอาคารหอสมุดกลาง (ห้องสมุด): เป็นศูนย์รวมทรัพยากรสารสนเทศ หนังสือ และพื้นที่สำหรับให้นักศึกษามานั่งอ่านหนังสือและค้นคว้าข้อมูลบริการคอมพิวเตอร์ (ชั้น 6): จัดเตรียมเครื่องคอมพิวเตอร์พร้อมโปรแกรมการศึกษาและวิจัย เช่น Microsoft Office, Adobe Creative Cloud และ SPSSพื้นที่เรียนรู้ (Learning Space): รองรับการใช้งานและอ่านหนังสือกลุ่มหรือเดี่ยวของนักศึกษาจุดบริการสอบ/อบรม: ใช้เป็นห้องปฏิบัติการและสถานที่จัดสอบหรืออบรมด้านดิจิทัลต่างๆ ของมหาวิทยาลัย',
-          en: 'The Sirindhorn Building at King Mongkut\'s University of Technology North Bangkok (KMUTNB), Prachinburi Campus, primarily serves as the Central Library, providing a space for research and reading. It also houses the Computer and Information Technology Center on the 6th floor, offering computer labs and learning spaces. Functions and services within the building include: Central Library (Library): A central repository of information resources, books, and a space for students to read and research. Computer Services (6th Floor): Equipped with computers and educational and research software such as Microsoft Office, Adobe Creative Cloud, and SPSS. Learning Space: Supports group and individual student reading and research. Examination/Training Center: Used as a laboratory and venue for conducting examinations or training in various digital areas offered by the university.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusRoad22.panorama,
-            alt: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' },
-            caption: { th: 'อาคารสิรินธร', en: 'Sirindhorn Building' }
-          }
-        ]
-      }
+         id: 'Sirindhorn Building-info',
+         type: 'info',
+         yaw: 0,
+         pitch: 5
+       }
     ]
   },
   {
@@ -938,20 +752,7 @@ export const tourScenes = [
         id: 'luang-pho-sing-shrine-info',
         type: 'info',
         yaw: 98,
-        pitch: 4,
-        title: { th: 'หอพระหลวงพ่อสิง', en: 'Luang Pho Sing Shrine' },
-        description: {
-          th: 'หอพระหลวงพ่อสิงเป็นจุดสักการะภายในบริเวณมหาวิทยาลัย',
-          en: 'The Luang Pho Sing Shrine is a place of worship within the university grounds.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusRoad23.panorama,
-            alt: { th: 'หอพระหลวงพ่อสิงภายในบริเวณมหาวิทยาลัย', en: 'Luang Pho Sing Shrine on the university grounds' },
-            caption: { th: 'หอพระหลวงพ่อสิง', en: 'Luang Pho Sing Shrine' }
-          }
-        ]
+        pitch: 4
       }
     ]
   },
@@ -973,20 +774,7 @@ export const tourScenes = [
         id: 'faculty-technology-car-parking-info',
         type: 'info',
         yaw: 108,
-        pitch: 2,
-        title: { th: 'ที่จอดรถยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Car Parking' },
-        description: {
-          th: 'พื้นที่จอดรถยนต์ภายในบริเวณคณะเทคโนโลยี',
-          en: 'The car parking area within the Faculty of Technology.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusRoad24.panorama,
-            alt: { th: 'พื้นที่จอดรถยนต์ในคณะเทคโนโลยี', en: 'Car parking at the Faculty of Technology' },
-            caption: { th: 'ที่จอดรถยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Car Parking' }
-          }
-        ]
+        pitch: 2
       }
     ]
   },
@@ -1008,25 +796,7 @@ export const tourScenes = [
         id: 'faculty-technology-motorcycle-parking-1-info',
         type: 'info',
         yaw: 30,
-        pitch: 1,
-        title: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Motorcycle Parking' },
-        description: {
-          th: 'พื้นที่จอดรถจักรยานยนต์ภายในบริเวณคณะเทคโนโลยี',
-          en: 'The motorcycle parking area within the Faculty of Technology.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusRoad25.panorama,
-            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 1', en: 'Faculty of Technology motorcycle parking from Point 1' },
-            caption: { th: 'มุมมองจากจุดที่ 1', en: 'View from Point 1' }
-          },
-          {
-            src: tourMedia.campusRoad26.panorama,
-            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 2', en: 'Faculty of Technology motorcycle parking from Point 2' },
-            caption: { th: 'มุมมองจากจุดที่ 2', en: 'View from Point 2' }
-          }
-        ]
+        pitch: 1
       }
     ]
   },
@@ -1048,25 +818,7 @@ export const tourScenes = [
         id: 'faculty-technology-motorcycle-parking-2-info',
         type: 'info',
         yaw: 0,
-        pitch: 2,
-        title: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยี', en: 'Faculty of Technology Motorcycle Parking' },
-        description: {
-          th: 'พื้นที่จอดรถจักรยานยนต์ภายในบริเวณคณะเทคโนโลยี',
-          en: 'The motorcycle parking area within the Faculty of Technology.'
-        },
-        reference: wikipediaReference,
-        images: [
-          {
-            src: tourMedia.campusRoad25.panorama,
-            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 1', en: 'Faculty of Technology motorcycle parking from Point 1' },
-            caption: { th: 'มุมมองจากจุดที่ 1', en: 'View from Point 1' }
-          },
-          {
-            src: tourMedia.campusRoad26.panorama,
-            alt: { th: 'ที่จอดรถจักรยานยนต์ในคณะเทคโนโลยีจากจุดที่ 2', en: 'Faculty of Technology motorcycle parking from Point 2' },
-            caption: { th: 'มุมมองจากจุดที่ 2', en: 'View from Point 2' }
-          }
-        ]
+        pitch: 2
       }
     ]
   },
@@ -1154,21 +906,7 @@ export const tourScenes = [
         id: 'fitm-parking-1-info',
         type: 'info',
         yaw: 120,
-        pitch: 1,
-        title: {
-          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
-        },
-        description: {
-          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Parking for cars and motorcycles within the Faculty of Industrial Technology and Management area.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.campusRoad32.panorama,
-          alt: { th: 'พื้นที่จอดรถบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 1', en: 'FITM parking area, Point 1' },
-          caption: { th: 'พื้นที่จอดรถ จุดที่ 1', en: 'Parking area, Point 1' }
-        }]
+        pitch: 1
       }
     ]
   },
@@ -1190,21 +928,7 @@ export const tourScenes = [
         id: 'fitm-parking-2-info',
         type: 'info',
         yaw: 35,
-        pitch: 1,
-        title: {
-          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
-        },
-        description: {
-          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Parking for cars and motorcycles within the Faculty of Industrial Technology and Management area.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.campusRoad33.panorama,
-          alt: { th: 'พื้นที่จอดรถบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 2', en: 'FITM parking area, Point 2' },
-          caption: { th: 'พื้นที่จอดรถ จุดที่ 2', en: 'Parking area, Point 2' }
-        }]
+        pitch: 1
       }
     ]
   },
@@ -1226,21 +950,7 @@ export const tourScenes = [
         id: 'orange-blossom-room-info',
         type: 'info',
         yaw: -100,
-        pitch: 1,
-        title: {
-          th: 'ห้องพวงแสด',
-          en: 'Orange Blossom Room'
-        },
-        description: {
-          th: 'จุดข้อมูลห้องพวงแสดภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Information point for the Orange Blossom Room within the Faculty of Industrial Technology and Management.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.campusRoad34.panorama,
-          alt: { th: 'บริเวณห้องพวงแสด', en: 'Orange Blossom Room area' },
-          caption: { th: 'ห้องพวงแสด', en: 'Orange Blossom Room' }
-        }]
+        pitch: 1
       },
     ]
   },
@@ -1280,41 +990,13 @@ export const tourScenes = [
         id: 'fitm-front-parking-info',
         type: 'info',
         yaw: 125,
-        pitch: 1,
-        title: {
-          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
-        },
-        description: {
-          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Parking for cars and motorcycles near the Faculty of Industrial Technology and Management building.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.campusRoad36.panorama,
-          alt: { th: 'พื้นที่จอดรถใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Parking near the FITM building' },
-          caption: { th: 'พื้นที่จอดรถหน้าอาคาร', en: 'Parking by the building' }
-        }]
+        pitch: 1
       },
       {
         id: 'fitm-parking-3-info',
         type: 'info',
         yaw: 0,
-        pitch: 1,
-        title: {
-          th: 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
-        },
-        description: {
-          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Parking for cars and motorcycles near the Faculty of Industrial Technology and Management building.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.campusRoad36.panorama,
-          alt: { th: 'พื้นที่จอดรถใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Parking near the FITM building' },
-          caption: { th: 'พื้นที่จอดรถหน้าอาคาร', en: 'Parking by the building' }
-        }]
+        pitch: 1
       }
     ]
   },
@@ -1336,21 +1018,7 @@ export const tourScenes = [
         id: 'fitm-parking-4-info',
         type: 'info',
         yaw: -35,
-        pitch: 1,
-        title: {
-          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
-        },
-        description: {
-          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
-          en: 'Parking for cars and motorcycles within the Faculty of Industrial Technology and Management area.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.campusRoad37.panorama,
-          alt: { th: 'พื้นที่จอดรถบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 4', en: 'FITM parking area, Point 4' },
-          caption: { th: 'พื้นที่จอดรถ จุดที่ 4', en: 'Parking area, Point 4' }
-        }]
+        pitch: 1
       }
     ]
   },
@@ -1373,18 +1041,7 @@ export const tourScenes = [
         id: 'university-cafeteria-info',
         type: 'info',
         yaw: 0,
-        pitch: 2,
-        title: { th: 'โรงอาหารมหาวิทยาลัย', en: 'University Cafeteria' },
-        description: {
-          th: 'พื้นที่โรงอาหารของมหาวิทยาลัยสำหรับรับประทานอาหารและพักผ่อนระหว่างวัน',
-          en: 'The university dining area for meals and daytime breaks.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.universityCafeteria.panorama,
-          alt: { th: 'บริเวณโรงอาหารมหาวิทยาลัย', en: 'University cafeteria area' },
-          caption: { th: 'โรงอาหารมหาวิทยาลัย', en: 'University Cafeteria' }
-        }]
+        pitch: 2
       }
     ]
   },
@@ -1472,21 +1129,7 @@ export const tourScenes = [
         id: 'faculty-of-engineering-info',
         type: 'info',
         yaw: 50,
-        pitch: 2,
-        title: {
-          th: 'คณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี',
-          en: 'Faculty of Engineering, Prachinburi Campus'
-        },
-        description: {
-          th: 'จุดข้อมูลคณะวิศวกรรมศาสตร์ มจพ. วิทยาเขตปราจีนบุรี',
-          en: 'Information point for the Faculty of Engineering at KMUTNB Prachinburi Campus.'
-        },
-        reference: projectSurveyReference,
-        images: [{
-          src: tourMedia.campusRoad43.panorama,
-          alt: { th: 'บริเวณคณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี', en: 'Faculty of Engineering, Prachinburi Campus area' },
-          caption: { th: 'คณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี', en: 'Faculty of Engineering, Prachinburi Campus' }
-        }]
+        pitch: 2
       }
     ]
   }
@@ -1609,48 +1252,12 @@ export function validateTour(): readonly string[] {
         errors.push(`Scene ${scene.id} links to missing scene ${hotspot.target}`);
       }
       if (hotspot.type === 'info') {
-        const hasFallbackContent = Boolean(hotspot.title || hotspot.description || hotspot.reference || hotspot.images?.length);
-        if (hasFallbackContent) {
-          if (!hotspot.title || !hotspot.description || !hotspot.reference || !hotspot.images?.length) {
-            errors.push(`Info hotspot ${hotspot.id} fallback content must be complete when provided`);
-          }
-          for (const locale of locales) {
-            if (!hotspot.title?.[locale].trim() || !hotspot.description?.[locale].trim()) {
-              errors.push(`Info hotspot ${hotspot.id} fallback content is missing ${locale} text`);
-            }
-            if (!hotspot.reference?.label[locale].trim()) {
-              errors.push(`Info hotspot ${hotspot.id} reference is missing ${locale} label`);
-            }
-          }
-        }
-        if (hotspot.reference?.url !== undefined) {
-          try {
-            const referenceUrl = new URL(hotspot.reference.url);
-            if (referenceUrl.protocol !== 'http:' && referenceUrl.protocol !== 'https:') {
-              errors.push(`Info hotspot ${hotspot.id} reference must use HTTP or HTTPS`);
-            }
-          } catch {
-            errors.push(`Info hotspot ${hotspot.id} has an invalid reference URL`);
-          }
-        }
-        for (const image of hotspot.images ?? []) {
-          if (!image.src.startsWith('/mainimages/')) {
-            errors.push(`Info hotspot ${hotspot.id} must use /mainimages media: ${image.src}`);
-          }
-          if (image.src.includes('/tour/pano') || image.src.includes('/tour/thumbs')) {
-            errors.push(`Info hotspot ${hotspot.id} references legacy tour media: ${image.src}`);
-          }
-          if (image.src.includes('/tiles/')) {
-            errors.push(`Info hotspot ${hotspot.id} references generated panorama tiles: ${image.src}`);
-          }
-          for (const locale of locales) {
-            if (!image.alt[locale].trim()) {
-              errors.push(`Info hotspot ${hotspot.id} image is missing ${locale} alternative text`);
-            }
-            if (image.caption && !image.caption[locale].trim()) {
-              errors.push(`Info hotspot ${hotspot.id} image is missing ${locale} caption`);
-            }
-          }
+        const allowedFields = new Set(['id', 'type', 'yaw', 'pitch']);
+        const unexpectedFields = Object.keys(hotspot).filter((field) => !allowedFields.has(field));
+        if (unexpectedFields.length > 0) {
+          errors.push(
+            `Info hotspot ${hotspot.id} must contain geometry only; move ${unexpectedFields.join(', ')} to Admin`
+          );
         }
       }
     }

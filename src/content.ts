@@ -182,12 +182,12 @@ export function createFallbackHotspotContent(
     id: hotspot.id,
     sceneId: scene.id,
     hotspotId: hotspot.id,
-    title: hotspot.title ?? genericInfoTitle,
-    description: hotspot.description ?? genericInfoDescription,
+    title: genericInfoTitle,
+    description: genericInfoDescription,
     sceneTitle: scene.title,
     sceneDescription: scene.description,
-    reference: hotspot.reference ?? pendingReference,
-    images: hotspot.images ?? []
+    reference: pendingReference,
+    images: []
   };
 }
 
@@ -239,10 +239,10 @@ export function resolveInfoHotspot(
   if (!override) {
     return {
       ...hotspot,
-      title: hotspot.title ?? genericInfoTitle,
-      description: hotspot.description ?? genericInfoDescription,
-      reference: hotspot.reference ?? pendingReference,
-      images: hotspot.images ?? []
+      title: genericInfoTitle,
+      description: genericInfoDescription,
+      reference: pendingReference,
+      images: []
     };
   }
   return {

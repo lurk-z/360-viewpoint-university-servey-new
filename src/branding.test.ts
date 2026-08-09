@@ -65,4 +65,14 @@ describe('FITM branding', () => {
     expect(viewer).toContain("canvasBackground: '#082f49'");
     expect(map).toContain("color: '#0ea5e9'");
   });
+
+  it('shows the current viewer position in green while landmark markers remain blue', () => {
+    const styles = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf8');
+    const userMarker = styles.match(/\.tour-map-user__dot\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+    const landmarkMarker = styles.match(/\.tour-map-landmark-marker\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+
+    expect(userMarker).toContain('background: #22c55e');
+    expect(userMarker).toContain('rgb(34 197 94 / 30%)');
+    expect(landmarkMarker).toContain('background: var(--focus)');
+  });
 });

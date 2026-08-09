@@ -1,14 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
-import { createFallbackHotspotContent, programDataSchema, type ProgramData } from '../src/content.ts';
+import {
+  hotspotDataSchema,
+  programDataSchema,
+  type HotspotData,
+  type ProgramData
+} from '../src/content.ts';
 import { syncTourPlaces } from '../src/server/tour-place-sync.ts';
 import { tourPlaceDefinitions } from '../src/tour-places.ts';
-import { getInfoHotspots, getScene, tourScenes, type InfoHotspotDefinition, type TourScene } from '../src/tour-data.ts';
+import { getInfoHotspots, getScene, type InfoHotspotDefinition, type TourScene } from '../src/tour-data.ts';
 import {
   businessAdditionalProgramSeeds,
   digitalAgroAdditionalProgramSeeds,
   engineeringProgramSeeds,
   fitmProgramSeeds
 } from './new-program-seeds.ts';
+import { placeContentBootstrap } from './place-seed-data.ts';
 
 try {
   process.loadEnvFile('.env.local');
@@ -296,34 +302,19 @@ interface ExistingHotspotRow {
   readonly published_data: Record<string, unknown> | null;
 }
 
-const publishedNewPlaceIds = new Set([
-  'fitm-parking-1-info',
-  'fitm-parking-2-info',
-  'fitm-parking-3-info',
-  'fitm-parking-4-info',
-  'fitm-front-parking-info',
-  'orange-blossom-room-info',
-  'faculty-of-engineering-info',
-  'university-cafeteria-info'
-]);
+const bootstrapById: Readonly<Record<string, unknown>> = placeContentBootstrap;
 
-const initialNewPlaceContent = new Map(tourScenes.flatMap((scene) => (
-  getInfoHotspots(scene).flatMap((hotspot) => {
-    if (!publishedNewPlaceIds.has(hotspot.id)) return [];
-    const fallback = createFallbackHotspotContent(scene, hotspot);
-    return [[hotspot.id, {
-      draftData: {
-        title: fallback.title,
-        description: fallback.description,
-        sceneTitle: fallback.sceneTitle,
-        sceneDescription: fallback.sceneDescription,
-        reference: fallback.reference,
-        images: fallback.images
-      },
-      publishOnInsert: true
-    }] as const];
-  })
-)));
+function getBootstrapPlaceContent(id: string): HotspotData | undefined {
+  const data = bootstrapById[id];
+  return data ? hotspotDataSchema.parse(data) : undefined;
+}
+
+const initialNewPlaceContent = new Map(
+  Object.entries(bootstrapById).map(([id, data]) => [id, {
+    draftData: hotspotDataSchema.parse(data),
+    publishOnInsert: true
+  }] as const)
+);
 
 const syncedPlaces = await syncTourPlaces(supabase, undefined, initialNewPlaceContent);
 const { data: existingHotspotData, error: hotspotReadError } = await supabase
@@ -368,10 +359,10 @@ async function ensureFaculty(input: {
   const currentHotspot = input.hotspot ? existingHotspots.get(input.hotspot.id) : undefined;
   const draftHotspot = currentHotspot?.draft_data;
   const publishedHotspot = currentHotspot?.published_data;
-  const fallbackContent = input.hotspot
-    ? createFallbackHotspotContent(input.scene, input.hotspot)
+  const bootstrapContent = input.hotspot
+    ? getBootstrapPlaceContent(input.hotspot.id)
     : undefined;
-  const fallbackImages = fallbackContent?.images.length ? fallbackContent.images : [{
+  const fallbackImages = bootstrapContent?.images.length ? bootstrapContent.images : [{
     src: input.scene.panorama,
     alt: input.scene.title,
     caption: input.scene.title
@@ -384,14 +375,14 @@ async function ensureFaculty(input: {
     : fallbackImages;
   const draftSource = hasBilingualReference(draftHotspot?.reference)
     ? draftHotspot?.reference
-    : fallbackContent?.reference ?? wikipediaReference;
+    : bootstrapContent?.reference ?? wikipediaReference;
   const publishedSource = hasBilingualReference(publishedHotspot?.reference)
     ? publishedHotspot?.reference
-    : fallbackContent?.reference ?? wikipediaReference;
+    : bootstrapContent?.reference ?? wikipediaReference;
   const draftData = {
-    name: draftHotspot?.title ?? fallbackContent?.title ?? input.scene.title,
+    name: draftHotspot?.title ?? bootstrapContent?.title ?? input.scene.title,
     summary: input.scene.description,
-    description: draftHotspot?.description ?? fallbackContent?.description ?? input.scene.description,
+    description: draftHotspot?.description ?? bootstrapContent?.description ?? input.scene.description,
     images: draftImages,
     source: draftSource
   };
