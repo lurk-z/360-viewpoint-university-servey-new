@@ -33,7 +33,7 @@ export function buildKnowledgeDocuments(content: PublicContentSnapshot): Knowled
       return {
         citation: { id: item.id, kind: 'program', title: item.name, url: sourceUrl(item.source) },
         sceneId: faculty?.sceneId,
-        text: `PROGRAM ${item.slug}\nFACULTY: ${faculty?.name.th ?? '-'} / ${faculty?.name.en ?? '-'}\nTH: ${item.name.th} (${item.level.th})\n${item.summary.th}\n${item.description.th}\nการรับสมัคร: ${item.admission.th}\nEN: ${item.name.en} (${item.level.en})\n${item.summary.en}\n${item.description.en}\nAdmission: ${item.admission.en}`
+        text: `PROGRAM ${item.slug}\nFACULTY: ${faculty?.name.th ?? '-'} / ${faculty?.name.en ?? '-'}\nDEPARTMENT: ${item.department?.th ?? '-'} / ${item.department?.en ?? '-'}\nTH: ${item.name.th} (${item.level.th})\n${item.summary.th}\n${item.description.th}\nการรับสมัคร: ${item.admission.th}\nEN: ${item.name.en} (${item.level.en})\n${item.summary.en}\n${item.description.en}\nAdmission: ${item.admission.en}`
       };
     }),
     ...content.activities.map((item): KnowledgeDocument => ({

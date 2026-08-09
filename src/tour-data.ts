@@ -60,6 +60,7 @@ export const tourMedia = {
   campusRoad15: mainPanorama('temp3-8.jpg'),
   campusRoad16: mainPanorama('temp3-9.jpg'),
   campusRoad17: mainPanorama('temp3-10.jpg'),
+  campusRoad27: mainPanorama('temp4-1.jpg'),
   campusRoad18: mainPanorama('temp4-2.jpg'),
   campusRoad19: mainPanorama('temp4-3.jpg'),
   campusRoad20: mainPanorama('temp4-4.jpg'),
@@ -68,7 +69,24 @@ export const tourMedia = {
   campusRoad23: mainPanorama('temp5-1.jpg'),
   campusRoad24: mainPanorama('temp5-2.jpg'),
   campusRoad25: mainPanorama('temp5-3.jpg'),
-  campusRoad26: mainPanorama('temp5-4.jpg')
+  campusRoad26: mainPanorama('temp5-4.jpg'),
+  campusRoad28: mainPanorama('temp6-1.jpg'),
+  campusRoad29: mainPanorama('temp6-2.jpg'),
+  campusRoad30: mainPanorama('temp6-3.jpg'),
+  campusRoad31: mainPanorama('temp6-4.jpg'),
+  campusRoad32: mainPanorama('temp6-5.jpg'),
+  campusRoad33: mainPanorama('temp6-6.jpg'),
+  campusRoad34: mainPanorama('temp6-7.jpg'),
+  campusRoad35: mainPanorama('temp6-8.jpg'),
+  campusRoad36: mainPanorama('temp6-9.jpg'),
+  campusRoad37: mainPanorama('temp6-10.jpg'),
+  universityCafeteria: mainPanorama('temp6-University_cafeteria.jpg'),
+  campusRoad38: mainPanorama('temp7-1.jpg'),
+  campusRoad39: mainPanorama('temp7-2.jpg'),
+  campusRoad40: mainPanorama('temp7-3.jpg'),
+  campusRoad41: mainPanorama('temp7-4.jpg'),
+  campusRoad42: mainPanorama('temp7-5.jpg'),
+  campusRoad43: mainPanorama('temp7-6.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -121,6 +139,13 @@ export interface InfoReference {
 
 const wikipediaReference: InfoReference = {
   label: { th: 'วิกิพีเดีย', en: 'Wikipedia' }
+};
+
+const projectSurveyReference: InfoReference = {
+  label: {
+    th: 'ข้อมูลและภาพถ่ายจากการสำรวจโครงการ',
+    en: 'Project survey data and photographs'
+  }
 };
 
 /** Structural Info point stored with tour geometry. Presentation is resolved from CMS content. */
@@ -720,7 +745,7 @@ export const tourScenes = [
     hotspots: [
       { id: 'campus-road-15-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 180, pitch: -3 },
       { id: 'campus-road-15-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 150, pitch: -3 },
-      { id: 'campus-road-15-to-road-18', type: 'scene', target: 'campusRoad18', yaw: 0, pitch: -3 }
+      { id: 'campus-road-15-to-road-27', type: 'scene', target: 'campusRoad27', yaw: 0, pitch: -3 }
     ]
   },
   {
@@ -752,7 +777,24 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 344, y: 272 },
     hotspots: [
-      { id: 'campus-road-17-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 200, pitch: -3 }
+      { id: 'campus-road-17-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 200, pitch: -3 },
+      { id: 'campus-road-17-to-road-28', type: 'scene', target: 'campusRoad28', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad27',
+    ...tourMedia.campusRoad27,
+    title: { th: 'เส้นทางภายในวิทยาเขต จุดที่ 27', en: 'Campus Route Point 27' },
+    description: {
+      th: 'จุดเชื่อมต่อบนเส้นทางระหว่างจุดที่ 15 และพื้นที่กลุ่มอาคารภายในวิทยาเขต',
+      en: 'A connecting route point between Point 15 and the campus building area.'
+    },
+    tags: { th: ['เส้นทาง', 'ทางแยก', 'จุดที่ 27'], en: ['Route', 'Junction', 'Point 27'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 392, y: 373 },
+    hotspots: [
+      { id: 'campus-road-27-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 180, pitch: -3 },
+      { id: 'campus-road-27-to-road-18', type: 'scene', target: 'campusRoad18', yaw: 0, pitch: -3 }
     ]
   },
   {
@@ -767,7 +809,7 @@ export const tourScenes = [
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
     mapPosition: { x: 411, y: 449 },
     hotspots: [
-      { id: 'campus-road-18-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 180, pitch: -3 },
+      { id: 'campus-road-18-to-road-27', type: 'scene', target: 'campusRoad27', yaw: 100, pitch: 0 },
       { id: 'campus-road-18-to-road-19', type: 'scene', target: 'campusRoad19', yaw: 0, pitch: -3 }
     ]
   },
@@ -888,6 +930,7 @@ export const tourScenes = [
     tags: { th: ['เส้นทาง', 'หอพระ', 'จุดที่ 23'], en: ['Route', 'Shrine', 'Point 23'] },
     initialView: { yaw: 98, pitch: 0, zoom: 24 },
     mapPosition: { x: 331, y: 324 },
+    mapLandmark: true,
     hotspots: [
       { id: 'campus-road-23-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 180, pitch: -3 },
       { id: 'campus-road-23-to-road-24', type: 'scene', target: 'campusRoad24', yaw: 0, pitch: -3 },
@@ -1024,6 +1067,426 @@ export const tourScenes = [
             caption: { th: 'มุมมองจากจุดที่ 2', en: 'View from Point 2' }
           }
         ]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad28',
+    ...tourMedia.campusRoad28,
+    title: { th: 'เส้นทางไปกลุ่มอาคาร จุดที่ 28', en: 'Building Route Point 28' },
+    description: {
+      th: 'เส้นทางต่อจากจุดที่ 17 มุ่งหน้าไปยังกลุ่มอาคารด้านในของวิทยาเขต',
+      en: 'The route continuing from Point 17 toward the inner campus buildings.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 28'], en: ['Route', 'Outdoor', 'Point 28'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 296, y: 239 },
+    hotspots: [
+      { id: 'campus-road-28-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 180, pitch: -3 },
+      { id: 'campus-road-28-to-road-29', type: 'scene', target: 'campusRoad29', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad29',
+    ...tourMedia.campusRoad29,
+    title: { th: 'เส้นทางไปกลุ่มอาคาร จุดที่ 29', en: 'Building Route Point 29' },
+    description: {
+      th: 'ถนนภายในวิทยาเขตที่เชื่อมต่อไปยังทางแยกของกลุ่มอาคารคณะ',
+      en: 'An internal campus road leading toward the faculty building junction.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 29'], en: ['Route', 'Outdoor', 'Point 29'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 251, y: 241 },
+    hotspots: [
+      { id: 'campus-road-29-to-road-28', type: 'scene', target: 'campusRoad28', yaw: 180, pitch: -3 },
+      { id: 'campus-road-29-to-road-30', type: 'scene', target: 'campusRoad30', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad30',
+    ...tourMedia.campusRoad30,
+    title: { th: 'เส้นทางไปกลุ่มอาคาร จุดที่ 30', en: 'Building Route Point 30' },
+    description: {
+      th: 'เส้นทางช่วงก่อนถึงทางแยกไปคณะเทคโนโลยีและการจัดการอุตสาหกรรมและคณะวิศวกรรมศาสตร์',
+      en: 'The route approaching the junction for the Faculty of Industrial Technology and Management and the Faculty of Engineering.'
+    },
+    tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 30'], en: ['Route', 'Outdoor', 'Point 30'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 230, y: 258 },
+    hotspots: [
+      { id: 'campus-road-30-to-road-29', type: 'scene', target: 'campusRoad29', yaw: 180, pitch: -3 },
+      { id: 'campus-road-30-to-road-31', type: 'scene', target: 'campusRoad31', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad31',
+    ...tourMedia.campusRoad31,
+    title: { th: 'ทางแยกกลุ่มอาคารคณะ', en: 'Faculty Building Junction' },
+    description: {
+      th: 'ทางแยกไปคณะเทคโนโลยีและการจัดการอุตสาหกรรมและคณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี',
+      en: 'The junction for the Faculty of Industrial Technology and Management and the Faculty of Engineering at Prachinburi Campus.'
+    },
+    tags: { th: ['เส้นทาง', 'ทางแยก'], en: ['Route', 'Junction'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 213, y: 278 },
+    hotspots: [
+      { id: 'campus-road-31-to-road-30', type: 'scene', target: 'campusRoad30', yaw: 170, pitch: -3 },
+      { id: 'campus-road-31-to-road-32', type: 'scene', target: 'campusRoad32', yaw: -95, pitch: -3 },
+      { id: 'campus-road-31-to-road-38', type: 'scene', target: 'campusRoad38', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad32',
+    ...tourMedia.campusRoad32,
+    title: { th: 'เส้นทางคณะเทคโนโลยี จุดที่ 32', en: 'FITM Route Point 32' },
+    description: {
+      th: 'เส้นทางและพื้นที่จอดรถใกล้คณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'A route and parking area near the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['เส้นทาง', 'ที่จอดรถ', 'จุดที่ 32'], en: ['Route', 'Parking', 'Point 32'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 254, y: 301 },
+    hotspots: [
+      { id: 'campus-road-32-to-road-31', type: 'scene', target: 'campusRoad31', yaw: 190, pitch: 0 },
+      { id: 'campus-road-32-to-road-33', type: 'scene', target: 'campusRoad33', yaw: 0, pitch: -3 },
+      { id: 'campus-road-32-to-road-37', type: 'scene', target: 'campusRoad37', yaw: 85, pitch: -3 },
+      {
+        id: 'fitm-parking-1-info',
+        type: 'info',
+        yaw: 120,
+        pitch: 1,
+        title: {
+          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
+        },
+        description: {
+          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Parking for cars and motorcycles within the Faculty of Industrial Technology and Management area.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.campusRoad32.panorama,
+          alt: { th: 'พื้นที่จอดรถบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 1', en: 'FITM parking area, Point 1' },
+          caption: { th: 'พื้นที่จอดรถ จุดที่ 1', en: 'Parking area, Point 1' }
+        }]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad33',
+    ...tourMedia.campusRoad33,
+    title: { th: 'เส้นทางคณะเทคโนโลยี จุดที่ 33', en: 'FITM Route Point 33' },
+    description: {
+      th: 'เส้นทางและพื้นที่จอดรถในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'A route and parking area within the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['เส้นทาง', 'ที่จอดรถ', 'จุดที่ 33'], en: ['Route', 'Parking', 'Point 33'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 275, y: 321 },
+    hotspots: [
+      { id: 'campus-road-33-to-road-32', type: 'scene', target: 'campusRoad32', yaw: 180, pitch: -3 },
+      { id: 'campus-road-33-to-road-34', type: 'scene', target: 'campusRoad34', yaw: 80, pitch: -3 },
+      {
+        id: 'fitm-parking-2-info',
+        type: 'info',
+        yaw: 35,
+        pitch: 1,
+        title: {
+          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
+        },
+        description: {
+          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Parking for cars and motorcycles within the Faculty of Industrial Technology and Management area.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.campusRoad33.panorama,
+          alt: { th: 'พื้นที่จอดรถบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 2', en: 'FITM parking area, Point 2' },
+          caption: { th: 'พื้นที่จอดรถ จุดที่ 2', en: 'Parking area, Point 2' }
+        }]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad34',
+    ...tourMedia.campusRoad34,
+    title: { th: 'เส้นทางคณะเทคโนโลยี จุดที่ 34', en: 'FITM Route Point 34' },
+    description: {
+      th: 'ถนนภายในกลุ่มอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'An internal road in the Faculty of Industrial Technology and Management building area.'
+    },
+    tags: { th: ['เส้นทาง', 'คณะเทคโนโลยี', 'จุดที่ 34'], en: ['Route', 'FITM', 'Point 34'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 262, y: 339 },
+    hotspots: [
+      { id: 'campus-road-34-to-road-33', type: 'scene', target: 'campusRoad33', yaw: 180, pitch: -3 },
+      { id: 'campus-road-34-to-road-35', type: 'scene', target: 'campusRoad35', yaw: 0, pitch: -3 },
+      {
+        id: 'orange-blossom-room-info',
+        type: 'info',
+        yaw: -100,
+        pitch: 1,
+        title: {
+          th: 'ห้องพวงแสด',
+          en: 'Orange Blossom Room'
+        },
+        description: {
+          th: 'จุดข้อมูลห้องพวงแสดภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Information point for the Orange Blossom Room within the Faculty of Industrial Technology and Management.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.campusRoad34.panorama,
+          alt: { th: 'บริเวณห้องพวงแสด', en: 'Orange Blossom Room area' },
+          caption: { th: 'ห้องพวงแสด', en: 'Orange Blossom Room' }
+        }]
+      },
+    ]
+  },
+  {
+    id: 'campusRoad35',
+    ...tourMedia.campusRoad35,
+    title: { th: 'เส้นทางคณะเทคโนโลยี จุดที่ 35', en: 'FITM Route Point 35' },
+    description: {
+      th: 'เส้นทางเข้าใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'The route approaching the Faculty of Industrial Technology and Management building.'
+    },
+    tags: { th: ['เส้นทาง', 'คณะเทคโนโลยี', 'จุดที่ 35'], en: ['Route', 'FITM', 'Point 35'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 249, y: 358 },
+    hotspots: [
+      { id: 'campus-road-35-to-road-34', type: 'scene', target: 'campusRoad34', yaw: 180, pitch: -3 },
+      { id: 'campus-road-35-to-road-36', type: 'scene', target: 'campusRoad36', yaw: 80, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad36',
+    ...tourMedia.campusRoad36,
+    title: { th: 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Faculty of Industrial Technology and Management' },
+    description: {
+      th: 'จุดชมบริเวณด้านหน้าคณะเทคโนโลยีและการจัดการอุตสาหกรรม มจพ. วิทยาเขตปราจีนบุรี',
+      en: 'A viewpoint in front of the Faculty of Industrial Technology and Management at KMUTNB Prachinburi Campus.'
+    },
+    tags: { th: ['อาคาร', 'คณะ', 'FITM'], en: ['Building', 'Faculty', 'FITM'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 228, y: 345 },
+    mapLandmark: true,
+    hotspots: [
+      { id: 'campus-road-36-to-road-35', type: 'scene', target: 'campusRoad35', yaw: -100, pitch: -3 },
+      { id: 'campus-road-36-to-road-37', type: 'scene', target: 'campusRoad37', yaw: 150, pitch: -3 },
+      { id: 'campus-road-36-to-road-universityCafeteria', type: 'scene', target: 'universityCafeteria', yaw: 50, pitch: -3 },
+      {
+        id: 'fitm-front-parking-info',
+        type: 'info',
+        yaw: 125,
+        pitch: 1,
+        title: {
+          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
+        },
+        description: {
+          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Parking for cars and motorcycles near the Faculty of Industrial Technology and Management building.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.campusRoad36.panorama,
+          alt: { th: 'พื้นที่จอดรถใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Parking near the FITM building' },
+          caption: { th: 'พื้นที่จอดรถหน้าอาคาร', en: 'Parking by the building' }
+        }]
+      },
+      {
+        id: 'fitm-parking-3-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 1,
+        title: {
+          th: 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
+        },
+        description: {
+          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Parking for cars and motorcycles near the Faculty of Industrial Technology and Management building.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.campusRoad36.panorama,
+          alt: { th: 'พื้นที่จอดรถใกล้อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Parking near the FITM building' },
+          caption: { th: 'พื้นที่จอดรถหน้าอาคาร', en: 'Parking by the building' }
+        }]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad37',
+    ...tourMedia.campusRoad37,
+    title: { th: 'เส้นทางคณะเทคโนโลยี จุดที่ 37', en: 'FITM Route Point 37' },
+    description: {
+      th: 'เส้นทางบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรมที่เชื่อมต่อไปยังโรงอาหารมหาวิทยาลัย',
+      en: 'A route by the Faculty of Industrial Technology and Management connecting to the university cafeteria.'
+    },
+    tags: { th: ['เส้นทาง', 'ที่จอดรถ', 'จุดที่ 37'], en: ['Route', 'Parking', 'Point 37'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 242, y: 326 },
+    hotspots: [
+      { id: 'campus-road-37-to-road-36', type: 'scene', target: 'campusRoad36', yaw: 180, pitch: -3 },
+      { id: 'campus-road-37-to-road-32', type: 'scene', target: 'campusRoad32', yaw: 0, pitch: -3 },
+      {
+        id: 'fitm-parking-4-info',
+        type: 'info',
+        yaw: -35,
+        pitch: 1,
+        title: {
+          th: 'พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Car and Motorcycle Parking at the Faculty of Industrial Technology and Management'
+        },
+        description: {
+          th: 'พื้นที่สำหรับจอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+          en: 'Parking for cars and motorcycles within the Faculty of Industrial Technology and Management area.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.campusRoad37.panorama,
+          alt: { th: 'พื้นที่จอดรถบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 4', en: 'FITM parking area, Point 4' },
+          caption: { th: 'พื้นที่จอดรถ จุดที่ 4', en: 'Parking area, Point 4' }
+        }]
+      }
+    ]
+  },
+  {
+    id: 'universityCafeteria',
+    ...tourMedia.universityCafeteria,
+    title: { th: 'โรงอาหารมหาวิทยาลัย', en: 'University Cafeteria' },
+    description: {
+      th: 'โรงอาหารสำหรับนักศึกษา บุคลากร และผู้มาติดต่อภายในวิทยาเขตปราจีนบุรี',
+      en: 'The cafeteria serving students, staff, and visitors at Prachinburi Campus.'
+    },
+    tags: { th: ['อาคาร', 'โรงอาหาร', 'บริการ'], en: ['Building', 'Cafeteria', 'Services'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 212, y: 337 },
+    mapLandmark: true,
+    hotspots: [
+      { id: 'cafeteria-to-campus-road-38', type: 'scene', target: 'campusRoad38', yaw: 270, pitch: -3 },
+      { id: 'cafeteria-to-campus-road-36', type: 'scene', target: 'campusRoad36', yaw: 90, pitch: -2 },
+      {
+        id: 'university-cafeteria-info',
+        type: 'info',
+        yaw: 0,
+        pitch: 2,
+        title: { th: 'โรงอาหารมหาวิทยาลัย', en: 'University Cafeteria' },
+        description: {
+          th: 'พื้นที่โรงอาหารของมหาวิทยาลัยสำหรับรับประทานอาหารและพักผ่อนระหว่างวัน',
+          en: 'The university dining area for meals and daytime breaks.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.universityCafeteria.panorama,
+          alt: { th: 'บริเวณโรงอาหารมหาวิทยาลัย', en: 'University cafeteria area' },
+          caption: { th: 'โรงอาหารมหาวิทยาลัย', en: 'University Cafeteria' }
+        }]
+      }
+    ]
+  },
+  {
+    id: 'campusRoad38',
+    ...tourMedia.campusRoad38,
+    title: { th: 'เส้นทางคณะวิศวกรรมศาสตร์ จุดที่ 38', en: 'Engineering Route Point 38' },
+    description: { th: 'เส้นทางจากทางแยกไปยังคณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี', en: 'The route from the junction toward the Faculty of Engineering, Prachinburi Campus.' },
+    tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 38'], en: ['Route', 'Engineering', 'Point 38'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 184, y: 316 },
+    hotspots: [
+      { id: 'campus-road-38-to-road-31', type: 'scene', target: 'campusRoad31', yaw: 180, pitch: -3 },
+      { id: 'campus-road-38-to-road-universityCafeteria', type: 'scene', target: 'universityCafeteria', yaw: -80, pitch: -3 },
+      { id: 'campus-road-38-to-road-39', type: 'scene', target: 'campusRoad39', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad39',
+    ...tourMedia.campusRoad39,
+    title: { th: 'เส้นทางคณะวิศวกรรมศาสตร์ จุดที่ 39', en: 'Engineering Route Point 39' },
+    description: { th: 'ถนนภายในบริเวณกลุ่มอาคารวิศวกรรมศาสตร์', en: 'An internal road in the engineering building area.' },
+    tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 39'], en: ['Route', 'Engineering', 'Point 39'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 140, y: 390 },
+    hotspots: [
+      { id: 'campus-road-39-to-road-38', type: 'scene', target: 'campusRoad38', yaw: 180, pitch: -3 },
+      { id: 'campus-road-39-to-road-40', type: 'scene', target: 'campusRoad40', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad40',
+    ...tourMedia.campusRoad40,
+    title: { th: 'เส้นทางคณะวิศวกรรมศาสตร์ จุดที่ 40', en: 'Engineering Route Point 40' },
+    description: { th: 'เส้นทางต่อเนื่องภายในบริเวณคณะวิศวกรรมศาสตร์', en: 'A continuing route within the Faculty of Engineering area.' },
+    tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 40'], en: ['Route', 'Engineering', 'Point 40'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 129, y: 412 },
+    hotspots: [
+      { id: 'campus-road-40-to-road-39', type: 'scene', target: 'campusRoad39', yaw: 180, pitch: -3 },
+      { id: 'campus-road-40-to-road-41', type: 'scene', target: 'campusRoad41', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad41',
+    ...tourMedia.campusRoad41,
+    title: { th: 'เส้นทางคณะวิศวกรรมศาสตร์ จุดที่ 41', en: 'Engineering Route Point 41' },
+    description: { th: 'ถนนเชื่อมต่อไปยังอาคารคณะวิศวกรรมศาสตร์', en: 'A road connecting toward the Faculty of Engineering building.' },
+    tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 41'], en: ['Route', 'Engineering', 'Point 41'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 116, y: 424 },
+    hotspots: [
+      { id: 'campus-road-41-to-road-40', type: 'scene', target: 'campusRoad40', yaw: 180, pitch: -3 },
+      { id: 'campus-road-41-to-road-42', type: 'scene', target: 'campusRoad42', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad42',
+    ...tourMedia.campusRoad42,
+    title: { th: 'เส้นทางคณะวิศวกรรมศาสตร์ จุดที่ 42', en: 'Engineering Route Point 42' },
+    description: { th: 'เส้นทางช่วงก่อนถึงอาคารคณะวิศวกรรมศาสตร์', en: 'The route approaching the Faculty of Engineering building.' },
+    tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 42'], en: ['Route', 'Engineering', 'Point 42'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 93, y: 451 },
+    hotspots: [
+      { id: 'campus-road-42-to-road-41', type: 'scene', target: 'campusRoad41', yaw: -80, pitch: -3 },
+      { id: 'campus-road-42-to-road-43', type: 'scene', target: 'campusRoad43', yaw: 50, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad43',
+    ...tourMedia.campusRoad43,
+    title: { th: 'คณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี', en: 'Faculty of Engineering, Prachinburi Campus' },
+    description: {
+      th: 'จุดชมบริเวณอาคารคณะวิศวกรรมศาสตร์ มจพ. วิทยาเขตปราจีนบุรี',
+      en: 'A viewpoint by the Faculty of Engineering building at KMUTNB Prachinburi Campus.'
+    },
+    tags: { th: ['อาคาร', 'คณะ', 'วิศวกรรมศาสตร์'], en: ['Building', 'Faculty', 'Engineering'] },
+    initialView: { yaw: 0, pitch: 2, zoom: 24 },
+    mapPosition: { x: 117, y: 469 },
+    mapLandmark: true,
+    hotspots: [
+      { id: 'campus-road-43-to-road-42', type: 'scene', target: 'campusRoad42', yaw: 180, pitch: -3 },
+      {
+        id: 'faculty-of-engineering-info',
+        type: 'info',
+        yaw: 50,
+        pitch: 2,
+        title: {
+          th: 'คณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี',
+          en: 'Faculty of Engineering, Prachinburi Campus'
+        },
+        description: {
+          th: 'จุดข้อมูลคณะวิศวกรรมศาสตร์ มจพ. วิทยาเขตปราจีนบุรี',
+          en: 'Information point for the Faculty of Engineering at KMUTNB Prachinburi Campus.'
+        },
+        reference: projectSurveyReference,
+        images: [{
+          src: tourMedia.campusRoad43.panorama,
+          alt: { th: 'บริเวณคณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี', en: 'Faculty of Engineering, Prachinburi Campus area' },
+          caption: { th: 'คณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี', en: 'Faculty of Engineering, Prachinburi Campus' }
+        }]
       }
     ]
   }

@@ -14,7 +14,7 @@ import {
   type ContentKind
 } from '../../src/content';
 import { requireAdmin, requireStaff } from '../../src/server/auth';
-import { syncTourPlaces } from '../../src/server/tour-place-sync';
+import { DuplicateTourPlaceIdError, syncTourPlaces } from '../../src/server/tour-place-sync';
 import { isTourPlaceLink } from '../../src/tour-places';
 import { getMediaUsageIndex } from '../../src/server/media-usage';
 
@@ -34,6 +34,7 @@ function actionSuccess(message: string): AdminActionState {
 
 function actionFailure(error: unknown, fallback: string): AdminActionState {
   if (error instanceof AdminActionError) return { status: 'error', message: error.message };
+  if (error instanceof DuplicateTourPlaceIdError) return { status: 'error', message: error.message };
   if (error instanceof z.ZodError) {
     return { status: 'error', message: 'กรุณาตรวจสอบข้อมูลบังคับภาษาไทยและอังกฤษ รูปภาพ แหล่งอ้างอิง รูปแบบ URL และ Slug ให้ครบถ้วน' };
   }
@@ -80,8 +81,11 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
     });
   }
   if (kind === 'programs') {
+    const departmentTh = text(formData, 'departmentTh');
+    const departmentEn = text(formData, 'departmentEn');
     return programDataSchema.parse({
       name: { th: text(formData, 'nameTh'), en: text(formData, 'nameEn') },
+      department: departmentTh || departmentEn ? { th: departmentTh, en: departmentEn } : undefined,
       level: { th: text(formData, 'levelTh'), en: text(formData, 'levelEn') },
       summary: { th: text(formData, 'summaryTh'), en: text(formData, 'summaryEn') },
       description: { th: text(formData, 'descriptionTh'), en: text(formData, 'descriptionEn') },

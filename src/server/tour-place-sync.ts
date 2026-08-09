@@ -10,24 +10,47 @@ export interface TourPlaceSyncResult extends TourPlaceSyncStatus {
   readonly relinked: number;
 }
 
+export interface InitialTourPlaceContent {
+  readonly draftData: Record<string, unknown>;
+  readonly publishOnInsert?: boolean;
+}
+
+export class DuplicateTourPlaceIdError extends Error {
+  readonly duplicateIds: readonly string[];
+
+  constructor(duplicateIds: readonly string[]) {
+    super(`พบ Hotspot ID ซ้ำในโครงสร้างทัวร์: ${duplicateIds.join(', ')}`);
+    this.name = 'DuplicateTourPlaceIdError';
+    this.duplicateIds = duplicateIds;
+  }
+}
+
 export async function syncTourPlaces(
   supabase: SupabaseClient,
-  userId?: string
+  userId?: string,
+  initialContentById?: ReadonlyMap<string, InitialTourPlaceContent>
 ): Promise<TourPlaceSyncResult> {
   const { data, error: readError } = await supabase.from('hotspot_contents').select('id,scene_id');
   if (readError) throw readError;
   const rows = (data ?? []).map((row) => ({ id: String(row.id), sceneId: String(row.scene_id) }));
   const before = getTourPlaceSyncStatus(rows);
+  if (before.duplicates.length > 0) {
+    throw new DuplicateTourPlaceIdError(before.duplicates.map((duplicate) => duplicate.id));
+  }
 
   if (before.missing.length > 0) {
     const { error } = await supabase.from('hotspot_contents').upsert(
-      before.missing.map((definition) => ({
-        id: definition.id,
-        scene_id: definition.sceneId,
-        draft_data: getTourPlaceDraft(definition),
-        published_data: null,
-        ...(userId ? { created_by: userId, updated_by: userId } : {})
-      })),
+      before.missing.map((definition) => {
+        const initial = initialContentById?.get(definition.id);
+        const draftData = initial?.draftData ?? getTourPlaceDraft(definition);
+        return {
+          id: definition.id,
+          scene_id: definition.sceneId,
+          draft_data: draftData,
+          published_data: initial?.publishOnInsert ? draftData : null,
+          ...(userId ? { created_by: userId, updated_by: userId } : {})
+        };
+      }),
       { onConflict: 'id', ignoreDuplicates: true }
     );
     if (error) throw error;

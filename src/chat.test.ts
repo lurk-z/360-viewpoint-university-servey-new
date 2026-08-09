@@ -80,6 +80,7 @@ describe('grounded tour chat', () => {
     } as const;
     const baseProgram = {
       facultyId: faculty.id,
+      department: { th: 'ภาควิชาการจัดการ', en: 'Department of Management' },
       level: { th: 'ปริญญาตรี', en: "Bachelor's degree" },
       summary: { th: 'สรุป', en: 'Summary' },
       description: { th: 'รายละเอียด', en: 'Description' },
@@ -95,6 +96,8 @@ describe('grounded tour chat', () => {
       ]
     };
     const request = { locale: 'th', sceneId: 'campusBuilding1', history: [] } as const;
+    expect(buildKnowledgeDocuments(content).find((document) => document.citation.id === 'program-th')?.text)
+      .toContain('DEPARTMENT: ภาควิชาการจัดการ / Department of Management');
 
     expect(findRelatedProgramIds({ ...request, message: 'คณะบริหารธุรกิจมีหลักสูตรอะไรบ้าง' }, content))
       .toEqual(['program-th', 'program-ibtt']);

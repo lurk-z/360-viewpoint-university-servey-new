@@ -5,6 +5,7 @@ import { syncTourPlaces } from './server/tour-place-sync';
 import {
   getTourPlaceDraft,
   getTourPlaceSyncStatus,
+  getDuplicateTourPlaceDefinitions,
   isTourPlaceLink,
   tourPlaceDefinitions
 } from './tour-places';
@@ -54,8 +55,20 @@ describe('tour place content synchronization', () => {
     expect(status.missing).toHaveLength(tourPlaceDefinitions.length - 2);
     expect(status.moved).toEqual([second]);
     expect(status.orphaned).toEqual([{ id: 'removed-hotspot', sceneId: first!.sceneId }]);
+    expect(status.duplicates).toEqual([]);
     expect(isTourPlaceLink(first!.id, first!.sceneId)).toBe(true);
     expect(isTourPlaceLink(first!.id, second!.sceneId)).toBe(false);
+  });
+
+  it('reports duplicate hotspot IDs with every conflicting scene', () => {
+    expect(getDuplicateTourPlaceDefinitions([
+      { id: 'duplicate-info', sceneId: 'entrance' },
+      { id: 'unique-info', sceneId: 'entranceRoad' },
+      { id: 'duplicate-info', sceneId: 'memorialPlaza' }
+    ])).toEqual([{
+      id: 'duplicate-info',
+      sceneIds: ['entrance', 'memorialPlaza']
+    }]);
   });
 
   it('creates an unpublished-ready draft that still requires an explicit Admin image', () => {

@@ -2,7 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import { createFallbackHotspotContent, programDataSchema, type ProgramData } from '../src/content.ts';
 import { syncTourPlaces } from '../src/server/tour-place-sync.ts';
 import { tourPlaceDefinitions } from '../src/tour-places.ts';
-import { getInfoHotspots, getScene, type InfoHotspotDefinition, type TourScene } from '../src/tour-data.ts';
+import { getInfoHotspots, getScene, tourScenes, type InfoHotspotDefinition, type TourScene } from '../src/tour-data.ts';
+import {
+  businessAdditionalProgramSeeds,
+  digitalAgroAdditionalProgramSeeds,
+  engineeringProgramSeeds,
+  fitmProgramSeeds
+} from './new-program-seeds.ts';
 
 try {
   process.loadEnvFile('.env.local');
@@ -290,7 +296,36 @@ interface ExistingHotspotRow {
   readonly published_data: Record<string, unknown> | null;
 }
 
-const syncedPlaces = await syncTourPlaces(supabase);
+const publishedNewPlaceIds = new Set([
+  'fitm-parking-1-info',
+  'fitm-parking-2-info',
+  'fitm-parking-3-info',
+  'fitm-parking-4-info',
+  'fitm-front-parking-info',
+  'orange-blossom-room-info',
+  'faculty-of-engineering-info',
+  'university-cafeteria-info'
+]);
+
+const initialNewPlaceContent = new Map(tourScenes.flatMap((scene) => (
+  getInfoHotspots(scene).flatMap((hotspot) => {
+    if (!publishedNewPlaceIds.has(hotspot.id)) return [];
+    const fallback = createFallbackHotspotContent(scene, hotspot);
+    return [[hotspot.id, {
+      draftData: {
+        title: fallback.title,
+        description: fallback.description,
+        sceneTitle: fallback.sceneTitle,
+        sceneDescription: fallback.sceneDescription,
+        reference: fallback.reference,
+        images: fallback.images
+      },
+      publishOnInsert: true
+    }] as const];
+  })
+)));
+
+const syncedPlaces = await syncTourPlaces(supabase, undefined, initialNewPlaceContent);
 const { data: existingHotspotData, error: hotspotReadError } = await supabase
   .from('hotspot_contents')
   .select('id,draft_data,published_data');
@@ -421,10 +456,26 @@ const digitalAgroFacultyId = await ensureFaculty({
   slug: 'digital-agro-industry',
   scene: getScene('campusRoad19')
 });
-const insertedBusinessProgramCount = await ensurePrograms(businessFacultyId, businessProgramSeeds);
-const insertedDigitalAgroProgramCount = await ensurePrograms(digitalAgroFacultyId, digitalAgroProgramSeeds);
-const totalProgramCount = businessProgramSeeds.length + digitalAgroProgramSeeds.length;
+const fitmFacultyId = await ensureFaculty({
+  slug: 'industrial-technology-and-management',
+  scene: getScene('campusRoad36')
+});
+const engineeringFacultyId = await ensureFaculty({
+  slug: 'faculty-of-engineering-prachinburi',
+  scene: getScene('campusRoad43')
+});
+
+const allBusinessProgramSeeds: readonly ProgramSeed[] = [...businessProgramSeeds, ...businessAdditionalProgramSeeds];
+const allDigitalAgroProgramSeeds: readonly ProgramSeed[] = [...digitalAgroProgramSeeds, ...digitalAgroAdditionalProgramSeeds];
+const insertedBusinessProgramCount = await ensurePrograms(businessFacultyId, allBusinessProgramSeeds);
+const insertedDigitalAgroProgramCount = await ensurePrograms(digitalAgroFacultyId, allDigitalAgroProgramSeeds);
+const insertedFitmProgramCount = await ensurePrograms(fitmFacultyId, fitmProgramSeeds);
+const insertedEngineeringProgramCount = await ensurePrograms(engineeringFacultyId, engineeringProgramSeeds);
+const totalProgramCount = allBusinessProgramSeeds.length
+  + allDigitalAgroProgramSeeds.length
+  + fitmProgramSeeds.length
+  + engineeringProgramSeeds.length;
 
 process.stdout.write(
-  `Seed ready: 2 faculties, ${tourPlaceDefinitions.length - 1} editable places, and ${totalProgramCount} programs (${insertedBusinessProgramCount} new business programs; ${insertedDigitalAgroProgramCount} new digital-agro program drafts; ${syncedPlaces.inserted} new place drafts; ${syncedPlaces.relinked} scene links updated).\n`
+  `Seed ready: 4 faculties, ${tourPlaceDefinitions.length - 1} editable places, and ${totalProgramCount} programs (${insertedBusinessProgramCount} new business programs; ${insertedDigitalAgroProgramCount} new digital-agro programs; ${insertedFitmProgramCount} new FITM programs; ${insertedEngineeringProgramCount} new engineering programs; ${syncedPlaces.inserted} new places; ${syncedPlaces.relinked} scene links updated).\n`
 );

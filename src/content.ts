@@ -45,6 +45,7 @@ export interface ProgramContent {
   readonly facultyId: string;
   readonly slug: string;
   readonly name: LocalizedContent;
+  readonly department?: LocalizedContent;
   readonly level: LocalizedContent;
   readonly summary: LocalizedContent;
   readonly description: LocalizedContent;
@@ -119,6 +120,7 @@ export const facultyDataSchema = z.object({
 
 export const programDataSchema = z.object({
   name: requiredLocalizedSchema,
+  department: requiredLocalizedSchema.optional(),
   level: requiredLocalizedSchema,
   summary: requiredLocalizedSchema,
   description: requiredLocalizedSchema,

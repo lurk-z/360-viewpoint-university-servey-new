@@ -17,6 +17,12 @@ export interface TourPlaceSyncStatus {
   readonly missing: readonly TourPlaceDefinition[];
   readonly moved: readonly TourPlaceDefinition[];
   readonly orphaned: readonly StoredTourPlaceLink[];
+  readonly duplicates: readonly DuplicateTourPlaceDefinition[];
+}
+
+export interface DuplicateTourPlaceDefinition {
+  readonly id: string;
+  readonly sceneIds: readonly SceneId[];
 }
 
 export const tourPlaceDefinitions: readonly TourPlaceDefinition[] = tourScenes.flatMap((scene) => (
@@ -24,6 +30,20 @@ export const tourPlaceDefinitions: readonly TourPlaceDefinition[] = tourScenes.f
 ));
 
 const definitionById = new Map(tourPlaceDefinitions.map((definition) => [definition.id, definition]));
+
+export function getDuplicateTourPlaceDefinitions(
+  definitions: readonly TourPlaceDefinition[] = tourPlaceDefinitions
+): readonly DuplicateTourPlaceDefinition[] {
+  const scenesById = new Map<string, SceneId[]>();
+  for (const definition of definitions) {
+    const sceneIds = scenesById.get(definition.id) ?? [];
+    sceneIds.push(definition.sceneId);
+    scenesById.set(definition.id, sceneIds);
+  }
+  return [...scenesById.entries()]
+    .filter(([, sceneIds]) => sceneIds.length > 1)
+    .map(([id, sceneIds]) => ({ id, sceneIds }));
+}
 
 export function isTourPlaceLink(id: string, sceneId: string): boolean {
   return definitionById.get(id)?.sceneId === sceneId;
@@ -46,6 +66,7 @@ export function getTourPlaceDraft(definition: TourPlaceDefinition): HotspotData 
 }
 
 export function getTourPlaceSyncStatus(rows: readonly StoredTourPlaceLink[]): TourPlaceSyncStatus {
+  const duplicates = getDuplicateTourPlaceDefinitions();
   const rowById = new Map(rows.map((row) => [row.id, row]));
   const missing = tourPlaceDefinitions.filter((definition) => !rowById.has(definition.id));
   const moved = tourPlaceDefinitions.filter((definition) => {
@@ -58,6 +79,7 @@ export function getTourPlaceSyncStatus(rows: readonly StoredTourPlaceLink[]): To
     synced: tourPlaceDefinitions.length - missing.length - moved.length,
     missing,
     moved,
-    orphaned
+    orphaned,
+    duplicates
   };
 }

@@ -159,6 +159,8 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
     <TextField prefix={prefix} name="nameTh" label={kind === 'activities' ? 'ชื่อกิจกรรม (ไทย)' : kind === 'hotspot_contents' ? 'ชื่อ Info (ไทย)' : 'ชื่อ (ไทย)'} value={localized(data, nameKey, 'th')} required />
     <TextField prefix={prefix} name="nameEn" label={kind === 'activities' ? 'Activity name (English)' : 'Name (English)'} value={localized(data, nameKey, 'en')} required />
     {kind === 'programs' ? <>
+      <TextField prefix={prefix} name="departmentTh" label="ภาควิชา/หน่วยงาน (ไทย ไม่บังคับ)" value={localized(data, 'department', 'th')} />
+      <TextField prefix={prefix} name="departmentEn" label="Department (English, optional)" value={localized(data, 'department', 'en')} />
       <TextField prefix={prefix} name="levelTh" label="ระดับการศึกษา (ไทย)" value={localized(data, 'level', 'th')} required />
       <TextField prefix={prefix} name="levelEn" label="Degree level (English)" value={localized(data, 'level', 'en')} required />
     </> : null}

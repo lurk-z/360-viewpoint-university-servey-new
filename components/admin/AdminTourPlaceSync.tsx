@@ -21,6 +21,7 @@ export default function AdminTourPlaceSync({
   const [state, action, pending] = useActionState(syncTourPlacesAction, initialState);
   useAdminActionRefresh(state, { scope: 'draft', kind: 'tour' });
   const needsSync = status.missing.length > 0 || status.moved.length > 0;
+  const hasDuplicates = status.duplicates.length > 0;
 
   return (
     <section className="admin-tour-sync">
@@ -32,8 +33,8 @@ export default function AdminTourPlaceSync({
         </div>
         {role === 'admin' ? (
           <form action={action}>
-            <button className="admin-button" type="submit" disabled={pending || !needsSync}>
-              {pending ? 'กำลังซิงก์…' : needsSync ? 'ซิงก์สถานที่ใหม่จากทัวร์' : 'ข้อมูลตรงกันแล้ว'}
+            <button className="admin-button" type="submit" disabled={pending || !needsSync || hasDuplicates}>
+              {pending ? 'กำลังซิงก์…' : hasDuplicates ? 'กรุณาแก้ Hotspot ID ซ้ำ' : needsSync ? 'ซิงก์สถานที่ใหม่จากทัวร์' : 'ข้อมูลตรงกันแล้ว'}
             </button>
           </form>
         ) : <small>เฉพาะ Admin เท่านั้นที่กดซิงก์ได้</small>}
@@ -49,9 +50,15 @@ export default function AdminTourPlaceSync({
           {state.message}
         </p>
       ) : null}
-      {status.missing.length || status.moved.length || status.orphaned.length ? (
+      {hasDuplicates ? (
+        <p className="admin-action-message is-error" role="alert">
+          พบ Hotspot ID ซ้ำ: {status.duplicates.map((item) => `${item.id} (${item.sceneIds.join(', ')})`).join('; ')}
+        </p>
+      ) : null}
+      {status.missing.length || status.moved.length || status.orphaned.length || hasDuplicates ? (
         <details>
           <summary>ดูรายละเอียดการซิงก์</summary>
+          {hasDuplicates ? <p><strong>Hotspot ID ซ้ำ:</strong> {status.duplicates.map((item) => `${item.id} → ${item.sceneIds.join(', ')}`).join('; ')}</p> : null}
           {status.missing.length ? <p><strong>รายการใหม่:</strong> {status.missing.map((item) => item.id).join(', ')}</p> : null}
           {status.moved.length ? <p><strong>Scene ID เปลี่ยน:</strong> {status.moved.map((item) => `${item.id} → ${item.sceneId}`).join(', ')}</p> : null}
           {status.orphaned.length ? <p><strong>ไม่พบในทัวร์:</strong> {status.orphaned.map((item) => item.id).join(', ')}</p> : null}

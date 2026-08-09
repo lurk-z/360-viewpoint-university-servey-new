@@ -52,6 +52,13 @@ export default function FacultyProgramsDialog({
   const facultyPrograms = selectedFaculty
     ? content.programs.filter((program) => program.facultyId === selectedFaculty.id)
     : [];
+  const programGroups = Array.from(facultyPrograms.reduce((groups, program) => {
+    const key = program.department ? localizeContent(program.department, locale) : message(locale, 'otherProgramsDepartment');
+    const entries = groups.get(key) ?? [];
+    entries.push(program);
+    groups.set(key, entries);
+    return groups;
+  }, new Map<string, typeof facultyPrograms>()));
   const selectedProgram = facultyPrograms.find((program) => program.id === selectedProgramId);
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
   const layoutClass = `academics-layout${selectedFaculty ? ' has-faculty' : ''}${selectedProgram ? ' has-program' : ''}`;
@@ -111,17 +118,22 @@ export default function FacultyProgramsDialog({
             <h3>{message(locale, 'programsLabel')}</h3>
             {facultyPrograms.length > 0 ? (
               <div className="academics-program-list">
-                {facultyPrograms.map((program) => (
-                  <button
-                    className={program.id === selectedProgramId ? 'is-active' : ''}
-                    type="button"
-                    key={program.id}
-                    aria-pressed={program.id === selectedProgramId}
-                    onClick={() => setSelectedProgramId(program.id)}
-                  >
-                    <strong>{localizeContent(program.name, locale)}</strong>
-                    <span>{localizeContent(program.level, locale)}</span>
-                  </button>
+                {programGroups.map(([department, programs]) => (
+                  <section className="academics-program-group" key={department}>
+                    <h4>{department}</h4>
+                    {programs.map((program) => (
+                      <button
+                        className={program.id === selectedProgramId ? 'is-active' : ''}
+                        type="button"
+                        key={program.id}
+                        aria-pressed={program.id === selectedProgramId}
+                        onClick={() => setSelectedProgramId(program.id)}
+                      >
+                        <strong>{localizeContent(program.name, locale)}</strong>
+                        <span>{localizeContent(program.level, locale)}</span>
+                      </button>
+                    ))}
+                  </section>
                 ))}
               </div>
             ) : <p className="academics-empty">{message(locale, 'noPrograms')}</p>}
@@ -146,6 +158,10 @@ export default function FacultyProgramsDialog({
             ) : null}
             <p className="academics-program-summary">{localizeContent(selectedProgram.summary, locale)}</p>
             <dl className="academics-program-facts">
+              {selectedProgram.department ? <>
+                <dt>{message(locale, 'departmentLabel')}</dt>
+                <dd>{localizeContent(selectedProgram.department, locale)}</dd>
+              </> : null}
               <dt>{message(locale, 'programLevel')}</dt>
               <dd>{localizeContent(selectedProgram.level, locale)}</dd>
               <dt>{message(locale, 'admissionLabel')}</dt>

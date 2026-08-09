@@ -1254,6 +1254,19 @@ svg {
   line-height: 1.4;
 }
 
+.academics-program-group + .academics-program-group {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.academics-program-group > h4 {
+  margin: 0 0 8px;
+  color: var(--blue-800);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 .academics-faculty-summary {
   padding-bottom: 14px;
   margin-bottom: 16px;
