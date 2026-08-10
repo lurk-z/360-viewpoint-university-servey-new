@@ -190,9 +190,11 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       icon.className = 'tour-arrow__icon';
       icon.setAttribute('aria-hidden', 'true');
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('viewBox', '0 0 72 42');
+      svg.setAttribute('focusable', 'false');
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M12 20V5m0 0-6 6m6-6 6 6');
+      path.setAttribute('class', 'tour-arrow__chevron');
+      path.setAttribute('d', 'M6 27 36 7 66 27 58 37 36 22 14 37Z');
       svg.append(path);
       icon.append(svg);
       button.append(icon);
@@ -235,7 +237,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           arrowStyle: {
             element: createArrowElement,
             className: 'tour-arrow-marker',
-            size: { width: 45, height: 45 }
+            size: { width: 80, height: 60 }
           },
           getLinkTooltip: (_content, link) => {
             const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);

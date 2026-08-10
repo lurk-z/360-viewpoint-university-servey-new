@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { localizeContent, type ContentSource, type PublicContentSnapshot } from '../src/content';
-import type { Locale } from '../src/tour-data';
+import type { Locale, SceneId } from '../src/tour-data';
 import { message } from '../src/i18n';
 import { ModalDialog } from './ModalDialog';
 
@@ -13,6 +13,7 @@ interface FacultyProgramsDialogProps {
   readonly initialFacultyId?: string;
   readonly initialProgramId?: string;
   readonly onClose: () => void;
+  readonly onNavigate: (sceneId: SceneId) => void;
 }
 
 function SourceLine({ source, locale }: { readonly source: ContentSource; readonly locale: Locale }) {
@@ -34,7 +35,8 @@ export default function FacultyProgramsDialog({
   content,
   initialFacultyId,
   initialProgramId,
-  onClose
+  onClose,
+  onNavigate
 }: FacultyProgramsDialogProps) {
   const [selectedFacultyId, setSelectedFacultyId] = useState<string>();
   const [selectedProgramId, setSelectedProgramId] = useState<string>();
@@ -60,6 +62,7 @@ export default function FacultyProgramsDialog({
     return groups;
   }, new Map<string, typeof facultyPrograms>()));
   const selectedProgram = facultyPrograms.find((program) => program.id === selectedProgramId);
+  const selectedFacultySceneId = selectedFaculty?.sceneId;
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
   const layoutClass = `academics-layout${selectedFaculty ? ' has-faculty' : ''}${selectedProgram ? ' has-program' : ''}`;
 
@@ -148,6 +151,26 @@ export default function FacultyProgramsDialog({
             <p className="eyebrow">{localizeContent(selectedProgram.level, locale)}</p>
             <h3>{localizeContent(selectedProgram.name, locale)}</h3>
             <p className="scene-alt-title">{localizeContent(selectedProgram.name, alternativeLocale)}</p>
+            {selectedFaculty ? (
+              <section className="academics-program-faculty" aria-label={message(locale, 'programFacultyLabel')}>
+                <span>{message(locale, 'programFacultyLabel')}</span>
+                <strong>{localizeContent(selectedFaculty.name, locale)}</strong>
+                <div className="academics-program-faculty__actions">
+                  <button type="button" onClick={() => setSelectedProgramId(undefined)}>
+                    {message(locale, 'viewFacultyDetails')}
+                  </button>
+                  {selectedFacultySceneId ? (
+                    <button
+                      className="is-primary"
+                      type="button"
+                      onClick={() => onNavigate(selectedFacultySceneId)}
+                    >
+                      {message(locale, 'goToFacultyScene')}
+                    </button>
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
             {selectedProgram.imageUrl ? (
               <img
                 className="academics-program-image"

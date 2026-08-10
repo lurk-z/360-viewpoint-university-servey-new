@@ -49,8 +49,10 @@ describe('FITM branding', () => {
     expect(manifest.icons[0]?.src).toBe('/fitm-favicon.svg');
     expect(favicon).toContain('aria-label="FITM"');
     expect(favicon).toContain('fill="#20b5e6"');
-    expect(serviceWorker).toContain("const CACHE_NAME = 'kmuntb-tour-v10'");
+    expect(serviceWorker).toContain("const CACHE_NAME = 'kmuntb-tour-v11'");
     expect(serviceWorker).toContain("'/fitm-favicon.svg'");
+    expect(serviceWorker).toContain("'/mainimages/map/mainmap1.png'");
+    expect(serviceWorker).not.toContain("'/mainimages/map/mainmap.png'");
     expect(serviceWorker).toContain("'/api/content'");
   });
 
@@ -62,6 +64,7 @@ describe('FITM branding', () => {
     expect(styles).toContain('--fitm-navy: #082f49');
     expect(styles).toContain('--fitm-cyan: #0ea5e9');
     expect(styles).toContain('--fitm-surface: #f3f9fc');
+    expect(styles).toContain('aspect-ratio: 1096 / 583');
     expect(viewer).toContain("canvasBackground: '#082f49'");
     expect(map).toContain("color: '#0ea5e9'");
   });

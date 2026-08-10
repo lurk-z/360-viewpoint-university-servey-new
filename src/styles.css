@@ -117,6 +117,7 @@ svg {
   z-index: 1000;
   display: flex;
   gap: 8px;
+  pointer-events: none;
 }
 
 .skip-links a {
@@ -131,6 +132,7 @@ svg {
 }
 
 .skip-links a:focus {
+  pointer-events: auto;
   transform: translateY(0);
 }
 
@@ -782,44 +784,56 @@ svg {
 
 .tour-arrow {
   display: grid;
-  width: 45px;
-  height: 45px;
+  width: 80px;
+  height: 60px;
   place-items: center;
   padding: 0;
-  border: 3px solid rgb(255 255 255 / 92%);
-  border-radius: 50%;
-  background: linear-gradient(145deg, var(--orange-500), var(--orange-900));
-  box-shadow: 0 8px 24px rgb(2 20 34 / 58%);
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
   color: var(--white);
-  transition: transform 160ms ease, background 160ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.tour-arrow:hover,
 .tour-arrow:focus-visible {
-  background: var(--orange-950);
-  transform: scale(1.08);
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .tour-arrow__icon {
   display: grid;
-  width: 100%;
-  height: 100%;
+  width: 72px;
+  height: 42px;
   place-items: center;
-  border-radius: inherit;
+  filter: drop-shadow(0 3px 1px rgb(2 20 34 / 70%)) drop-shadow(0 8px 8px rgb(2 20 34 / 55%));
+  transform: perspective(110px) rotateX(22deg) translateY(3px);
+  transform-origin: center bottom;
+  transition: filter 160ms ease, transform 160ms ease;
 }
 
 .tour-arrow__icon svg {
-  width: 28px;
-  height: 28px;
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
+  display: block;
+  width: 72px;
+  height: 42px;
+  overflow: visible;
+}
+
+.tour-arrow__chevron {
+  fill: currentcolor;
+  stroke: rgb(148 163 184 / 85%);
   stroke-linejoin: round;
-  stroke-width: 2.5;
+  stroke-width: 1.5;
+}
+
+.tour-arrow:hover .tour-arrow__icon,
+.tour-arrow:focus-visible .tour-arrow__icon {
+  filter: drop-shadow(0 3px 1px rgb(2 20 34 / 75%)) drop-shadow(0 10px 10px rgb(2 20 34 / 62%));
+  transform: perspective(110px) rotateX(16deg) translateY(-2px) scale(1.08);
 }
 
 .psv-virtual-tour-link {
-  filter: drop-shadow(0 8px 7px rgb(2 20 34 / 40%));
+  filter: none;
 }
 
 .psv-tooltip {
@@ -828,6 +842,25 @@ svg {
   color: var(--white);
   font-family: inherit;
   font-size: 0.78rem;
+}
+
+@media (max-width: 700px) {
+  .tour-arrow__icon,
+  .tour-arrow__icon svg {
+    width: 64px;
+    height: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-arrow__icon {
+    transition: none;
+  }
+
+  .tour-arrow:hover .tour-arrow__icon,
+  .tour-arrow:focus-visible .tour-arrow__icon {
+    transform: perspective(110px) rotateX(22deg) translateY(3px);
+  }
 }
 
 .tour-chat {
@@ -1308,6 +1341,68 @@ svg {
   margin-bottom: 8px;
 }
 
+.academics-program-faculty {
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--fitm-cyan);
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--fitm-surface), var(--white));
+}
+
+.academics-program-faculty > span {
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.academics-program-faculty > strong {
+  color: var(--fitm-navy);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.academics-program-faculty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.academics-program-faculty__actions button {
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--fitm-blue-dark);
+  font-size: 0.73rem;
+  font-weight: 800;
+  line-height: 1.35;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.academics-program-faculty__actions button:hover {
+  border-color: var(--fitm-sky);
+  background: var(--fitm-tint);
+  transform: translateY(-1px);
+}
+
+.academics-program-faculty__actions button.is-primary {
+  border-color: var(--fitm-blue);
+  background: var(--fitm-blue);
+  color: var(--white);
+}
+
+.academics-program-faculty__actions button.is-primary:hover {
+  border-color: var(--fitm-navy);
+  background: var(--fitm-navy);
+}
+
 .academics-program-image {
   display: block;
   width: 100%;
@@ -1680,7 +1775,7 @@ svg {
   right: 82px;
   width: clamp(360px, 38vw, 460px);
   height: auto;
-  aspect-ratio: 1150 / 577;
+  aspect-ratio: 1096 / 583;
   overflow: hidden;
   border: 0;
   border-radius: 18px;
@@ -2073,6 +2168,14 @@ svg {
 }
 
 @media (max-width: 520px) {
+  .academics-program-faculty__actions {
+    display: grid;
+  }
+
+  .academics-program-faculty__actions button {
+    width: 100%;
+  }
+
   .tour-chat__toggle {
     min-width: 52px;
     height: 46px;

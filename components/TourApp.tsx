@@ -481,6 +481,10 @@ export default function TourApp() {
         initialFacultyId={academicSelection.facultyId}
         initialProgramId={academicSelection.programId}
         onClose={closeDialog}
+        onNavigate={(sceneId) => {
+          closeDialog();
+          void navigate(sceneId);
+        }}
       />
 
       <ActivitiesDialog

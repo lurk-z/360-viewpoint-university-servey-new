@@ -18,9 +18,9 @@ function mainPanorama(fileName: string): SceneMedia {
 }
 
 export const tourMap = {
-  image: mainImage('map/mainmap.png'),
-  width: 1150,
-  height: 577
+  image: mainImage('map/mainmap1.png'),
+  width: 1096,
+  height: 583
 } as const;
 
 //เพิ่มรูป
@@ -76,7 +76,15 @@ export const tourMedia = {
   campusRoad40: mainPanorama('temp7-3.jpg'),
   campusRoad41: mainPanorama('temp7-4.jpg'),
   campusRoad42: mainPanorama('temp7-5.jpg'),
-  campusRoad43: mainPanorama('temp7-6.jpg')
+  campusRoad43: mainPanorama('temp7-6.jpg'),
+  multipurposeGym: mainPanorama('temp9-1.jpg'),
+  campusRoad44: mainPanorama('temp9-2.jpg'),
+  campusRoad45: mainPanorama('temp9-3.jpg'),
+  campusRoad46: mainPanorama('temp9-3-1.jpg'),
+  campusRoad47: mainPanorama('temp9-4.jpg'),
+  campusRoad48: mainPanorama('temp9-5.jpg'),
+  campusRoad49: mainPanorama('temp9-6.jpg'),
+  campusRoad50: mainPanorama('temp9-7.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -183,7 +191,7 @@ export const tourScenes = [
     },
     tags: { th: ['ทางเข้า', 'ป้ายมหาวิทยาลัย', 'กลางแจ้ง'], en: ['Entrance', 'Landmark', 'Outdoor'] },
     initialView: { yaw: 0, pitch: 0, zoom: 22 },
-    mapPosition: {   x: 1054, y: 159   },
+    mapPosition: { x: 939, y: 217 },
     mapLandmark: true,
     hotspots: [
       { id: 'entrance-to-road', type: 'scene', target: 'entranceRoad', yaw: -40, pitch: -3 },
@@ -206,7 +214,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ประตูทางเข้า', 'เส้นทาง'], en: ['Road', 'Gate', 'Route'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 1046, y: 159  },
+    mapPosition: { x: 933, y: 217 },
     hotspots: [
       { id: 'road-to-entrance', type: 'scene', target: 'entrance', yaw: 200, pitch: 1 },
       { id: 'road-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: -50, pitch: -2 },
@@ -223,7 +231,7 @@ export const tourScenes = [
     },
     tags: { th: ['ลาน', 'สวน', 'อนุสรณ์'], en: ['Plaza', 'Garden', 'Memorial'] },
     initialView: { yaw: 0, pitch: -1, zoom: 22 },
-    mapPosition: {  x: 1009, y: 176   },
+    mapPosition: { x: 904, y: 229 },
     hotspots: [
       { id: 'plaza-to-road', type: 'scene', target: 'entranceRoad', yaw: 175, pitch: -2 },
       { id: 'plaza-to-memorial', type: 'scene', target: 'memorial', yaw: -55, pitch: -2 },
@@ -240,7 +248,7 @@ export const tourScenes = [
     },
     tags: { th: ['อนุสรณ์', 'จุดสำคัญ', 'กลางแจ้ง'], en: ['Memorial', 'Landmark', 'Outdoor'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: {  x: 1007, y: 193  },
+    mapPosition: { x: 903, y: 242 },
     mapLandmark: true,
     hotspots: [
       { id: 'memorial-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 120, pitch: 0 },
@@ -262,7 +270,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางเดิน', 'จุดที่ 1'], en: ['Road', 'Walkway', 'Point 1'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: {  x: 985, y: 193 },
+    mapPosition: { x: 886, y: 242 },
     hotspots: [
       { id: 'campus-road-1-to-plaza', type: 'scene', target: 'memorialPlaza', yaw: 180, pitch: -2 },
       { id: 'campus-road-1-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 10, pitch: -2 }
@@ -278,7 +286,7 @@ export const tourScenes = [
     },
     tags: { th: ['โรงแรม', 'อาคาร', 'จุดบริการ'], en: ['Hotel', 'Building', 'Service'] },
     initialView: { yaw: 0, pitch: 1, zoom: 24 },
-    mapPosition: {  x: 926, y: 249  },
+    mapPosition: { x: 841, y: 285 },
     mapLandmark: true,
     hotspots: [
       { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
@@ -300,7 +308,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางเดิน', 'จุดที่ 2'], en: ['Road', 'Walkway', 'Point 2'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 937, y: 222  },
+    mapPosition: { x: 850, y: 264 },
     hotspots: [
       { id: 'campus-road-2-to-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
       { id: 'campus-road-2-to-hotel', type: 'scene', target: 'vallayaHotel', yaw: -50, pitch: -2 },
@@ -317,7 +325,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'อาคาร', 'จุดที่ 3'], en: ['Road', 'Buildings', 'Point 3'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: {   x: 889, y: 252  },
+    mapPosition: { x: 813, y: 287 },
     hotspots: [
       { id: 'campus-road-3-to-road-2', type: 'scene', target: 'campusRoad2', yaw: 190, pitch: -2 },
       { id: 'campus-road-3-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 13, pitch: -5 },
@@ -334,7 +342,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางแยก', 'จุดที่ 4'], en: ['Road', 'Junction', 'Point 4'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: {  x: 868, y: 263  },
+    mapPosition: { x: 797, y: 296 },
     hotspots: [
       { id: 'campus-road-4-to-road-3', type: 'scene', target: 'campusRoad3', yaw: 180, pitch: -2 },
       { id: 'campus-road-4-to-building-1', type: 'scene', target: 'campusBuilding1', yaw: -80, pitch: -2 },
@@ -352,7 +360,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 1'], en: ['Building', 'Academic', 'Point 1'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: {  x: 895, y: 260  },
+    mapPosition: { x: 818, y: 293 },
     mapLandmark: true,
     hotspots: [
       { id: 'building-1-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
@@ -375,7 +383,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'พื้นที่เรียน', 'จุดที่ 2'], en: ['Building', 'Academic', 'Point 2'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: {  x: 857, y: 283  },
+    mapPosition: { x: 789, y: 311 },
     mapLandmark: true,
     hotspots: [
       { id: 'building-2-to-campus-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
@@ -397,7 +405,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางข้าม', 'จุดที่ 5'], en: ['Road', 'Crossing', 'Point 5'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: {   x: 851, y: 273   },
+    mapPosition: { x: 784, y: 303 },
     hotspots: [
       { id: 'campus-road-5-to-road-4', type: 'scene', target: 'campusRoad4', yaw: 180, pitch: -2 },
       { id: 'campus-road-to-building-2', type: 'scene', target: 'campusBuilding2', yaw: -70 ,pitch: 0 },
@@ -414,7 +422,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'พื้นที่สีเขียว', 'จุดที่ 6'], en: ['Road', 'Green space', 'Point 6'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: {  x: 823, y: 290  },
+    mapPosition: { x: 763, y: 316 },
     hotspots: [
       { id: 'campus-road-6-to-road-5', type: 'scene', target: 'campusRoad5', yaw: 150, pitch: 0 },
       { id: 'campus-road-6-to-road-7', type: 'scene', target: 'campusRoad7', yaw: -10, pitch: -2 }
@@ -430,7 +438,7 @@ export const tourScenes = [
     },
     tags: { th: ['ถนน', 'ทางแยก', 'จุดที่ 7'], en: ['Road', 'Junction', 'Point 7'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: {  x: 729, y: 267  },
+    mapPosition: { x: 692, y: 299 },
     hotspots: [
       { id: 'campus-road-7-to-road-6', type: 'scene', target: 'campusRoad6', yaw: 180, pitch: -3 },
       { id: 'campus-road-7-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: -45, pitch: -2 },
@@ -447,7 +455,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'ลาน', 'จุดที่ 3'], en: ['Building', 'Forecourt', 'Point 3'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 701, y: 288 },
+    mapPosition: { x: 671, y: 315 },
     mapLandmark: true,
     hotspots: [
       { id: 'building-3-to-campus-road-7', type: 'scene', target: 'campusRoad7', yaw: 180, pitch: -3 },
@@ -469,7 +477,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 8'], en: ['Route', 'Outdoor', 'Point 8'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: {  x: 694, y: 246  },
+    mapPosition: { x: 665, y: 283 },
     hotspots: [
       { id: 'campus-road-8-to-building-3', type: 'scene', target: 'campusBuilding3', yaw: 180, pitch: -3 },
       { id: 'campus-road-8-to-road-9', type: 'scene', target: 'campusRoad9', yaw: 0, pitch: -3 }
@@ -485,7 +493,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 9'], en: ['Route', 'Outdoor', 'Point 9'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 639, y: 215 },
+    mapPosition: { x: 623, y: 259 },
     hotspots: [
       { id: 'campus-road-9-to-road-8', type: 'scene', target: 'campusRoad8', yaw: 180, pitch: -3 },
       { id: 'campus-road-9-to-road-10', type: 'scene', target: 'campusRoad10', yaw: 0, pitch: -3 }
@@ -501,7 +509,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 10'], en: ['Route', 'Outdoor', 'Point 10'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 575, y: 181 },
+    mapPosition: { x: 575, y: 233 },
     hotspots: [
       { id: 'campus-road-10-to-road-9', type: 'scene', target: 'campusRoad9', yaw: 180, pitch: -3 },
       { id: 'campus-road-10-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 0, pitch: -3 }
@@ -517,7 +525,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 11'], en: ['Route', 'Outdoor', 'Point 11'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 526, y: 178 },
+    mapPosition: { x: 538, y: 231 },
     hotspots: [
       { id: 'campus-road-11-to-road-10', type: 'scene', target: 'campusRoad10', yaw: 180, pitch: -3 },
       { id: 'campus-road-11-to-road-12', type: 'scene', target: 'campusRoad12', yaw: 0, pitch: -3 }
@@ -533,7 +541,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 12'], en: ['Route', 'Outdoor', 'Point 12'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 486, y: 185 },
+    mapPosition: { x: 507, y: 236 },
     hotspots: [
       { id: 'campus-road-12-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 180, pitch: -3 },
       { id: 'campus-road-12-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 0, pitch: -3 }
@@ -549,7 +557,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 13'], en: ['Route', 'Outdoor', 'Point 13'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 438, y: 203 },
+    mapPosition: { x: 471, y: 250 },
     hotspots: [
       { id: 'campus-road-13-to-road-12', type: 'scene', target: 'campusRoad12', yaw: 180, pitch: -3 },
       { id: 'campus-road-13-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 0, pitch: -3 }
@@ -565,7 +573,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 14'], en: ['Route', 'Outdoor', 'Point 14'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 404, y: 235 },
+    mapPosition: { x: 445, y: 274 },
     hotspots: [
       { id: 'campus-road-14-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 180, pitch: -3 },
       { id: 'campus-road-14-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 0, pitch: -3 }
@@ -581,7 +589,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 15'], en: ['Route', 'Outdoor', 'Point 15'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 374, y: 297 },
+    mapPosition: { x: 422, y: 321 },
     hotspots: [
       { id: 'campus-road-15-to-road-14', type: 'scene', target: 'campusRoad14', yaw: 180, pitch: -3 },
       { id: 'campus-road-15-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 150, pitch: -3 },
@@ -598,7 +606,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 16'], en: ['Route', 'Outdoor', 'Point 16'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 351, y: 299 },
+    mapPosition: { x: 405, y: 323 },
     hotspots: [
       { id: 'campus-road-16-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 230, pitch: -3 },
       { id: 'campus-road-16-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 120, pitch: -3 },
@@ -615,7 +623,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 17'], en: ['Route', 'Outdoor', 'Point 17'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 344, y: 272 },
+    mapPosition: { x: 399, y: 302 },
     hotspots: [
       { id: 'campus-road-17-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 200, pitch: -3 },
       { id: 'campus-road-17-to-road-28', type: 'scene', target: 'campusRoad28', yaw: 0, pitch: -3 }
@@ -631,7 +639,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ทางแยก', 'จุดที่ 27'], en: ['Route', 'Junction', 'Point 27'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 392, y: 373 },
+    mapPosition: { x: 436, y: 379 },
     hotspots: [
       { id: 'campus-road-27-to-road-15', type: 'scene', target: 'campusRoad15', yaw: 180, pitch: -3 },
       { id: 'campus-road-27-to-road-18', type: 'scene', target: 'campusRoad18', yaw: 0, pitch: -3 }
@@ -647,7 +655,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ทางแยก', 'จุดที่ 18'], en: ['Route', 'Junction', 'Point 18'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 411, y: 449 },
+    mapPosition: { x: 450, y: 437 },
     hotspots: [
       { id: 'campus-road-18-to-road-27', type: 'scene', target: 'campusRoad27', yaw: 100, pitch: 0 },
       { id: 'campus-road-18-to-road-19', type: 'scene', target: 'campusRoad19', yaw: 0, pitch: -3 }
@@ -663,7 +671,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'คณะ', 'จุดที่ 19'], en: ['Building', 'Faculty', 'Point 19'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 388, y: 430 },
+    mapPosition: { x: 433, y: 422 },
     mapLandmark: true,
     hotspots: [
       { id: 'campus-road-19-to-road-18', type: 'scene', target: 'campusRoad18', yaw: -90, pitch: -3 },
@@ -680,7 +688,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'อาคาร', 'จุดที่ 20'], en: ['Route', 'Buildings', 'Point 20'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 373, y: 418 },
+    mapPosition: { x: 421, y: 413 },
     hotspots: [
       { id: 'campus-road-20-to-road-19', type: 'scene', target: 'campusRoad19', yaw: 30, pitch: -3 },
       { id: 'campus-road-20-to-road-21', type: 'scene', target: 'campusRoad21', yaw: -200, pitch: 0 }
@@ -696,7 +704,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'บริหาร', 'จุดที่ 21'], en: ['Building', 'Administration', 'Point 21'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 352, y: 401 },
+    mapPosition: { x: 405, y: 400 },
     mapLandmark: true,
     hotspots: [
       { id: 'campus-road-21-to-road-20', type: 'scene', target: 'campusRoad20', yaw: -90, pitch: -3 },
@@ -720,7 +728,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'หอสมุด'], en: ['Building', 'Library'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 250, y: 422 },
+    mapPosition: { x: 328, y: 416 },
     mapLandmark: true,
     hotspots: [
       { id: 'campus-road-22-to-road-21', type: 'scene', target: 'campusRoad21', yaw: 180, pitch: -3 },
@@ -743,7 +751,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'หอพระ', 'จุดที่ 23'], en: ['Route', 'Shrine', 'Point 23'] },
     initialView: { yaw: 98, pitch: 0, zoom: 24 },
-    mapPosition: { x: 331, y: 324 },
+    mapPosition: { x: 390, y: 342 },
     mapLandmark: true,
     hotspots: [
       { id: 'campus-road-23-to-road-16', type: 'scene', target: 'campusRoad16', yaw: 180, pitch: -3 },
@@ -766,7 +774,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ที่จอดรถยนต์', 'จุดที่ 24'], en: ['Route', 'Car parking', 'Point 24'] },
     initialView: { yaw: 108, pitch: 0, zoom: 24 },
-    mapPosition: { x: 311, y: 348 },
+    mapPosition: { x: 374, y: 360 },
     hotspots: [
       { id: 'campus-road-24-to-road-23', type: 'scene', target: 'campusRoad23', yaw: 180, pitch: -3 },
       { id: 'campus-road-24-to-road-25', type: 'scene', target: 'campusRoad25', yaw: 0, pitch: -3 },
@@ -788,7 +796,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ที่จอดรถจักรยานยนต์', 'จุดที่ 25'], en: ['Route', 'Motorcycle parking', 'Point 25'] },
     initialView: { yaw: 30, pitch: 0, zoom: 24 },
-    mapPosition: { x: 291, y: 373 },
+    mapPosition: { x: 359, y: 379 },
     hotspots: [
       { id: 'campus-road-25-to-road-24', type: 'scene', target: 'campusRoad24', yaw: 150, pitch: -3 },
       { id: 'campus-road-25-to-road-26', type: 'scene', target: 'campusRoad26', yaw: -50, pitch: -3 },
@@ -810,7 +818,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ที่จอดรถจักรยานยนต์', 'จุดที่ 26'], en: ['Route', 'Motorcycle parking', 'Point 26'] },
     initialView: { yaw: 0, pitch: 0, zoom: 24 },
-    mapPosition: { x: 270, y: 398 },
+    mapPosition: { x: 343, y: 398 },
     hotspots: [
       { id: 'campus-road-26-to-road-25', type: 'scene', target: 'campusRoad25', yaw: 85, pitch: -3 },
       { id: 'campus-road-26-to-road-22', type: 'scene', target: 'campusRoad22', yaw: -90, pitch: -3 },
@@ -832,7 +840,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 28'], en: ['Route', 'Outdoor', 'Point 28'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 296, y: 239 },
+    mapPosition: { x: 363, y: 277 },
     hotspots: [
       { id: 'campus-road-28-to-road-17', type: 'scene', target: 'campusRoad17', yaw: 180, pitch: -3 },
       { id: 'campus-road-28-to-road-29', type: 'scene', target: 'campusRoad29', yaw: 0, pitch: -3 }
@@ -848,10 +856,11 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 29'], en: ['Route', 'Outdoor', 'Point 29'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 251, y: 241 },
+    mapPosition: { x: 329, y: 279 },
     hotspots: [
       { id: 'campus-road-29-to-road-28', type: 'scene', target: 'campusRoad28', yaw: 180, pitch: -3 },
-      { id: 'campus-road-29-to-road-30', type: 'scene', target: 'campusRoad30', yaw: 0, pitch: -3 }
+      { id: 'campus-road-29-to-road-30', type: 'scene', target: 'campusRoad30', yaw: 0, pitch: -3 },
+      { id: 'campus-road-29-to-multipurpose-gym', type: 'scene', target: 'multipurposeGym', yaw: 120, pitch: 3}
     ]
   },
   {
@@ -864,10 +873,11 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'กลางแจ้ง', 'จุดที่ 30'], en: ['Route', 'Outdoor', 'Point 30'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 230, y: 258 },
+    mapPosition: { x: 313, y: 292 },
     hotspots: [
       { id: 'campus-road-30-to-road-29', type: 'scene', target: 'campusRoad29', yaw: 180, pitch: -3 },
-      { id: 'campus-road-30-to-road-31', type: 'scene', target: 'campusRoad31', yaw: 0, pitch: -3 }
+      { id: 'campus-road-30-to-road-31', type: 'scene', target: 'campusRoad31', yaw: 0, pitch: -3 },
+      { id: 'campus-road-30-to-road-49', type: 'scene', target: 'campusRoad49', yaw: 90, pitch: -3 }
     ]
   },
   {
@@ -880,7 +890,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ทางแยก'], en: ['Route', 'Junction'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 213, y: 278 },
+    mapPosition: { x: 300, y: 307 },
     hotspots: [
       { id: 'campus-road-31-to-road-30', type: 'scene', target: 'campusRoad30', yaw: 170, pitch: -3 },
       { id: 'campus-road-31-to-road-32', type: 'scene', target: 'campusRoad32', yaw: -95, pitch: -3 },
@@ -897,7 +907,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ที่จอดรถ', 'จุดที่ 32'], en: ['Route', 'Parking', 'Point 32'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 254, y: 301 },
+    mapPosition: { x: 331, y: 324 },
     hotspots: [
       { id: 'campus-road-32-to-road-31', type: 'scene', target: 'campusRoad31', yaw: 190, pitch: 0 },
       { id: 'campus-road-32-to-road-33', type: 'scene', target: 'campusRoad33', yaw: 0, pitch: -3 },
@@ -920,7 +930,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ที่จอดรถ', 'จุดที่ 33'], en: ['Route', 'Parking', 'Point 33'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 275, y: 321 },
+    mapPosition: { x: 347, y: 340 },
     hotspots: [
       { id: 'campus-road-33-to-road-32', type: 'scene', target: 'campusRoad32', yaw: 180, pitch: -3 },
       { id: 'campus-road-33-to-road-34', type: 'scene', target: 'campusRoad34', yaw: 80, pitch: -3 },
@@ -942,7 +952,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'คณะเทคโนโลยี', 'จุดที่ 34'], en: ['Route', 'FITM', 'Point 34'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 262, y: 339 },
+    mapPosition: { x: 337, y: 353 },
     hotspots: [
       { id: 'campus-road-34-to-road-33', type: 'scene', target: 'campusRoad33', yaw: 180, pitch: -3 },
       { id: 'campus-road-34-to-road-35', type: 'scene', target: 'campusRoad35', yaw: 0, pitch: -3 },
@@ -964,7 +974,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'คณะเทคโนโลยี', 'จุดที่ 35'], en: ['Route', 'FITM', 'Point 35'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 249, y: 358 },
+    mapPosition: { x: 327, y: 368 },
     hotspots: [
       { id: 'campus-road-35-to-road-34', type: 'scene', target: 'campusRoad34', yaw: 180, pitch: -3 },
       { id: 'campus-road-35-to-road-36', type: 'scene', target: 'campusRoad36', yaw: 80, pitch: -3 }
@@ -980,7 +990,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'คณะ', 'FITM'], en: ['Building', 'Faculty', 'FITM'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 228, y: 345 },
+    mapPosition: { x: 311, y: 358 },
     mapLandmark: true,
     hotspots: [
       { id: 'campus-road-36-to-road-35', type: 'scene', target: 'campusRoad35', yaw: -100, pitch: -3 },
@@ -1010,7 +1020,7 @@ export const tourScenes = [
     },
     tags: { th: ['เส้นทาง', 'ที่จอดรถ', 'จุดที่ 37'], en: ['Route', 'Parking', 'Point 37'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 242, y: 326 },
+    mapPosition: { x: 322, y: 343 },
     hotspots: [
       { id: 'campus-road-37-to-road-36', type: 'scene', target: 'campusRoad36', yaw: 180, pitch: -3 },
       { id: 'campus-road-37-to-road-32', type: 'scene', target: 'campusRoad32', yaw: 0, pitch: -3 },
@@ -1032,7 +1042,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'โรงอาหาร', 'บริการ'], en: ['Building', 'Cafeteria', 'Services'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 212, y: 337 },
+    mapPosition: { x: 299, y: 352 },
     mapLandmark: true,
     hotspots: [
       { id: 'cafeteria-to-campus-road-38', type: 'scene', target: 'campusRoad38', yaw: 270, pitch: -3 },
@@ -1052,11 +1062,12 @@ export const tourScenes = [
     description: { th: 'เส้นทางจากทางแยกไปยังคณะวิศวกรรมศาสตร์ วิทยาเขตปราจีนบุรี', en: 'The route from the junction toward the Faculty of Engineering, Prachinburi Campus.' },
     tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 38'], en: ['Route', 'Engineering', 'Point 38'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 184, y: 316 },
+    mapPosition: { x: 278, y: 336 },
     hotspots: [
       { id: 'campus-road-38-to-road-31', type: 'scene', target: 'campusRoad31', yaw: 180, pitch: -3 },
       { id: 'campus-road-38-to-road-universityCafeteria', type: 'scene', target: 'universityCafeteria', yaw: -80, pitch: -3 },
-      { id: 'campus-road-38-to-road-39', type: 'scene', target: 'campusRoad39', yaw: 0, pitch: -3 }
+      { id: 'campus-road-38-to-road-39', type: 'scene', target: 'campusRoad39', yaw: 0, pitch: -3 },
+      { id: 'campus-road-38-to-road-50', type: 'scene', target: 'campusRoad50', yaw: 75, pitch: -3 }
     ]
   },
   {
@@ -1066,7 +1077,7 @@ export const tourScenes = [
     description: { th: 'ถนนภายในบริเวณกลุ่มอาคารวิศวกรรมศาสตร์', en: 'An internal road in the engineering building area.' },
     tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 39'], en: ['Route', 'Engineering', 'Point 39'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 140, y: 390 },
+    mapPosition: { x: 244, y: 392 },
     hotspots: [
       { id: 'campus-road-39-to-road-38', type: 'scene', target: 'campusRoad38', yaw: 180, pitch: -3 },
       { id: 'campus-road-39-to-road-40', type: 'scene', target: 'campusRoad40', yaw: 0, pitch: -3 }
@@ -1079,7 +1090,7 @@ export const tourScenes = [
     description: { th: 'เส้นทางต่อเนื่องภายในบริเวณคณะวิศวกรรมศาสตร์', en: 'A continuing route within the Faculty of Engineering area.' },
     tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 40'], en: ['Route', 'Engineering', 'Point 40'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 129, y: 412 },
+    mapPosition: { x: 236, y: 409 },
     hotspots: [
       { id: 'campus-road-40-to-road-39', type: 'scene', target: 'campusRoad39', yaw: 180, pitch: -3 },
       { id: 'campus-road-40-to-road-41', type: 'scene', target: 'campusRoad41', yaw: 0, pitch: -3 }
@@ -1092,7 +1103,7 @@ export const tourScenes = [
     description: { th: 'ถนนเชื่อมต่อไปยังอาคารคณะวิศวกรรมศาสตร์', en: 'A road connecting toward the Faculty of Engineering building.' },
     tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 41'], en: ['Route', 'Engineering', 'Point 41'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 116, y: 424 },
+    mapPosition: { x: 226, y: 418 },
     hotspots: [
       { id: 'campus-road-41-to-road-40', type: 'scene', target: 'campusRoad40', yaw: 180, pitch: -3 },
       { id: 'campus-road-41-to-road-42', type: 'scene', target: 'campusRoad42', yaw: 0, pitch: -3 }
@@ -1105,7 +1116,7 @@ export const tourScenes = [
     description: { th: 'เส้นทางช่วงก่อนถึงอาคารคณะวิศวกรรมศาสตร์', en: 'The route approaching the Faculty of Engineering building.' },
     tags: { th: ['เส้นทาง', 'วิศวกรรมศาสตร์', 'จุดที่ 42'], en: ['Route', 'Engineering', 'Point 42'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 93, y: 451 },
+    mapPosition: { x: 209, y: 438 },
     hotspots: [
       { id: 'campus-road-42-to-road-41', type: 'scene', target: 'campusRoad41', yaw: -80, pitch: -3 },
       { id: 'campus-road-42-to-road-43', type: 'scene', target: 'campusRoad43', yaw: 50, pitch: -3 }
@@ -1121,7 +1132,7 @@ export const tourScenes = [
     },
     tags: { th: ['อาคาร', 'คณะ', 'วิศวกรรมศาสตร์'], en: ['Building', 'Faculty', 'Engineering'] },
     initialView: { yaw: 0, pitch: 2, zoom: 24 },
-    mapPosition: { x: 117, y: 469 },
+    mapPosition: { x: 227, y: 452 },
     mapLandmark: true,
     hotspots: [
       { id: 'campus-road-43-to-road-42', type: 'scene', target: 'campusRoad42', yaw: 180, pitch: -3 },
@@ -1131,6 +1142,141 @@ export const tourScenes = [
         yaw: 50,
         pitch: 2
       }
+    ]
+  },
+  {
+    id: 'multipurposeGym',
+    ...tourMedia.multipurposeGym,
+    title: {
+      th: 'โรงยิมอเนกประสงค์ (โดมแดง) มจพ. วิทยาเขตปราจีนบุรี',
+      en: 'Multipurpose Gymnasium (Red Dome), KMUTNB Prachinburi Campus'
+    },
+    description: {
+      th: 'จุดชมภายในโรงยิมอเนกประสงค์หรือโดมแดง พร้อมมุมมองสนามฟุตบอลกลางแจ้งบริเวณโดยรอบ',
+      en: 'A viewpoint inside the multipurpose gymnasium, or Red Dome, with views of the surrounding outdoor football field.'
+    },
+    tags: { th: ['โรงยิม', 'โดมแดง', 'สนามกีฬา'], en: ['Gymnasium', 'Red Dome', 'Sports'] },
+    initialView: { yaw: 0, pitch: 4, zoom: 24 },
+    mapPosition: { x: 364, y: 235 },
+    mapLandmark: true,
+    hotspots: [
+      { id: 'multipurpose-gym-to-road-29', type: 'scene', target: 'campusRoad29', yaw: 90, pitch: -3 },
+      { id: 'multipurpose-gym-to-road-44', type: 'scene', target: 'campusRoad44', yaw: -90, pitch: -3 },
+      { id: 'multipurpose-gym-info', type: 'info', yaw: 0, pitch: 12 },
+      { id: 'outdoor-football-field-info', type: 'info', yaw: 145, pitch: 0 }
+    ]
+  },
+  {
+    id: 'campusRoad44',
+    ...tourMedia.campusRoad44,
+    title: { th: 'ทางเดินบริเวณโดมแดง จุดที่ 1', en: 'Red Dome Walkway Point 1' },
+    description: {
+      th: 'ทางเดินมีหลังคาบริเวณสนามกีฬาที่เชื่อมระหว่างโดมแดงกับทางแยกภายในพื้นที่',
+      en: 'A covered sports-area walkway connecting the Red Dome to the nearby internal junction.'
+    },
+    tags: { th: ['ทางเดิน', 'โดมแดง', 'จุดที่ 1'], en: ['Walkway', 'Red Dome', 'Point 1'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 357, y: 201 },
+    hotspots: [
+      { id: 'campus-road-44-to-multipurpose-gym', type: 'scene', target: 'multipurposeGym', yaw: 0, pitch: -3 },
+      { id: 'campus-road-44-to-road-45', type: 'scene', target: 'campusRoad45', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad45',
+    ...tourMedia.campusRoad45,
+    title: { th: 'ทางแยกทางเดินบริเวณโดมแดง', en: 'Red Dome Walkway Junction' },
+    description: {
+      th: 'ทางแยกของทางเดินมีหลังคา โดยเส้นทางหลักต่อไปยังจุดที่ 2 และอีกด้านเป็นทางเดินแยกปลายตัน',
+      en: 'A covered-walkway junction where the main route continues to Point 2 and the opposite side leads to a short branch.'
+    },
+    tags: { th: ['ทางเดิน', 'ทางแยก', 'โดมแดง'], en: ['Walkway', 'Junction', 'Red Dome'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 320, y: 202 },
+    hotspots: [
+      { id: 'campus-road-45-to-road-44', type: 'scene', target: 'campusRoad44', yaw: -90, pitch: -3 },
+      { id: 'campus-road-45-to-road-47', type: 'scene', target: 'campusRoad47', yaw: 0, pitch: -3 },
+      { id: 'campus-road-45-to-road-46', type: 'scene', target: 'campusRoad46', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad46',
+    ...tourMedia.campusRoad46,
+    title: { th: 'ทางเดินแยกบริเวณโดมแดง', en: 'Red Dome Branch Walkway' },
+    description: {
+      th: 'ทางเดินแยกจากจุดตัดหลักและย้อนกลับไปยังทางแยกบริเวณโดมแดงได้',
+      en: 'A short branch from the main path that connects back to the Red Dome walkway junction.'
+    },
+    tags: { th: ['ทางเดิน', 'ทางแยก', 'ปลายทาง'], en: ['Walkway', 'Branch', 'Endpoint'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 316, y: 188 },
+    hotspots: [
+      { id: 'campus-road-46-to-road-45', type: 'scene', target: 'campusRoad45', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad47',
+    ...tourMedia.campusRoad47,
+    title: { th: 'ทางเดินบริเวณโดมแดง จุดที่ 2', en: 'Red Dome Walkway Point 2' },
+    description: {
+      th: 'ทางเดินมีหลังคาข้างพื้นที่สนาม เชื่อมต่อจากทางแยกไปยังเส้นทางส่วนถัดไป',
+      en: 'A covered walkway beside the field connecting the junction to the next route segment.'
+    },
+    tags: { th: ['ทางเดิน', 'สนามกีฬา', 'จุดที่ 2'], en: ['Walkway', 'Sports field', 'Point 2'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 319, y: 229 },
+    hotspots: [
+      { id: 'campus-road-47-to-road-45', type: 'scene', target: 'campusRoad45', yaw: 180, pitch: -3 },
+      { id: 'campus-road-47-to-road-48', type: 'scene', target: 'campusRoad48', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad48',
+    ...tourMedia.campusRoad48,
+    title: { th: 'ทางเดินบริเวณโดมแดง จุดที่ 3', en: 'Red Dome Walkway Point 3' },
+    description: {
+      th: 'ทางเดินต่อเนื่องใต้แนวหลังคาระหว่างพื้นที่สนามและกลุ่มอาคารภายในมหาวิทยาลัย',
+      en: 'A continuing covered walkway between the sports field and nearby campus buildings.'
+    },
+    tags: { th: ['ทางเดิน', 'สนามกีฬา', 'จุดที่ 3'], en: ['Walkway', 'Sports field', 'Point 3'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 321, y: 259 },
+    hotspots: [
+      { id: 'campus-road-48-to-road-47', type: 'scene', target: 'campusRoad47', yaw: 180, pitch: -3 },
+      { id: 'campus-road-48-to-road-49', type: 'scene', target: 'campusRoad49', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad49',
+    ...tourMedia.campusRoad49,
+    title: { th: 'ทางเดินบริเวณโดมแดง จุดที่ 4', en: 'Red Dome Walkway Point 4' },
+    description: {
+      th: 'จุดเชื่อมทางเดินบริเวณโดมแดงกับถนนในภาพ temp6-3 และทางเดินไปยังจุดที่ 5',
+      en: 'The connection between the Red Dome walkway, the road shown in temp6-3, and the walkway toward Point 5.'
+    },
+    tags: { th: ['ทางเดิน', 'จุดเชื่อม', 'จุดที่ 4'], en: ['Walkway', 'Connection', 'Point 4'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 306, y: 282 },
+    hotspots: [
+      { id: 'campus-road-49-to-road-48', type: 'scene', target: 'campusRoad48', yaw: 170, pitch: -3 },
+      { id: 'campus-road-49-to-road-50', type: 'scene', target: 'campusRoad50', yaw: 0, pitch: -3 },
+      { id: 'campus-road-49-to-road-30', type: 'scene', target: 'campusRoad30', yaw: -90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad50',
+    ...tourMedia.campusRoad50,
+    title: { th: 'ทางเดินบริเวณโดมแดง จุดที่ 5', en: 'Red Dome Walkway Point 5' },
+    description: {
+      th: 'จุดเชื่อมปลายทางเดินบริเวณโดมแดงกับเส้นทางคณะวิศวกรรมศาสตร์ในภาพ temp7-1',
+      en: 'The end connection from the Red Dome walkway to the engineering route shown in temp7-1.'
+    },
+    tags: { th: ['ทางเดิน', 'จุดเชื่อม', 'จุดที่ 5'], en: ['Walkway', 'Connection', 'Point 5'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 270, y: 329 },
+    hotspots: [
+      { id: 'campus-road-50-to-road-49', type: 'scene', target: 'campusRoad49', yaw: -80, pitch: -3 },
+      { id: 'campus-road-50-to-road-38', type: 'scene', target: 'campusRoad38', yaw: 10, pitch: -3 }
     ]
   }
 ] as const satisfies readonly TourScene[];

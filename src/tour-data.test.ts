@@ -54,6 +54,12 @@ function readJpegDimensions(filePath: string): { width: number; height: number }
   throw new Error(`Could not read JPEG dimensions: ${filePath}`);
 }
 
+function readPngDimensions(filePath: string): { width: number; height: number } {
+  const data = readFileSync(filePath);
+  expect(data.subarray(1, 4).toString('ascii')).toBe('PNG');
+  return { width: data.readUInt32BE(16), height: data.readUInt32BE(20) };
+}
+
 function publicAssetPath(assetUrl: string): string {
   const pathname = new URL(assetUrl, 'https://tour.local').pathname;
   return resolve(process.cwd(), 'public', pathname.slice(1));
@@ -65,7 +71,7 @@ describe('tour configuration', () => {
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(52);
+    expect(tourScenes).toHaveLength(60);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
@@ -84,7 +90,8 @@ describe('tour configuration', () => {
       'campusRoad23',
       'campusRoad36',
       'universityCafeteria',
-      'campusRoad43'
+      'campusRoad43',
+      'multipurposeGym'
     ]);
     expect(getMapLandmarkScenes().every((scene) => scene.mapLandmark)).toBe(true);
   });
@@ -273,7 +280,9 @@ describe('tour configuration', () => {
       'campusRoad25:campusRoad26',
       'campusRoad28:campusRoad29',
       'campusRoad29:campusRoad30',
+      'campusRoad29:multipurposeGym',
       'campusRoad30:campusRoad31',
+      'campusRoad30:campusRoad49',
       'campusRoad31:campusRoad32',
       'campusRoad31:campusRoad38',
       'campusRoad32:campusRoad33',
@@ -284,11 +293,19 @@ describe('tour configuration', () => {
       'campusRoad36:campusRoad37',
       'campusRoad36:universityCafeteria',
       'campusRoad38:campusRoad39',
+      'campusRoad38:campusRoad50',
       'campusRoad38:universityCafeteria',
       'campusRoad39:campusRoad40',
       'campusRoad40:campusRoad41',
       'campusRoad41:campusRoad42',
       'campusRoad42:campusRoad43',
+      'campusRoad44:campusRoad45',
+      'campusRoad44:multipurposeGym',
+      'campusRoad45:campusRoad46',
+      'campusRoad45:campusRoad47',
+      'campusRoad47:campusRoad48',
+      'campusRoad48:campusRoad49',
+      'campusRoad49:campusRoad50',
       'entrance:entranceRoad',
       'entranceRoad:memorialPlaza',
       'memorial:memorialPlaza'
@@ -308,7 +325,10 @@ describe('tour configuration', () => {
       ).toBe(true);
       expect(getSceneAssetUrls(scene)).toEqual([scene.panorama]);
     }
-    expect(existsSync(resolve(process.cwd(), 'public', tourMap.image.slice(1)))).toBe(true);
+    const mapPath = resolve(process.cwd(), 'public', tourMap.image.slice(1));
+    expect(tourMap).toEqual({ image: '/mainimages/map/mainmap1.png', width: 1096, height: 583 });
+    expect(existsSync(mapPath)).toBe(true);
+    expect(readPngDimensions(mapPath)).toEqual({ width: 1096, height: 583 });
     expect(existsSync(resolve(process.cwd(), 'public/mainimages/tiles'))).toBe(false);
   });
 
@@ -328,12 +348,12 @@ describe('tour configuration', () => {
     const sceneIds = ['campusRoad27', 'campusRoad18', 'campusRoad19', 'campusRoad20', 'campusRoad21', 'campusRoad22'] as const;
     const expectedFiles = ['temp4-1.jpg', 'temp4-2.jpg', 'temp4-3.jpg', 'temp4-4.jpg', 'temp4-5.jpg', 'temp4-6.jpg'];
     const expectedPositions = [
-      { x: 392, y: 373 },
-      { x: 411, y: 449 },
-      { x: 388, y: 430 },
-      { x: 373, y: 418 },
-      { x: 352, y: 401 },
-      { x: 250, y: 422 }
+      { x: 436, y: 379 },
+      { x: 450, y: 437 },
+      { x: 433, y: 422 },
+      { x: 421, y: 413 },
+      { x: 405, y: 400 },
+      { x: 328, y: 416 }
     ];
 
     const scenes = sceneIds.map((sceneId) => getScene(sceneId));
@@ -388,14 +408,75 @@ describe('tour configuration', () => {
     }
   });
 
+  it('uses all eight temp9 panoramas with the configured Red Dome route and junctions', () => {
+    const ids = [
+      'multipurposeGym',
+      'campusRoad44',
+      'campusRoad45',
+      'campusRoad46',
+      'campusRoad47',
+      'campusRoad48',
+      'campusRoad49',
+      'campusRoad50'
+    ] as const;
+    const files = [
+      'temp9-1.jpg',
+      'temp9-2.jpg',
+      'temp9-3.jpg',
+      'temp9-3-1.jpg',
+      'temp9-4.jpg',
+      'temp9-5.jpg',
+      'temp9-6.jpg',
+      'temp9-7.jpg'
+    ];
+    expect(ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
+      .toEqual(files.map((file) => `/mainimages/${file}`));
+
+    const checkPair = (from: Parameters<typeof getScene>[0], to: Parameters<typeof getScene>[0]): void => {
+      expect(getNavigationHotspots(getScene(from)).map((item) => item.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((item) => item.target)).toContain(from);
+    };
+    checkPair('campusRoad29', 'multipurposeGym');
+    checkPair('multipurposeGym', 'campusRoad44');
+    checkPair('campusRoad44', 'campusRoad45');
+    checkPair('campusRoad45', 'campusRoad46');
+    checkPair('campusRoad45', 'campusRoad47');
+    checkPair('campusRoad47', 'campusRoad48');
+    checkPair('campusRoad48', 'campusRoad49');
+    checkPair('campusRoad49', 'campusRoad50');
+    checkPair('campusRoad30', 'campusRoad49');
+    checkPair('campusRoad38', 'campusRoad50');
+
+    expect(getNavigationHotspots(getScene('campusRoad28')).map((item) => item.target))
+      .not.toContain('multipurposeGym');
+    expect(getNavigationHotspots(getScene('campusRoad46'))).toEqual([
+      expect.objectContaining({ target: 'campusRoad45', yaw: 0, pitch: -3 })
+    ]);
+    expect(getNavigationHotspots(getScene('campusRoad45'))).toEqual(expect.arrayContaining([
+      expect.objectContaining({ target: 'campusRoad44', yaw: -90, pitch: -3 }),
+      expect.objectContaining({ target: 'campusRoad47', yaw: 0, pitch: -3 }),
+      expect.objectContaining({ target: 'campusRoad46', yaw: 180, pitch: -3 })
+    ]));
+
+    expect(getInfoHotspots(getScene('multipurposeGym'))).toEqual([
+      expect.objectContaining({ id: 'multipurpose-gym-info', yaw: 0, pitch: 12 }),
+      expect.objectContaining({ id: 'outdoor-football-field-info', yaw: 145, pitch: 0 })
+    ]);
+
+    for (const file of files) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
   it('uses all four full-resolution temp5 panoramas with their map positions and information points', () => {
     const ids = ['campusRoad23', 'campusRoad24', 'campusRoad25', 'campusRoad26'] as const;
     const expectedFiles = ['temp5-1.jpg', 'temp5-2.jpg', 'temp5-3.jpg', 'temp5-4.jpg'];
     const expectedPositions = [
-      { x: 331, y: 324 },
-      { x: 311, y: 348 },
-      { x: 291, y: 373 },
-      { x: 270, y: 398 }
+      { x: 390, y: 342 },
+      { x: 374, y: 360 },
+      { x: 359, y: 379 },
+      { x: 343, y: 398 }
     ];
     const expectedInfo = [
       { id: 'luang-pho-sing-shrine-info', yaw: 98, pitch: 4 },
@@ -425,19 +506,22 @@ describe('tour configuration', () => {
     }
   });
 
-  it('keeps every Info definition geometry-only and stores its install content in the bootstrap', () => {
+  it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    expect(infoHotspots).toHaveLength(21);
-    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(21);
-    expect(Object.keys(placeContentBootstrap).sort()).toEqual(
-      infoHotspots.map((hotspot) => hotspot.id).sort()
-    );
+    expect(infoHotspots).toHaveLength(23);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(23);
 
     for (const hotspot of infoHotspots) {
       expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);
-      const bootstrap = placeContentBootstrap[hotspot.id as keyof typeof placeContentBootstrap];
+    }
+
+    const infoIds = new Set(infoHotspots.map((hotspot) => hotspot.id));
+    expect(placeContentBootstrap).not.toHaveProperty('multipurpose-gym-info');
+    expect(placeContentBootstrap).not.toHaveProperty('outdoor-football-field-info');
+    for (const [id, bootstrap] of Object.entries(placeContentBootstrap)) {
+      expect(infoIds.has(id), `${id} is no longer linked to an Info hotspot`).toBe(true);
       const parsed = hotspotDataSchema.parse(bootstrap);
-      expect(parsed.images.length, `${hotspot.id} needs a bootstrap image`).toBeGreaterThanOrEqual(1);
+      expect(parsed.images.length, `${id} needs a bootstrap image`).toBeGreaterThanOrEqual(1);
       for (const image of parsed.images) {
         expect(image.src).toMatch(/^(?:\/mainimages\/|https:\/\/)/);
         expect(image.src).not.toMatch(/^\/tour\/(?:pano|thumbs)\//);
@@ -453,11 +537,11 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 52 versioned source panoramas from the tour assets API', async () => {
+  it('returns only the 60 versioned source panoramas from the tour assets API', async () => {
     const response = getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(52);
+    expect(new Set(body.assets).size).toBe(60);
     expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });
