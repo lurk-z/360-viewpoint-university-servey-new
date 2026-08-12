@@ -670,43 +670,6 @@ export const placeContentBootstrap = {
       }
     ]
   },
-  "orange-blossom-room-info": {
-    "title": {
-      "th": "ห้องพวงแสด",
-      "en": "Orange Blossom Room"
-    },
-    "description": {
-      "th": "จุดข้อมูลห้องพวงแสดภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม",
-      "en": "Information point for the Orange Blossom Room within the Faculty of Industrial Technology and Management."
-    },
-    "sceneTitle": {
-      "th": "เส้นทางคณะเทคโนโลยี จุดที่ 34",
-      "en": "FITM Route Point 34"
-    },
-    "sceneDescription": {
-      "th": "ถนนภายในกลุ่มอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม",
-      "en": "An internal road in the Faculty of Industrial Technology and Management building area."
-    },
-    "reference": {
-      "label": {
-        "th": "ข้อมูลและภาพถ่ายจากการสำรวจโครงการ",
-        "en": "Project survey data and photographs"
-      }
-    },
-    "images": [
-      {
-        "src": "/mainimages/temp6-7.jpg?v=20260805-redacted",
-        "alt": {
-          "th": "บริเวณห้องพวงแสด",
-          "en": "Orange Blossom Room area"
-        },
-        "caption": {
-          "th": "ห้องพวงแสด",
-          "en": "Orange Blossom Room"
-        }
-      }
-    ]
-  },
   "fitm-front-parking-info": {
     "title": {
       "th": "พื้นที่จอดรถยนต์และจักรยานยนต์ภายในบริเวณคณะเทคโนโลยีและการจัดการอุตสาหกรรม",

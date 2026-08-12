@@ -19,7 +19,7 @@ export interface PanoramaEnhancementSettings {
   /** Five-tap unsharp-mask strength. 0 disables sharpening. */
   readonly sharpness: number;
 }
-
+// ความสว่างของภาพ (brightness) และความคมชัดของภาพ (sharpness)
 export const PANORAMA_ENHANCEMENT = Object.freeze({
   enabled: true,
   brightness: 1.08,

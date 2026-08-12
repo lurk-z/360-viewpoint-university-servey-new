@@ -84,7 +84,40 @@ export const tourMedia = {
   campusRoad47: mainPanorama('temp9-4.jpg'),
   campusRoad48: mainPanorama('temp9-5.jpg'),
   campusRoad49: mainPanorama('temp9-6.jpg'),
-  campusRoad50: mainPanorama('temp9-7.jpg')
+  campusRoad50: mainPanorama('temp9-7.jpg'),
+  campusRoad51: mainPanorama('temp9-3-2.jpg'),
+  campusRoad52: mainPanorama('temp8-1.jpg'),
+  campusRoad53: mainPanorama('temp8-2.jpg'),
+  campusRoad54: mainPanorama('temp8-3.jpg'),
+  campusRoad55: mainPanorama('temp8-4.jpg'),
+  campusRoad56: mainPanorama('temp8-5.jpg'),
+  campusRoad57: mainPanorama('temp8-6.jpg'),
+  campusRoad58: mainPanorama('temp8-7.jpg'),
+  maleDormitory: mainPanorama('temp8-8.jpg'),
+  dormitoryJunction: mainPanorama('temp8-9.jpg'),
+  femaleDormitory1: mainPanorama('temp8-10.jpg'),
+  femaleDormitoryMinimart: mainPanorama('temp8-11.jpg'),
+  dormitoryRoad: mainPanorama('temp8-12.jpg'),
+  femaleDormitory2: mainPanorama('temp8-13.jpg'),
+  fitmInterior1: mainPanorama('temp-faculty-1.jpg'),
+  fitmInterior2: mainPanorama('temp-faculty-2.jpg'),
+  fitmInterior3: mainPanorama('temp-faculty-3.jpg'),
+  fitmInterior4: mainPanorama('temp-faculty-4.jpg'),
+  fitmInterior5: mainPanorama('temp-faculty-5.jpg'),
+  fitmInterior6: mainPanorama('temp-faculty-6.jpg'),
+  fitmInterior7: mainPanorama('temp-faculty-7.jpg'),
+  fitmInterior8: mainPanorama('temp-faculty-8.jpg'),
+  fitmInterior9: mainPanorama('temp-faculty-9.jpg'),
+  fitmInterior10: mainPanorama('temp-faculty-10.jpg'),
+  fitmInterior11: mainPanorama('temp-faculty-11.jpg'),
+  fitmInterior12: mainPanorama('temp-faculty-12.jpg'),
+  fitmInterior13: mainPanorama('temp-faculty-13.jpg'),
+  fitmInterior14: mainPanorama('temp-faculty-14.jpg'),
+  fitmInterior15: mainPanorama('temp-faculty-15.jpg'),
+  fitmInterior16: mainPanorama('temp-faculty-16.jpg'),
+  fitmInterior17: mainPanorama('temp-faculty-17.jpg'),
+  puangKhramRoom1: mainPanorama('temp-puang-khram1.jpg'),
+  puangKhrangRoom2: mainPanorama('temp-puang-khram2.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -544,7 +577,8 @@ export const tourScenes = [
     mapPosition: { x: 507, y: 236 },
     hotspots: [
       { id: 'campus-road-12-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 180, pitch: -3 },
-      { id: 'campus-road-12-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 0, pitch: -3 }
+      { id: 'campus-road-12-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 0, pitch: -3 },
+      { id: 'campus-road-12-to-road-52', type: 'scene', target: 'campusRoad52', yaw: 90, pitch: -3 }
     ]
   },
   {
@@ -800,6 +834,7 @@ export const tourScenes = [
     hotspots: [
       { id: 'campus-road-25-to-road-24', type: 'scene', target: 'campusRoad24', yaw: 150, pitch: -3 },
       { id: 'campus-road-25-to-road-26', type: 'scene', target: 'campusRoad26', yaw: -50, pitch: -3 },
+      { id: 'campus-road-25-to-fitm-interior-5', type: 'scene', target: 'fitmInterior5', yaw: 90, pitch: -3 },
       {
         id: 'faculty-technology-motorcycle-parking-1-info',
         type: 'info',
@@ -956,12 +991,7 @@ export const tourScenes = [
     hotspots: [
       { id: 'campus-road-34-to-road-33', type: 'scene', target: 'campusRoad33', yaw: 180, pitch: -3 },
       { id: 'campus-road-34-to-road-35', type: 'scene', target: 'campusRoad35', yaw: 0, pitch: -3 },
-      {
-        id: 'orange-blossom-room-info',
-        type: 'info',
-        yaw: -100,
-        pitch: 1
-      },
+      { id: 'campus-road-34-to-fitm-interior-1', type: 'scene', target: 'fitmInterior1', yaw: -100, pitch: -3 }
     ]
   },
   {
@@ -995,7 +1025,7 @@ export const tourScenes = [
     hotspots: [
       { id: 'campus-road-36-to-road-35', type: 'scene', target: 'campusRoad35', yaw: -100, pitch: -3 },
       { id: 'campus-road-36-to-road-37', type: 'scene', target: 'campusRoad37', yaw: 150, pitch: -3 },
-      { id: 'campus-road-36-to-road-universityCafeteria', type: 'scene', target: 'universityCafeteria', yaw: 50, pitch: -3 },
+      { id: 'campus-road-36-to-fitm-interior-10', type: 'scene', target: 'fitmInterior10', yaw: 50, pitch: -3 },
       {
         id: 'fitm-front-parking-info',
         type: 'info',
@@ -1046,7 +1076,7 @@ export const tourScenes = [
     mapLandmark: true,
     hotspots: [
       { id: 'cafeteria-to-campus-road-38', type: 'scene', target: 'campusRoad38', yaw: 270, pitch: -3 },
-      { id: 'cafeteria-to-campus-road-36', type: 'scene', target: 'campusRoad36', yaw: 90, pitch: -2 },
+      { id: 'cafeteria-to-fitm-interior-10', type: 'scene', target: 'fitmInterior10', yaw: 90, pitch: -3 },
       {
         id: 'university-cafeteria-info',
         type: 'info',
@@ -1209,9 +1239,10 @@ export const tourScenes = [
     },
     tags: { th: ['ทางเดิน', 'ทางแยก', 'ปลายทาง'], en: ['Walkway', 'Branch', 'Endpoint'] },
     initialView: { yaw: 0, pitch: -2, zoom: 22 },
-    mapPosition: { x: 316, y: 188 },
+    mapPosition: { x: 315, y: 184 },
     hotspots: [
-      { id: 'campus-road-46-to-road-45', type: 'scene', target: 'campusRoad45', yaw: 0, pitch: -3 }
+      { id: 'campus-road-46-to-road-45', type: 'scene', target: 'campusRoad45', yaw: 0, pitch: -3 },
+      { id: 'campus-road-46-to-road-51', type: 'scene', target: 'campusRoad51', yaw: 150, pitch: -3 }
     ]
   },
   {
@@ -1277,6 +1308,558 @@ export const tourScenes = [
     hotspots: [
       { id: 'campus-road-50-to-road-49', type: 'scene', target: 'campusRoad49', yaw: -80, pitch: -3 },
       { id: 'campus-road-50-to-road-38', type: 'scene', target: 'campusRoad38', yaw: 10, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad51',
+    ...tourMedia.campusRoad51,
+    title: { th: 'ทางเดินเชื่อมโดมแดงและหอพักนักศึกษา', en: 'Red Dome–Dormitory Connecting Walkway' },
+    description: {
+      th: 'ทางเดินต่อจาก temp9-3-1 ที่เชื่อมเส้นทางบริเวณโดมแดงกับทางแยกหอพักนักศึกษา',
+      en: 'The walkway after temp9-3-1 connecting the Red Dome route to the student dormitory junction.'
+    },
+    tags: { th: ['ทางเดิน', 'โดมแดง', 'หอพักนักศึกษา'], en: ['Walkway', 'Red Dome', 'Dormitory'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 307, y: 184 },
+    hotspots: [
+      { id: 'campus-road-51-to-road-46', type: 'scene', target: 'campusRoad46', yaw: -100, pitch: -3 },
+      { id: 'campus-road-51-to-dormitory-junction', type: 'scene', target: 'dormitoryJunction', yaw: 95, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad52',
+    ...tourMedia.campusRoad52,
+    title: { th: 'เส้นทางไปหอพักนักศึกษา จุดที่ 1', en: 'Student Dormitory Route Point 1' },
+    description: {
+      th: 'จุดที่ 1 ของเส้นทางจากถนนภายในวิทยาเขตไปยังบริเวณหอพักนักศึกษา',
+      en: 'Point 1 on the campus route leading to the student dormitory area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'จุดที่ 1'], en: ['Route', 'Student dormitory', 'Point 1'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 484, y: 226 },
+    hotspots: [
+      { id: 'campus-road-52-to-road-12', type: 'scene', target: 'campusRoad12', yaw: 180, pitch: -3 },
+      { id: 'campus-road-52-to-road-53', type: 'scene', target: 'campusRoad53', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad53',
+    ...tourMedia.campusRoad53,
+    title: { th: 'เส้นทางไปหอพักนักศึกษา จุดที่ 2', en: 'Student Dormitory Route Point 2' },
+    description: {
+      th: 'จุดที่ 2 ของเส้นทางจากถนนภายในวิทยาเขตไปยังบริเวณหอพักนักศึกษา',
+      en: 'Point 2 on the campus route leading to the student dormitory area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'จุดที่ 2'], en: ['Route', 'Student dormitory', 'Point 2'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 462, y: 190 },
+    hotspots: [
+      { id: 'campus-road-53-to-road-52', type: 'scene', target: 'campusRoad52', yaw: 180, pitch: -3 },
+      { id: 'campus-road-53-to-road-54', type: 'scene', target: 'campusRoad54', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad54',
+    ...tourMedia.campusRoad54,
+    title: { th: 'เส้นทางไปหอพักนักศึกษา จุดที่ 3', en: 'Student Dormitory Route Point 3' },
+    description: {
+      th: 'จุดที่ 3 ของเส้นทางจากถนนภายในวิทยาเขตไปยังบริเวณหอพักนักศึกษา',
+      en: 'Point 3 on the campus route leading to the student dormitory area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'จุดที่ 3'], en: ['Route', 'Student dormitory', 'Point 3'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 438, y: 170 },
+    hotspots: [
+      { id: 'campus-road-54-to-road-53', type: 'scene', target: 'campusRoad53', yaw: 180, pitch: -3 },
+      { id: 'campus-road-54-to-road-55', type: 'scene', target: 'campusRoad55', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad55',
+    ...tourMedia.campusRoad55,
+    title: { th: 'เส้นทางไปหอพักนักศึกษา จุดที่ 4', en: 'Student Dormitory Route Point 4' },
+    description: {
+      th: 'จุดที่ 4 ของเส้นทางจากถนนภายในวิทยาเขตไปยังบริเวณหอพักนักศึกษา',
+      en: 'Point 4 on the campus route leading to the student dormitory area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'จุดที่ 4'], en: ['Route', 'Student dormitory', 'Point 4'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 397, y: 151 },
+    hotspots: [
+      { id: 'campus-road-55-to-road-54', type: 'scene', target: 'campusRoad54', yaw: 180, pitch: -3 },
+      { id: 'campus-road-55-to-road-56', type: 'scene', target: 'campusRoad56', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad56',
+    ...tourMedia.campusRoad56,
+    title: { th: 'เส้นทางไปหอพักนักศึกษา จุดที่ 5', en: 'Student Dormitory Route Point 5' },
+    description: {
+      th: 'จุดที่ 5 ของเส้นทางจากถนนภายในวิทยาเขตไปยังบริเวณหอพักนักศึกษา',
+      en: 'Point 5 on the campus route leading to the student dormitory area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'จุดที่ 5'], en: ['Route', 'Student dormitory', 'Point 5'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 357, y: 136 },
+    hotspots: [
+      { id: 'campus-road-56-to-road-55', type: 'scene', target: 'campusRoad55', yaw: 180, pitch: -3 },
+      { id: 'campus-road-56-to-road-57', type: 'scene', target: 'campusRoad57', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad57',
+    ...tourMedia.campusRoad57,
+    title: { th: 'เส้นทางไปหอพักนักศึกษา จุดที่ 6', en: 'Student Dormitory Route Point 6' },
+    description: {
+      th: 'จุดที่ 6 ของเส้นทางจากถนนภายในวิทยาเขตไปยังบริเวณหอพักนักศึกษา',
+      en: 'Point 6 on the campus route leading to the student dormitory area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'จุดที่ 6'], en: ['Route', 'Student dormitory', 'Point 6'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 326, y: 133 },
+    hotspots: [
+      { id: 'campus-road-57-to-road-56', type: 'scene', target: 'campusRoad56', yaw: 180, pitch: -3 },
+      { id: 'campus-road-57-to-road-58', type: 'scene', target: 'campusRoad58', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'campusRoad58',
+    ...tourMedia.campusRoad58,
+    title: { th: 'เส้นทางไปหอพักนักศึกษา จุดที่ 7', en: 'Student Dormitory Route Point 7' },
+    description: {
+      th: 'จุดที่ 7 ของเส้นทางจากถนนภายในวิทยาเขตไปยังบริเวณหอพักนักศึกษา',
+      en: 'Point 7 on the campus route leading to the student dormitory area.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'จุดที่ 7'], en: ['Route', 'Student dormitory', 'Point 7'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 295, y: 129 },
+    hotspots: [
+      { id: 'campus-road-58-to-road-57', type: 'scene', target: 'campusRoad57', yaw: -90, pitch: -3 },
+      { id: 'campus-road-58-to-male-dormitory', type: 'scene', target: 'maleDormitory', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'maleDormitory',
+    ...tourMedia.maleDormitory,
+    title: { th: 'หอพักนักศึกษาชาย', en: 'Male Student Dormitory' },
+    description: {
+      th: 'อาคารหอพักนักศึกษาชายและพื้นที่บริการบริเวณชั้นล่างภายในวิทยาเขตปราจีนบุรี',
+      en: 'The male student dormitory and its ground-floor service area at Prachinburi Campus.'
+    },
+    tags: { th: ['หอพัก', 'นักศึกษาชาย', 'มินิมาร์ท'], en: ['Dormitory', 'Male students', 'Minimart'] },
+    initialView: { yaw: 0, pitch: 3, zoom: 24 },
+    mapPosition: { x: 296, y: 164 },
+    mapLandmark: true,
+    hotspots: [
+      { id: 'male-dormitory-to-road-58', type: 'scene', target: 'campusRoad58', yaw: -90, pitch: -3 },
+      { id: 'male-dormitory-to-junction', type: 'scene', target: 'dormitoryJunction', yaw: 90, pitch: -3 },
+      { id: 'male-dormitory-to-dormitory-road', type: 'scene', target: 'dormitoryRoad', yaw: 180, pitch: -3 },
+      { id: 'male-dormitory-info', type: 'info', yaw: 0, pitch: 8 },
+      { id: 'male-dormitory-motorcycle-parking-info', type: 'info', yaw: 70, pitch: 0 }
+    ]
+  },
+  {
+    id: 'dormitoryJunction',
+    ...tourMedia.dormitoryJunction,
+    title: { th: 'ทางแยกบริเวณหอพักนักศึกษา', en: 'Student Dormitory Junction' },
+    description: {
+      th: 'ทางแยกที่เชื่อมระหว่างหอพักชาย หอพักหญิง และทางเดินไปยังบริเวณโดมแดง',
+      en: 'The junction linking the male and female dormitories with the walkway toward the Red Dome.'
+    },
+    tags: { th: ['ทางแยก', 'หอพักนักศึกษา', 'ทางเดิน'], en: ['Junction', 'Dormitory', 'Walkway'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 296, y: 184 },
+    hotspots: [
+      { id: 'dormitory-junction-to-male-dormitory', type: 'scene', target: 'maleDormitory', yaw: 90, pitch: -3 },
+      { id: 'dormitory-junction-to-female-dormitory-1', type: 'scene', target: 'femaleDormitory1', yaw: 0, pitch: -3 },
+      { id: 'dormitory-junction-to-road-51', type: 'scene', target: 'campusRoad51', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'femaleDormitory1',
+    ...tourMedia.femaleDormitory1,
+    title: { th: 'หอพักนักศึกษาหญิงหลังที่ 1', en: 'Female Student Dormitory 1' },
+    description: {
+      th: 'อาคารหอพักนักศึกษาหญิงหลังที่ 1 และพื้นที่จอดรถบริเวณอาคาร',
+      en: 'Female Student Dormitory 1 and its adjacent parking area.'
+    },
+    tags: { th: ['หอพัก', 'นักศึกษาหญิง', 'อาคาร 1'], en: ['Dormitory', 'Female students', 'Building 1'] },
+    initialView: { yaw: 0, pitch: 3, zoom: 24 },
+    mapPosition: { x: 281, y: 183 },
+    mapLandmark: true,
+    hotspots: [
+      { id: 'female-dormitory-1-to-junction', type: 'scene', target: 'dormitoryJunction', yaw: -90, pitch: -3 },
+      { id: 'female-dormitory-1-to-minimart', type: 'scene', target: 'femaleDormitoryMinimart', yaw: 90, pitch: -3 },
+      { id: 'female-dormitory-1-info', type: 'info', yaw: 0, pitch: 8 },
+      { id: 'female-dormitory-1-mixed-parking-info', type: 'info', yaw: -120, pitch: 0 }
+    ]
+  },
+  {
+    id: 'femaleDormitoryMinimart',
+    ...tourMedia.femaleDormitoryMinimart,
+    title: { th: 'มินิมาร์ทหอพักนักศึกษาหญิง', en: 'Female Dormitory Minimart' },
+    description: {
+      th: 'จุดบริการมินิมาร์ทบริเวณหอพักนักศึกษาหญิงและพื้นที่จอดรถจักรยานยนต์ใกล้เคียง',
+      en: 'The minimart by the female dormitory and the nearby motorcycle parking area.'
+    },
+    tags: { th: ['มินิมาร์ท', 'หอพักหญิง', 'บริการ'], en: ['Minimart', 'Female dormitory', 'Services'] },
+    initialView: { yaw: -45, pitch: 1, zoom: 24 },
+    mapPosition: { x: 252, y: 183 },
+    hotspots: [
+      { id: 'female-dormitory-minimart-to-dormitory-1', type: 'scene', target: 'femaleDormitory1', yaw: 180, pitch: -3 },
+      { id: 'female-dormitory-minimart-to-dormitory-road', type: 'scene', target: 'dormitoryRoad', yaw: 0, pitch: -3 },
+      { id: 'female-dormitory-minimart-info', type: 'info', yaw: -65, pitch: 2 },
+      { id: 'female-dormitory-minimart-motorcycle-parking-info', type: 'info', yaw: 15, pitch: 0 }
+    ]
+  },
+  {
+    id: 'dormitoryRoad',
+    ...tourMedia.dormitoryRoad,
+    title: { th: 'เส้นทางภายในบริเวณหอพักนักศึกษา', en: 'Dormitory Internal Route' },
+    description: {
+      th: 'เส้นทางภายในกลุ่มอาคารหอพักที่เชื่อมวงรอบและทางไปหอพักนักศึกษาหญิงหลังที่ 2',
+      en: 'The internal dormitory route connecting the loop and Female Student Dormitory 2.'
+    },
+    tags: { th: ['เส้นทาง', 'หอพักนักศึกษา', 'ทางเชื่อม'], en: ['Route', 'Dormitory', 'Connection'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 22 },
+    mapPosition: { x: 252, y: 166 },
+    hotspots: [
+      { id: 'dormitory-road-to-minimart', type: 'scene', target: 'femaleDormitoryMinimart', yaw: 100, pitch: -3 },
+      { id: 'dormitory-road-to-male-dormitory', type: 'scene', target: 'maleDormitory', yaw: 10, pitch: -3 },
+      { id: 'dormitory-road-to-female-dormitory-2', type: 'scene', target: 'femaleDormitory2', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'femaleDormitory2',
+    ...tourMedia.femaleDormitory2,
+    title: { th: 'หอพักนักศึกษาหญิงหลังที่ 2', en: 'Female Student Dormitory 2' },
+    description: {
+      th: 'อาคารหอพักนักศึกษาหญิงหลังที่ 2 ซึ่งเข้าถึงได้จากเส้นทางภายในบริเวณหอพัก',
+      en: 'Female Student Dormitory 2, reached from the internal dormitory route.'
+    },
+    tags: { th: ['หอพัก', 'นักศึกษาหญิง', 'อาคาร 2'], en: ['Dormitory', 'Female students', 'Building 2'] },
+    initialView: { yaw: 0, pitch: 3, zoom: 24 },
+    mapPosition: { x: 269, y: 204 },
+    mapLandmark: true,
+    hotspots: [
+      { id: 'female-dormitory-2-to-dormitory-road', type: 'scene', target: 'dormitoryRoad', yaw: 180, pitch: -3 },
+      { id: 'female-dormitory-2-info', type: 'info', yaw: 0, pitch: 8 },
+      { id: 'female-dormitory-2-mixed-parking-info', type: 'info', yaw: -120, pitch: 0 }
+    ]
+  },
+  {
+    id: 'fitmInterior1',
+    ...tourMedia.fitmInterior1,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 1', en: 'Inside FITM Point 1' },
+    description: {
+      th: 'จุดที่ 1 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 1 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 1'], en: ['Indoor', 'FITM', 'Point 1'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-1-to-campus-road-34', type: 'scene', target: 'campusRoad34', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-1-to-interior-2', type: 'scene', target: 'fitmInterior2', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior2',
+    ...tourMedia.fitmInterior2,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 2', en: 'Inside FITM Point 2' },
+    description: {
+      th: 'จุดที่ 2 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 2 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 2'], en: ['Indoor', 'FITM', 'Point 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-2-to-interior-1', type: 'scene', target: 'fitmInterior1', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-2-to-interior-3', type: 'scene', target: 'fitmInterior3', yaw: 0, pitch: -3 },
+      { id: 'fitm-interior-2-to-puang-khrang-room-2', type: 'scene', target: 'puangKhrangRoom2', yaw: -90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior3',
+    ...tourMedia.fitmInterior3,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 3', en: 'Inside FITM Point 3' },
+    description: {
+      th: 'จุดที่ 3 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 3 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 3'], en: ['Indoor', 'FITM', 'Point 3'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-3-to-interior-2', type: 'scene', target: 'fitmInterior2', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-3-to-interior-4', type: 'scene', target: 'fitmInterior4', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior4',
+    ...tourMedia.fitmInterior4,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 4', en: 'Inside FITM Point 4' },
+    description: {
+      th: 'จุดที่ 4 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 4 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 4'], en: ['Indoor', 'FITM', 'Point 4'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-4-to-interior-3', type: 'scene', target: 'fitmInterior3', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-4-to-puang-khram-room-1', type: 'scene', target: 'puangKhramRoom1', yaw: -90, pitch: -3 },
+      { id: 'fitm-interior-4-to-interior-5', type: 'scene', target: 'fitmInterior5', yaw: -50, pitch: -3 },
+      { id: 'fitm-interior-4-to-interior-6', type: 'scene', target: 'fitmInterior6', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior5',
+    ...tourMedia.fitmInterior5,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 5', en: 'Inside FITM Point 5' },
+    description: {
+      th: 'จุดที่ 5 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 5 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 5'], en: ['Indoor', 'FITM', 'Point 5'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-5-to-interior-4', type: 'scene', target: 'fitmInterior4', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-5-to-campus-road-25', type: 'scene', target: 'campusRoad25', yaw: 70, pitch: -3 },
+      { id: 'fitm-minimart-info', type: 'info', yaw: 0, pitch: 1 }
+    ]
+  },
+  {
+    id: 'fitmInterior6',
+    ...tourMedia.fitmInterior6,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 6', en: 'Inside FITM Point 6' },
+    description: {
+      th: 'จุดที่ 6 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 6 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 6'], en: ['Indoor', 'FITM', 'Point 6'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-6-to-interior-4', type: 'scene', target: 'fitmInterior4', yaw: 40, pitch: -3 },
+      { id: 'fitm-interior-6-to-interior-7', type: 'scene', target: 'fitmInterior7', yaw: -110, pitch: -3 },
+      { id: 'fitm-copy-room-info', type: 'info', yaw: 0, pitch: -3 },
+      { id: 'fitm-student-club-info', type: 'info', yaw: -30, pitch: -2 }
+    ]
+  },
+  {
+    id: 'fitmInterior7',
+    ...tourMedia.fitmInterior7,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 7', en: 'Inside FITM Point 7' },
+    description: {
+      th: 'จุดที่ 7 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 7 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 7'], en: ['Indoor', 'FITM', 'Point 7'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-7-to-interior-6', type: 'scene', target: 'fitmInterior6', yaw: -90, pitch: -3 },
+      { id: 'fitm-interior-7-to-interior-12', type: 'scene', target: 'fitmInterior12', yaw: 10, pitch: -3 },
+      { id: 'fitm-interior-7-to-interior-8', type: 'scene', target: 'fitmInterior8', yaw: 90, pitch: -3 },
+      { id: 'fitm-coworking-space-info', type: 'info', yaw: -5, pitch: -2 }
+    ]
+  },
+  {
+    id: 'fitmInterior8',
+    ...tourMedia.fitmInterior8,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 8', en: 'Inside FITM Point 8' },
+    description: {
+      th: 'จุดที่ 8 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 8 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 8'], en: ['Indoor', 'FITM', 'Point 8'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-8-to-interior-7', type: 'scene', target: 'fitmInterior7', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-8-to-interior-9', type: 'scene', target: 'fitmInterior9', yaw: 0, pitch: -3 },
+      { id: 'fitm-stairs-1-to-second-floor-info', type: 'info', yaw: -95, pitch: 8 }
+    ]
+  },
+  {
+    id: 'fitmInterior9',
+    ...tourMedia.fitmInterior9,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 9', en: 'Inside FITM Point 9' },
+    description: {
+      th: 'จุดที่ 9 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 9 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 9'], en: ['Indoor', 'FITM', 'Point 9'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-9-to-interior-8', type: 'scene', target: 'fitmInterior8', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-9-to-interior-10', type: 'scene', target: 'fitmInterior10', yaw: 30, pitch: -3 },
+      { id: 'fitm-interior-9-to-interior-11', type: 'scene', target: 'fitmInterior11', yaw: -60, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior10',
+    ...tourMedia.fitmInterior10,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 10', en: 'Inside FITM Point 10' },
+    description: {
+      th: 'จุดที่ 10 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 10 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 10'], en: ['Indoor', 'FITM', 'Point 10'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-10-to-interior-9', type: 'scene', target: 'fitmInterior9', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-10-to-campus-road-36', type: 'scene', target: 'campusRoad36', yaw: 90, pitch: -3 },
+      { id: 'fitm-interior-10-to-cafeteria', type: 'scene', target: 'universityCafeteria', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior11',
+    ...tourMedia.fitmInterior11,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 11', en: 'Inside FITM Point 11' },
+    description: {
+      th: 'จุดที่ 11 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 11 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 11'], en: ['Indoor', 'FITM', 'Point 11'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-11-to-interior-12', type: 'scene', target: 'fitmInterior12', yaw: 100, pitch: 2 },
+      { id: 'fitm-interior-11-to-interior-9', type: 'scene', target: 'fitmInterior9', yaw: 0, pitch: -3 },
+      { id: 'fitm-interior-9-to-interior-13', type: 'scene', target: 'fitmInterior13', yaw: -160, pitch: 2 }
+    ]
+  },
+  {
+    id: 'fitmInterior12',
+    ...tourMedia.fitmInterior12,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 12', en: 'Inside FITM Point 12' },
+    description: {
+      th: 'จุดที่ 12 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 12 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 12'], en: ['Indoor', 'FITM', 'Point 12'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-12-to-interior-7', type: 'scene', target: 'fitmInterior7', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-12-to-interior-11', type: 'scene', target: 'fitmInterior11', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior13',
+    ...tourMedia.fitmInterior13,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 13', en: 'Inside FITM Point 13' },
+    description: {
+      th: 'จุดที่ 13 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 13 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 13'], en: ['Indoor', 'FITM', 'Point 13'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-13-to-interior-11', type: 'scene', target: 'fitmInterior11', yaw: -40, pitch: -3 },
+      { id: 'fitm-interior-13-to-interior-14', type: 'scene', target: 'fitmInterior14', yaw: 180, pitch: -3 },
+      { id: 'fitm-nurse-room-info', type: 'info', yaw: 0, pitch: 1 },
+      { id: 'fitm-stairs-2-to-second-floor-info', type: 'info', yaw: -95, pitch: 8 }
+    ]
+  },
+  {
+    id: 'fitmInterior14',
+    ...tourMedia.fitmInterior14,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 14', en: 'Inside FITM Point 14' },
+    description: {
+      th: 'จุดที่ 14 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 14 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 14'], en: ['Indoor', 'FITM', 'Point 14'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-14-to-interior-13', type: 'scene', target: 'fitmInterior13', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-14-to-interior-15', type: 'scene', target: 'fitmInterior15', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior15',
+    ...tourMedia.fitmInterior15,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 15', en: 'Inside FITM Point 15' },
+    description: {
+      th: 'จุดที่ 15 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 15 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 15'], en: ['Indoor', 'FITM', 'Point 15'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-15-to-interior-14', type: 'scene', target: 'fitmInterior14', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-15-to-interior-16', type: 'scene', target: 'fitmInterior16', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior16',
+    ...tourMedia.fitmInterior16,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 16', en: 'Inside FITM Point 16' },
+    description: {
+      th: 'จุดที่ 16 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 16 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 16'], en: ['Indoor', 'FITM', 'Point 16'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-16-to-interior-15', type: 'scene', target: 'fitmInterior15', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-16-to-interior-17', type: 'scene', target: 'fitmInterior17', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmInterior17',
+    ...tourMedia.fitmInterior17,
+    title: { th: 'ภายในคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 17', en: 'Inside FITM Point 17' },
+    description: {
+      th: 'จุดที่ 17 ของเส้นทางภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'Point 17 on the indoor route through the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ภายในอาคาร', 'คณะเทคโนโลยีและการจัดการอุตสาหกรรม', 'จุดที่ 17'], en: ['Indoor', 'FITM', 'Point 17'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-interior-17-to-interior-16', type: 'scene', target: 'fitmInterior16', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'puangKhramRoom1',
+    ...tourMedia.puangKhramRoom1,
+    title: { th: 'ห้องพวงคราม 1', en: 'Phuang Khram Room 1' },
+    description: {
+      th: 'จุดชมภายในห้องพวงคราม 1 ของคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'An interior viewpoint of Phuang Khram Room 1 in the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ห้องพวงคราม 1', 'ภายในอาคาร', 'FITM'], en: ['Phuang Khram Room 1', 'Indoor', 'FITM'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'puang-khram-room-1-to-interior-4', type: 'scene', target: 'fitmInterior4', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'puangKhrangRoom2',
+    ...tourMedia.puangKhrangRoom2,
+    title: { th: 'ห้องพวงคราง 2', en: 'Phuang Khrang Room 2' },
+    description: {
+      th: 'จุดชมภายในห้องพวงคราง 2 ของคณะเทคโนโลยีและการจัดการอุตสาหกรรม',
+      en: 'An interior viewpoint of Phuang Khrang Room 2 in the Faculty of Industrial Technology and Management.'
+    },
+    tags: { th: ['ห้องพวงคราง 2', 'ภายในอาคาร', 'FITM'], en: ['Phuang Khrang Room 2', 'Indoor', 'FITM'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'puang-khrang-room-2-to-interior-2', type: 'scene', target: 'fitmInterior2', yaw: 180, pitch: -3 }
     ]
   }
 ] as const satisfies readonly TourScene[];

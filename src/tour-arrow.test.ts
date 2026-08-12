@@ -36,8 +36,8 @@ describe('ground navigation arrows', () => {
       (total, scene) => total + getNavigationHotspots(scene).length,
       0
     );
-    expect(tourScenes).toHaveLength(60);
-    expect(linkCount).toBe(131);
+    expect(tourScenes).toHaveLength(93);
+    expect(linkCount).toBe(205);
     expect(getNavigationHotspots(getScene('campusRoad4'))).toHaveLength(4);
     expect(getNavigationHotspots(getScene('campusRoad31'))).toHaveLength(3);
     expect(getNavigationHotspots(getScene('campusRoad36'))).toHaveLength(3);

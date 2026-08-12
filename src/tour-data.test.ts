@@ -71,7 +71,7 @@ describe('tour configuration', () => {
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(60);
+    expect(tourScenes).toHaveLength(93);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
@@ -91,7 +91,10 @@ describe('tour configuration', () => {
       'campusRoad36',
       'universityCafeteria',
       'campusRoad43',
-      'multipurposeGym'
+      'multipurposeGym',
+      'maleDormitory',
+      'femaleDormitory1',
+      'femaleDormitory2'
     ]);
     expect(getMapLandmarkScenes().every((scene) => scene.mapLandmark)).toBe(true);
   });
@@ -291,7 +294,6 @@ describe('tour configuration', () => {
       'campusRoad34:campusRoad35',
       'campusRoad35:campusRoad36',
       'campusRoad36:campusRoad37',
-      'campusRoad36:universityCafeteria',
       'campusRoad38:campusRoad39',
       'campusRoad38:campusRoad50',
       'campusRoad38:universityCafeteria',
@@ -306,6 +308,44 @@ describe('tour configuration', () => {
       'campusRoad47:campusRoad48',
       'campusRoad48:campusRoad49',
       'campusRoad49:campusRoad50',
+      'campusRoad12:campusRoad52',
+      'campusRoad25:fitmInterior5',
+      'campusRoad34:fitmInterior1',
+      'campusRoad36:fitmInterior10',
+      'campusRoad46:campusRoad51',
+      'campusRoad51:dormitoryJunction',
+      'campusRoad52:campusRoad53',
+      'campusRoad53:campusRoad54',
+      'campusRoad54:campusRoad55',
+      'campusRoad55:campusRoad56',
+      'campusRoad56:campusRoad57',
+      'campusRoad57:campusRoad58',
+      'campusRoad58:maleDormitory',
+      'dormitoryJunction:femaleDormitory1',
+      'dormitoryJunction:maleDormitory',
+      'dormitoryRoad:femaleDormitory2',
+      'dormitoryRoad:femaleDormitoryMinimart',
+      'dormitoryRoad:maleDormitory',
+      'femaleDormitory1:femaleDormitoryMinimart',
+      'fitmInterior1:fitmInterior2',
+      'fitmInterior2:fitmInterior3',
+      'fitmInterior2:puangKhrangRoom2',
+      'fitmInterior3:fitmInterior4',
+      'fitmInterior4:fitmInterior5',
+      'fitmInterior4:fitmInterior6',
+      'fitmInterior4:puangKhramRoom1',
+      'fitmInterior6:fitmInterior7',
+      'fitmInterior7:fitmInterior8',
+      'fitmInterior12:fitmInterior7',
+      'fitmInterior8:fitmInterior9',
+      'fitmInterior10:fitmInterior9',
+      'fitmInterior10:universityCafeteria',
+      'fitmInterior11:fitmInterior12',
+      'fitmInterior11:fitmInterior13',
+      'fitmInterior13:fitmInterior14',
+      'fitmInterior14:fitmInterior15',
+      'fitmInterior15:fitmInterior16',
+      'fitmInterior16:fitmInterior17',
       'entrance:entranceRoad',
       'entranceRoad:memorialPlaza',
       'memorial:memorialPlaza'
@@ -388,7 +428,7 @@ describe('tour configuration', () => {
     checkRoute(['campusRoad17', ...temp6Ids.slice(0, 4)]);
     checkRoute(['campusRoad31', ...temp6Ids.slice(4)]);
     checkRoute(['campusRoad32', 'campusRoad37']);
-    checkRoute(['campusRoad36', 'universityCafeteria', 'campusRoad38']);
+    checkRoute(['campusRoad36', 'fitmInterior10', 'universityCafeteria', 'campusRoad38']);
     checkRoute(['campusRoad31', ...temp7Ids]);
 
     const junction = getNavigationHotspots(getScene('campusRoad31'));
@@ -449,9 +489,10 @@ describe('tour configuration', () => {
 
     expect(getNavigationHotspots(getScene('campusRoad28')).map((item) => item.target))
       .not.toContain('multipurposeGym');
-    expect(getNavigationHotspots(getScene('campusRoad46'))).toEqual([
-      expect.objectContaining({ target: 'campusRoad45', yaw: 0, pitch: -3 })
-    ]);
+    expect(getNavigationHotspots(getScene('campusRoad46'))).toEqual(expect.arrayContaining([
+      expect.objectContaining({ target: 'campusRoad45', yaw: 0, pitch: -3 }),
+      expect.objectContaining({ target: 'campusRoad51', yaw: 180, pitch: -3 })
+    ]));
     expect(getNavigationHotspots(getScene('campusRoad45'))).toEqual(expect.arrayContaining([
       expect.objectContaining({ target: 'campusRoad44', yaw: -90, pitch: -3 }),
       expect.objectContaining({ target: 'campusRoad47', yaw: 0, pitch: -3 }),
@@ -462,6 +503,143 @@ describe('tour configuration', () => {
       expect.objectContaining({ id: 'multipurpose-gym-info', yaw: 0, pitch: 12 }),
       expect.objectContaining({ id: 'outdoor-football-field-info', yaw: 145, pitch: 0 })
     ]);
+
+    for (const file of files) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
+  it('adds the reciprocal dormitory loop, Red Dome connection and three landmarks', () => {
+    const dormitoryIds = [
+      'campusRoad51',
+      'campusRoad52',
+      'campusRoad53',
+      'campusRoad54',
+      'campusRoad55',
+      'campusRoad56',
+      'campusRoad57',
+      'campusRoad58',
+      'maleDormitory',
+      'dormitoryJunction',
+      'femaleDormitory1',
+      'femaleDormitoryMinimart',
+      'dormitoryRoad',
+      'femaleDormitory2'
+    ] as const;
+    const files = [
+      'temp9-3-2.jpg',
+      ...Array.from({ length: 13 }, (_, index) => `temp8-${index + 1}.jpg`)
+    ];
+
+    expect(dormitoryIds.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
+      .toEqual(files.map((file) => `/mainimages/${file}`));
+
+    const pairs = [
+      ['campusRoad12', 'campusRoad52'],
+      ['campusRoad52', 'campusRoad53'],
+      ['campusRoad53', 'campusRoad54'],
+      ['campusRoad54', 'campusRoad55'],
+      ['campusRoad55', 'campusRoad56'],
+      ['campusRoad56', 'campusRoad57'],
+      ['campusRoad57', 'campusRoad58'],
+      ['campusRoad58', 'maleDormitory'],
+      ['maleDormitory', 'dormitoryJunction'],
+      ['maleDormitory', 'dormitoryRoad'],
+      ['dormitoryJunction', 'femaleDormitory1'],
+      ['femaleDormitory1', 'femaleDormitoryMinimart'],
+      ['femaleDormitoryMinimart', 'dormitoryRoad'],
+      ['dormitoryRoad', 'femaleDormitory2'],
+      ['campusRoad46', 'campusRoad51'],
+      ['campusRoad51', 'dormitoryJunction']
+    ] as const;
+    for (const [from, to] of pairs) {
+      expect(getNavigationHotspots(getScene(from)).map((item) => item.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((item) => item.target)).toContain(from);
+    }
+
+    expect(getNavigationHotspots(getScene('femaleDormitory2')).map((item) => item.target))
+      .toEqual(['dormitoryRoad']);
+    expect(getMapLandmarkScenes().map((scene) => scene.id)).toEqual(expect.arrayContaining([
+      'maleDormitory',
+      'femaleDormitory1',
+      'femaleDormitory2'
+    ]));
+
+    for (const file of files) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
+  it('adds the complete reciprocal FITM indoor graph at the faculty map position', () => {
+    const fitmIds = Array.from(
+      { length: 17 },
+      (_, index) => `fitmInterior${index + 1}` as Parameters<typeof getScene>[0]
+    );
+    const roomIds = ['puangKhramRoom1', 'puangKhrangRoom2'] as const;
+    const files = [
+      ...Array.from({ length: 17 }, (_, index) => `temp-faculty-${index + 1}.jpg`),
+      'temp-puang-khram1.jpg',
+      'temp-puang-khram2.jpg'
+    ];
+
+    expect([...fitmIds, ...roomIds].map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
+      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect([...fitmIds, ...roomIds].every((id) => (
+      getScene(id).mapPosition.x === 311 && getScene(id).mapPosition.y === 358
+    ))).toBe(true);
+
+    const pairs = [
+      ['campusRoad34', 'fitmInterior1'],
+      ['fitmInterior1', 'fitmInterior2'],
+      ['fitmInterior2', 'fitmInterior3'],
+      ['fitmInterior2', 'puangKhrangRoom2'],
+      ['fitmInterior3', 'fitmInterior4'],
+      ['fitmInterior4', 'puangKhramRoom1'],
+      ['fitmInterior4', 'fitmInterior5'],
+      ['fitmInterior5', 'campusRoad25'],
+      ['fitmInterior4', 'fitmInterior6'],
+      ['fitmInterior6', 'fitmInterior7'],
+      ['fitmInterior7', 'fitmInterior12'],
+      ['fitmInterior12', 'fitmInterior11'],
+      ['fitmInterior11', 'fitmInterior13'],
+      ['fitmInterior13', 'fitmInterior14'],
+      ['fitmInterior14', 'fitmInterior15'],
+      ['fitmInterior15', 'fitmInterior16'],
+      ['fitmInterior16', 'fitmInterior17'],
+      ['fitmInterior7', 'fitmInterior8'],
+      ['fitmInterior8', 'fitmInterior9'],
+      ['fitmInterior9', 'fitmInterior10'],
+      ['fitmInterior10', 'campusRoad36'],
+      ['fitmInterior10', 'universityCafeteria']
+    ] as const;
+    for (const [from, to] of pairs) {
+      expect(getNavigationHotspots(getScene(from)).map((item) => item.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((item) => item.target)).toContain(from);
+    }
+    expect(getNavigationHotspots(getScene('campusRoad36')).map((item) => item.target))
+      .not.toContain('universityCafeteria');
+
+    const newInfoIds = new Set([
+      'male-dormitory-info',
+      'male-dormitory-motorcycle-parking-info',
+      'female-dormitory-1-info',
+      'female-dormitory-1-mixed-parking-info',
+      'female-dormitory-minimart-info',
+      'female-dormitory-minimart-motorcycle-parking-info',
+      'female-dormitory-2-info',
+      'female-dormitory-2-mixed-parking-info',
+      'fitm-copy-room-info',
+      'fitm-student-club-info',
+      'fitm-coworking-space-info',
+      'fitm-nurse-room-info',
+      'fitm-stairs-1-to-second-floor-info',
+      'fitm-stairs-2-to-second-floor-info'
+    ]);
+    const infoIds = tourScenes.flatMap((scene) => getInfoHotspots(scene).map((info) => info.id));
+    expect(infoIds.filter((id) => newInfoIds.has(id))).toHaveLength(14);
+    expect(infoIds).not.toContain('orange-blossom-room-info');
 
     for (const file of files) {
       expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
@@ -508,8 +686,8 @@ describe('tour configuration', () => {
 
   it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    expect(infoHotspots).toHaveLength(23);
-    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(23);
+    expect(infoHotspots).toHaveLength(36);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(36);
 
     for (const hotspot of infoHotspots) {
       expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);
@@ -537,11 +715,11 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 60 versioned source panoramas from the tour assets API', async () => {
+  it('returns only the 93 versioned source panoramas from the tour assets API', async () => {
     const response = getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(60);
+    expect(new Set(body.assets).size).toBe(93);
     expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });
