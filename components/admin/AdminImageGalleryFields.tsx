@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ContentImage } from '../../src/content';
+import { createBrowserId } from '../../src/browser-id';
 
 interface EditableImage {
   readonly key: string;
@@ -19,7 +20,7 @@ export interface AdminMediaOption {
 
 function editableImage(image?: ContentImage): EditableImage {
   return {
-    key: crypto.randomUUID(),
+    key: createBrowserId(),
     src: image?.src ?? '',
     altTh: image?.alt.th ?? '',
     altEn: image?.alt.en ?? '',

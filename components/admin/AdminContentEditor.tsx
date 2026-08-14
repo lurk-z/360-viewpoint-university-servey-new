@@ -1,10 +1,10 @@
 'use client';
 
-import { useActionState, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useActionState, useMemo, useRef, useState, type FormEvent, type ReactNode, type SyntheticEvent } from 'react';
 import type { AdminRole, ContentImage, ContentKind } from '../../src/content';
 import type { AdminContentRow } from '../../src/server/admin-repository';
 import AdminImageGalleryFields, { type AdminMediaOption } from './AdminImageGalleryFields';
-import { useAdminActionRefresh } from './useAdminActionRefresh';
+import { ADMIN_DIRTY_STATE_CHANGED_EVENT, useAdminActionRefresh } from './useAdminActionRefresh';
 import type { ContentUpdateScope } from '../../src/content-updates';
 import {
   archiveContentAction,
@@ -50,6 +50,11 @@ function localized(data: Record<string, unknown>, key: string, locale: 'th' | 'e
   return field(object(data[key]), locale);
 }
 
+function localizedList(data: Record<string, unknown>, key: string, locale: 'th' | 'en'): string {
+  const value = object(data[key])[locale];
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string').join('\n') : '';
+}
+
 function source(data: Record<string, unknown>, kind: ContentKind): Record<string, unknown> {
   return object(data[kind === 'hotspot_contents' ? 'reference' : 'source']);
 }
@@ -72,6 +77,43 @@ function contentImages(data: Record<string, unknown>): ContentImage[] {
   });
 }
 
+function LazyDetails({ className, summary, children, confirmDirtyClose = false }: {
+  readonly className?: string;
+  readonly summary: ReactNode;
+  readonly children: ReactNode;
+  readonly confirmDirtyClose?: boolean;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  const handleToggle = (event: SyntheticEvent<HTMLDetailsElement>): void => {
+    const details = event.currentTarget;
+    if (details.open) {
+      setMounted(true);
+      return;
+    }
+    if (!mounted) return;
+    const dirtyForm = details.querySelector<HTMLFormElement>('.admin-form[data-admin-dirty="true"]');
+    if (confirmDirtyClose && dirtyForm) {
+      const discard = window.confirm('ฟอร์มนี้มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดและละทิ้งการแก้ไขหรือไม่?');
+      if (!discard) {
+        details.open = true;
+        return;
+      }
+      dirtyForm.removeAttribute('data-admin-dirty');
+      window.dispatchEvent(new Event(ADMIN_DIRTY_STATE_CHANGED_EVENT));
+    }
+    setMounted(false);
+  };
+
+  return (
+    <details ref={detailsRef} className={className} onToggle={handleToggle}>
+      <summary>{summary}</summary>
+      {mounted ? children : null}
+    </details>
+  );
+}
+
 function DraftPreview({ kind, data }: { readonly kind: ContentKind; readonly data: Record<string, unknown> }) {
   const nameKey = kind === 'activities' || kind === 'hotspot_contents' ? 'title' : 'name';
   const images = contentImages(data);
@@ -80,15 +122,14 @@ function DraftPreview({ kind, data }: { readonly kind: ContentKind; readonly dat
     : field(data, 'imageUrl');
   const sourceData = source(data, kind);
   return (
-    <details className="admin-preview">
-      <summary>ดูตัวอย่างฉบับร่าง</summary>
+    <LazyDetails className="admin-preview" summary="ดูตัวอย่างฉบับร่าง">
       <article className="admin-preview__card">
         {imageUrl ? <img src={imageUrl} alt="" /> : null}
         <div lang="th"><small>ภาษาไทย</small><h3>{localized(data, nameKey, 'th')}</h3><p>{localized(data, 'description', 'th')}</p></div>
         <div lang="en"><small>ENGLISH</small><h3>{localized(data, nameKey, 'en')}</h3><p>{localized(data, 'description', 'en')}</p></div>
         <footer>แหล่งอ้างอิง: {localized(sourceData, 'label', 'th') || '-'}</footer>
       </article>
-    </details>
+    </LazyDetails>
   );
 }
 
@@ -173,6 +214,10 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
     {kind === 'programs' ? <>
       <TextArea prefix={prefix} name="admissionTh" label="ข้อมูลการรับสมัคร (ไทย)" value={localized(data, 'admission', 'th')} required />
       <TextArea prefix={prefix} name="admissionEn" label="Admission information (English)" value={localized(data, 'admission', 'en')} required />
+      <TextArea prefix={prefix} name="interestTagsTh" label="แท็กความสนใจ (ไทย ไม่บังคับ · หนึ่งรายการต่อบรรทัด)" value={localizedList(data, 'interestTags', 'th')} rows={4} />
+      <TextArea prefix={prefix} name="interestTagsEn" label="Interest tags (English, optional · one per line)" value={localizedList(data, 'interestTags', 'en')} rows={4} />
+      <TextArea prefix={prefix} name="careerTagsTh" label="แท็กแนวทางอาชีพ (ไทย ไม่บังคับ · หนึ่งรายการต่อบรรทัด)" value={localizedList(data, 'careerTags', 'th')} rows={4} />
+      <TextArea prefix={prefix} name="careerTagsEn" label="Career tags (English, optional · one per line)" value={localizedList(data, 'careerTags', 'en')} rows={4} />
     </> : null}
     {kind === 'activities' ? <>
       <TextField prefix={prefix} name="startDate" label="วันเริ่มต้น" type="date" value={field(data, 'startDate')} />
@@ -316,12 +361,11 @@ export default function AdminContentEditor({
       <header className="admin-page__header"><div><p>CONTENT MANAGEMENT</p><h1>{title}</h1><span>{description}</span></div></header>
 
       {kind !== 'hotspot_contents' ? (
-        <details className="admin-editor admin-editor--new">
-          <summary>+ เพิ่มรายการใหม่</summary>
+        <LazyDetails className="admin-editor admin-editor--new" summary="+ เพิ่มรายการใหม่" confirmDirtyClose>
           <SaveForm kind={kind} label="บันทึกเป็นฉบับร่าง">
             <ContentFields kind={kind} faculties={faculties} media={media} />
           </SaveForm>
-        </details>
+        </LazyDetails>
       ) : null}
 
       {facultyFilter ? (
@@ -368,18 +412,16 @@ export default function AdminContentEditor({
                   {row.archivedAt ? 'เก็บในคลัง' : placeStatus?.orphaned ? 'ไม่พบในทัวร์' : !placeStatus?.draftReady && kind === 'hotspot_contents' ? 'รอกรอกข้อมูล' : published ? 'เผยแพร่แล้ว' : 'ฉบับร่าง'}
                 </span>
               </header>
-              <details>
-                <summary>แก้ไขฉบับร่าง</summary>
+              <LazyDetails summary="แก้ไขฉบับร่าง" confirmDirtyClose>
                 <SaveForm kind={kind} id={row.id} label="บันทึกการแก้ไขเป็นฉบับร่าง">
                   <ContentFields kind={kind} row={row} faculties={faculties} media={media} />
                 </SaveForm>
-              </details>
+              </LazyDetails>
               <DraftPreview kind={kind} data={row.draftData} />
               {row.publishedData ? (
-                <details className="admin-preview">
-                  <summary>ดูข้อมูลที่เผยแพร่อยู่</summary>
+                <LazyDetails className="admin-preview" summary="ดูข้อมูลที่เผยแพร่อยู่">
                   <pre>{JSON.stringify(row.publishedData, null, 2)}</pre>
-                </details>
+                </LazyDetails>
               ) : null}
               {kind === 'faculties' && !published && programStats.published > 0 ? (
                 <p className="admin-dependency-note">
@@ -387,7 +429,8 @@ export default function AdminContentEditor({
                 </p>
               ) : null}
               {role === 'admin' ? (
-                <div className="admin-record-actions">
+                <LazyDetails className="admin-workflow-actions" summary="จัดการการเผยแพร่และรายการ">
+                  <div className="admin-record-actions">
                   <ActionForm
                     action={publishContentAction}
                     kind={kind}
@@ -447,7 +490,8 @@ export default function AdminContentEditor({
                       : undefined}
                     confirmMessage="การลบถาวรไม่สามารถย้อนกลับได้ ต้องการดำเนินการต่อหรือไม่?"
                   />
-                </div>
+                  </div>
+                </LazyDetails>
               ) : <p className="admin-editor-note">Editor บันทึกฉบับร่างได้ การเผยแพร่ต้องให้ Admin ตรวจสอบ</p>}
             </article>
           );

@@ -3,8 +3,10 @@ import { chatRequestSchema } from './chat';
 import { createFallbackContentSnapshot } from './content';
 import {
   buildKnowledgeDocuments,
+  classifyGeminiError,
   createFallbackChatResponse,
   findRelatedProgramIds,
+  rankProgramsForProfile,
   validateGroundedAnswer
 } from './server/chat-service';
 
@@ -24,10 +26,13 @@ describe('grounded tour chat', () => {
     const documents = buildKnowledgeDocuments(createFallbackContentSnapshot());
     const known = documents[0]!;
     const grounded = validateGroundedAnswer({
+      intent: 'answer',
       answered: true,
       answer: 'คำตอบจากข้อมูล',
       citationIds: [known.citation.id, 'invented-source'],
-      relatedSceneIds: [known.sceneId ?? 'entrance', 'invented-scene']
+      relatedSceneIds: [known.sceneId ?? 'entrance', 'invented-scene'],
+      destinationSceneId: '',
+      programRecommendations: []
     }, documents);
     expect(grounded?.citations.map((citation) => citation.id)).toEqual([known.citation.id]);
     expect(grounded?.relatedSceneIds).not.toContain('invented-scene');
@@ -45,6 +50,84 @@ describe('grounded tour chat', () => {
     expect(fallback.answered).toBe(false);
     expect(fallback.citations.length).toBeGreaterThan(0);
     expect(fallback.relatedProgramIds).toEqual([]);
+  });
+
+  it('validates recommendation profiles and classifies provider failures', () => {
+    const base = { message: 'Recommend a program', locale: 'en', sceneId: 'entrance', history: [] };
+    expect(chatRequestSchema.safeParse({
+      ...base,
+      recommendationProfile: {
+        interests: 'software and data',
+        currentQualification: 'm6-pvoc',
+        desiredLevel: 'bachelor'
+      }
+    }).success).toBe(true);
+    expect(chatRequestSchema.safeParse({
+      ...base,
+      recommendationProfile: {
+        interests: '',
+        currentQualification: 'unknown',
+        desiredLevel: 'bachelor'
+      }
+    }).success).toBe(false);
+    expect(classifyGeminiError({ status: 401, message: 'rejected' })).toBe('invalid-key');
+    expect(classifyGeminiError({ status: 429, message: 'resource exhausted' })).toBe('quota-exceeded');
+    expect(classifyGeminiError(new DOMException('aborted', 'AbortError'))).toBe('timeout');
+  });
+
+  it('weights Admin interest tags above unrelated programs and returns only real IDs', () => {
+    const fallback = createFallbackContentSnapshot();
+    const baseProgram = {
+      facultyId: 'faculty-fitm',
+      level: { th: 'ปริญญาตรี 4 ปี', en: "Four-year bachelor's degree" },
+      summary: { th: 'หลักสูตรทดสอบ', en: 'Test program' },
+      description: { th: 'รายละเอียดหลักสูตร', en: 'Program details' },
+      admission: { th: 'รับ ม.6 และ ปวช.', en: 'Accepts upper secondary and vocational certificate graduates' },
+      source: { label: { th: 'แหล่งข้อมูล', en: 'Source' } }
+    } as const;
+    const content = {
+      ...fallback,
+      programs: [
+        {
+          ...baseProgram,
+          id: 'program-software',
+          slug: 'software',
+          name: { th: 'เทคโนโลยีสารสนเทศ', en: 'Information Technology' },
+          interestTags: { th: ['เขียนโปรแกรม', 'ข้อมูล'], en: ['software', 'data'] },
+          careerTags: { th: ['นักพัฒนาซอฟต์แวร์'], en: ['software developer'] }
+        },
+        {
+          ...baseProgram,
+          id: 'program-hotel',
+          slug: 'hotel',
+          name: { th: 'การโรงแรม', en: 'Hotel Management' },
+          interestTags: { th: ['บริการ'], en: ['hospitality'] },
+          careerTags: { th: ['โรงแรม'], en: ['hotel'] }
+        }
+      ]
+    };
+    const recommendations = rankProgramsForProfile({
+      interests: 'software and data',
+      currentQualification: 'm6-pvoc',
+      desiredLevel: 'bachelor'
+    }, content, 'en');
+    expect(recommendations[0]?.programId).toBe('program-software');
+    expect(recommendations.every((item) => content.programs.some((program) => program.id === item.programId))).toBe(true);
+    const grounded = validateGroundedAnswer({
+      intent: 'program-recommendation',
+      answered: true,
+      answer: 'Verified recommendation',
+      citationIds: [],
+      relatedSceneIds: [],
+      destinationSceneId: '',
+      programRecommendations: [
+        { programId: 'program-software', reason: 'Matches software interests' },
+        { programId: 'invented-program', reason: 'Invented' }
+      ]
+    }, buildKnowledgeDocuments(content));
+    expect(grounded?.programRecommendations).toEqual([
+      { programId: 'program-software', reason: 'Matches software interests' }
+    ]);
   });
 
   it('uses a linked faculty as the canonical AI source instead of duplicating its Info hotspot', () => {

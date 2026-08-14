@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import type { PublicContentSnapshot } from '../src/content';
 import { getMapLandmarkScenes } from '../src/tour-data';
 
@@ -55,6 +55,15 @@ const academicsSnapshot = {
   hotspots: []
 } satisfies PublicContentSnapshot;
 
+async function openHeaderAction(page: Page, name: RegExp): Promise<void> {
+  const action = page.locator('.header-nav').getByRole('button', { name });
+  if (!await action.isVisible()) {
+    await page.getByRole('button', { name: /เปิดเมนูหลัก|Open main menu/ }).click();
+    await expect(action).toBeVisible();
+  }
+  await action.click();
+}
+
 test('public tour and AI chat remain available at the configured viewport', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('img[src="/mainimages/Logo_FitM/FITM_LOGO.png"]').first()).toBeVisible();
@@ -69,6 +78,196 @@ test('public tour and AI chat remain available at the configured viewport', asyn
   await expect(page.locator('.control-rail')).toBeHidden();
 });
 
+test('compact tour UI keeps the panorama clear and opens one panel at a time', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const startButton = page.locator('.intro .primary-button');
+  await expect(startButton).toBeEnabled({ timeout: 60_000 });
+  await startButton.click();
+  const viewport = page.viewportSize();
+  const compactUi = (viewport?.width ?? 0) <= 1024;
+
+  if (!compactUi) {
+    await expect(page.locator('.compact-tour-dock')).toBeHidden();
+    await expect(page.locator('.control-rail')).toBeVisible();
+    return;
+  }
+
+  const headerBox = await page.locator('.app-header').boundingBox();
+  const summaryBox = await page.locator('.compact-scene-summary').boundingBox();
+  const dockBox = await page.locator('.compact-tour-dock').boundingBox();
+  const previewBox = await page.locator('.persistent-tour-map').boundingBox();
+  expect(headerBox?.height ?? 0).toBeLessThanOrEqual(56);
+  expect(summaryBox?.height ?? 0).toBeLessThanOrEqual(42);
+  expect(dockBox?.height ?? 0).toBeLessThanOrEqual(60);
+  expect(previewBox?.width ?? 0).toBeLessThanOrEqual((viewport?.width ?? 0) <= 600 ? 160 : 200);
+  await expect(page.locator('.scene-panel')).toBeHidden();
+  await expect(page.locator('.control-rail')).toBeHidden();
+
+  const dockButtons = page.locator('.compact-tour-dock button');
+  await dockButtons.nth(0).click();
+  await expect(page.locator('.scene-panel')).toBeVisible();
+  await expect(page.locator('.persistent-tour-map')).toBeHidden();
+
+  await dockButtons.nth(2).click();
+  await expect(page.locator('.scene-panel')).toBeHidden();
+  await expect(page.locator('.compact-tool-popover')).toBeVisible();
+
+  await dockButtons.nth(3).click();
+  await expect(page.locator('.compact-tool-popover')).toBeHidden();
+  const chatPanel = page.locator('#tour-chat-panel');
+  await expect(chatPanel).toBeVisible();
+  const chatBox = await chatPanel.boundingBox();
+  expect(chatBox?.height ?? 0).toBeLessThanOrEqual((viewport?.height ?? 0) * 0.4 + 2);
+
+  await dockButtons.nth(3).click();
+  await expect(chatPanel).toBeHidden();
+  await expect(page.locator('.persistent-tour-map')).toBeVisible();
+  await expect(page.locator('.persistent-tour-map')).toHaveClass(/is-preview/);
+
+  const menuToggle = page.locator('.header-menu-toggle');
+  await menuToggle.click();
+  await expect(page.locator('.header-nav')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.header-nav')).toBeHidden();
+  await expect(menuToggle).toBeFocused();
+});
+
+test('Info hotspots open from a real mobile tap without opening after a drag', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip((viewport?.width ?? 0) > 1024, 'Touch hotspot behavior is covered by compact touch viewports.');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const startButton = page.locator('.intro .primary-button');
+  await expect(startButton).toBeEnabled({ timeout: 60_000 });
+  await startButton.click();
+
+  const marker = page.locator('.info-hotspot').first();
+  await expect(marker).toBeVisible({ timeout: 15_000 });
+  const markerBox = await marker.boundingBox();
+  expect(markerBox).not.toBeNull();
+  await page.touchscreen.tap(
+    (markerBox?.x ?? 0) + (markerBox?.width ?? 0) / 2,
+    (markerBox?.y ?? 0) + (markerBox?.height ?? 0) / 2
+  );
+  await expect(page.locator('dialog.app-dialog[open]')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('dialog.app-dialog[open]')).toHaveCount(0);
+
+  await marker.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const common = {
+      bubbles: true,
+      pointerId: 73,
+      pointerType: 'touch',
+      isPrimary: true
+    };
+    element.dispatchEvent(new PointerEvent('pointerdown', {
+      ...common,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2
+    }));
+    element.dispatchEvent(new PointerEvent('pointermove', {
+      ...common,
+      clientX: rect.left + rect.width / 2 + 28,
+      clientY: rect.top + rect.height / 2 + 18
+    }));
+    element.dispatchEvent(new PointerEvent('pointerup', {
+      ...common,
+      clientX: rect.left + rect.width / 2 + 28,
+      clientY: rect.top + rect.height / 2 + 18
+    }));
+  });
+  await expect(page.locator('dialog.app-dialog[open]')).toHaveCount(0);
+});
+
+test('AI route card starts a guided tour and highlights the real scene path', async ({ page }) => {
+  await page.route('**/api/chat', async (route) => {
+    await route.fulfill({
+      json: {
+        intent: 'tour',
+        answered: true,
+        answer: 'A verified route to the University Cafeteria is ready.',
+        citations: [],
+        relatedSceneIds: [],
+        relatedProgramIds: [],
+        tourPlan: { destinationSceneId: 'universityCafeteria', sceneIds: ['entrance', 'universityCafeteria'] },
+        programRecommendations: [],
+        needsRecommendationProfile: false,
+        fallback: false
+      }
+    });
+  });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'En' }).click();
+  const startButton = page.getByRole('button', { name: 'Start the tour' });
+  await expect(startButton).toBeEnabled({ timeout: 60_000 });
+  await startButton.click();
+
+  await page.getByRole('button', { name: 'Open AI assistant' }).click();
+  await page.locator('#tour-chat-input').fill('Take me to the University Cafeteria');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await page.getByRole('button', { name: 'Start guided tour' }).click();
+
+  const guide = page.locator('.guided-tour');
+  await expect(guide).toBeVisible();
+  await expect(guide).toContainText('University Cafeteria');
+  await expect(page.locator('.leaflet-overlay-pane path[stroke="#f97316"]')).toBeVisible({ timeout: 15_000 });
+  await guide.getByRole('button', { name: 'Next scene' }).click();
+  await expect(guide.locator('small')).toContainText(/^2 \/ /, { timeout: 60_000 });
+  await guide.getByRole('button', { name: 'Cancel guided tour' }).click();
+  await expect(guide).toHaveCount(0);
+});
+
+test('AI recommendation form uses the visitor profile and opens verified program data', async ({ page }) => {
+  await page.route('**/api/content', async (route) => {
+    await route.fulfill({ json: academicsSnapshot });
+  });
+  await page.route('**/api/chat', async (route) => {
+    const request = route.request().postDataJSON() as { recommendationProfile?: unknown };
+    await route.fulfill({
+      json: request.recommendationProfile ? {
+        intent: 'program-recommendation',
+        answered: true,
+        answer: 'This recommendation uses published Admin content.',
+        citations: [],
+        relatedSceneIds: [],
+        relatedProgramIds: ['program-with-scene'],
+        programRecommendations: [{ programId: 'program-with-scene', reason: 'Matches your interest in software.' }],
+        needsRecommendationProfile: false,
+        fallback: false
+      } : {
+        intent: 'program-recommendation',
+        answered: false,
+        answer: 'Tell us about your interests first.',
+        citations: [],
+        relatedSceneIds: [],
+        relatedProgramIds: [],
+        programRecommendations: [],
+        needsRecommendationProfile: true,
+        fallback: false
+      }
+    });
+  });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'En' }).click();
+  const startButton = page.getByRole('button', { name: 'Start the tour' });
+  await expect(startButton).toBeEnabled({ timeout: 60_000 });
+  await startButton.click();
+  await page.getByRole('button', { name: 'Open AI assistant' }).click();
+  await page.getByRole('button', { name: 'Recommend programs based on my interests' }).click();
+
+  const recommendationForm = page.locator('.tour-chat__recommendation-form');
+  await recommendationForm.getByLabel('Interests').fill('software development');
+  await recommendationForm.getByLabel('Current qualification').selectOption('m6-pvoc');
+  await recommendationForm.getByLabel('Desired study level').selectOption('bachelor');
+  await recommendationForm.getByRole('button', { name: 'Find programs' }).click();
+
+  const recommendation = page.locator('.tour-chat__recommendations');
+  await expect(recommendation).toContainText('Program with tour scene');
+  await expect(recommendation).toContainText('Matches your interest in software.');
+  await recommendation.getByRole('button', { name: 'View program details' }).click();
+  await expect(page.locator('dialog[open]')).toContainText('Program with tour scene');
+});
+
 test('program details link back to the faculty and navigate only when the faculty has a tour scene', async ({ page }) => {
   await page.route('**/api/content', async (route) => {
     await route.fulfill({ json: academicsSnapshot });
@@ -77,7 +276,7 @@ test('program details link back to the faculty and navigate only when the facult
   await page.getByRole('button', { name: 'En' }).click();
   await expect(page.getByRole('button', { name: 'Start the tour' })).toBeEnabled({ timeout: 60_000 });
 
-  await page.locator('.app-header').getByRole('button', { name: 'Faculties and programs' }).click();
+  await openHeaderAction(page, /^Faculties and programs$/);
   const academicsDialog = page.locator('dialog[open]');
   await academicsDialog.locator('.academics-faculties').getByRole('button', { name: /Faculty with tour scene/ }).click();
   await academicsDialog.locator('.academics-program-list').getByRole('button', { name: /Program with tour scene/ }).click();
@@ -97,7 +296,7 @@ test('program details link back to the faculty and navigate only when the facult
   await expect(page.locator('dialog[open]')).toHaveCount(0);
   await expect(page.locator('#scene-title')).toHaveText('Faculty with tour scene', { timeout: 60_000 });
 
-  await page.locator('.app-header').getByRole('button', { name: 'Faculties and programs' }).click();
+  await openHeaderAction(page, /^Faculties and programs$/);
   await academicsDialog.locator('.academics-faculties').getByRole('button', { name: /Faculty without tour scene/ }).click();
   await academicsDialog.locator('.academics-program-list').getByRole('button', { name: /Program without tour scene/ }).click();
   await expect(academicsDialog.locator('.academics-program-faculty')).toContainText('Faculty without tour scene');
@@ -126,7 +325,17 @@ test('map follows the virtual visitor, fills its panel, and expands without a wh
   expect(await mapPanel.evaluate((element) => getComputedStyle(element).borderTopWidth)).toBe('0px');
   const mapBox = await mapPanel.boundingBox();
   const viewport = page.viewportSize();
-  expect(mapBox?.width ?? 0).toBeGreaterThanOrEqual(Math.min(320, (viewport?.width ?? 20) - 20));
+  const compactUi = (viewport?.width ?? 0) <= 1024;
+  if (compactUi) {
+    await expect(mapPanel).toHaveClass(/is-preview/);
+    expect(mapBox?.width ?? 0).toBeLessThanOrEqual((viewport?.width ?? 0) <= 600 ? 160 : 200);
+    await page.locator('.map-preview-trigger').click();
+    await expect(mapPanel).toHaveClass(/is-panel/);
+    const panelBox = await mapPanel.boundingBox();
+    expect(panelBox?.width ?? 0).toBeGreaterThan((viewport?.width ?? 0) * 0.9);
+  } else {
+    expect(mapBox?.width ?? 0).toBeGreaterThanOrEqual(360);
+  }
 
   await page.getByRole('button', { name: /ตัวเลือกแผนที่เพิ่มเติม|More map options/ }).click();
   await page.getByRole('button', { name: /ขยายแผนที่|Expand map/ }).click();
@@ -137,6 +346,6 @@ test('map follows the virtual visitor, fills its panel, and expands without a wh
   await page.keyboard.press('Escape');
   await expect(mapPanel).not.toHaveClass(/is-expanded/);
 
-  await page.getByRole('button', { name: /กิจกรรม|Activities/ }).click();
+  await openHeaderAction(page, /กิจกรรม|Activities/);
   await expect(page.getByRole('heading', { name: /กิจกรรมภายในมหาวิทยาลัย|University activities/ })).toBeVisible();
 });

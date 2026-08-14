@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode, type SyntheticEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { subscribeContentUpdates } from '../../src/content-updates';
-import { ADMIN_ACTION_SETTLED_EVENT } from './useAdminActionRefresh';
+import {
+  ADMIN_ACTION_SETTLED_EVENT,
+  ADMIN_DIRTY_STATE_CHANGED_EVENT
+} from './useAdminActionRefresh';
 
 function isEditableTarget(event: SyntheticEvent<HTMLElement>): boolean {
   const target = event.target;
@@ -13,17 +16,26 @@ function isEditableTarget(event: SyntheticEvent<HTMLElement>): boolean {
 
 export default function AdminLiveRefresh({ children }: { readonly children: ReactNode }) {
   const router = useRouter();
+  const rootRef = useRef<HTMLDivElement>(null);
   const dirtyRef = useRef(false);
   const [dirty, setDirty] = useState(false);
   const [updateWaiting, setUpdateWaiting] = useState(false);
 
   useEffect(() => {
+    const syncDirtyState = (): void => {
+      const nextDirty = Boolean(rootRef.current?.querySelector('.admin-form[data-admin-dirty="true"]'));
+      dirtyRef.current = nextDirty;
+      setDirty(nextDirty);
+    };
     const settled = (): void => {
+      rootRef.current?.querySelectorAll<HTMLElement>('.admin-form[data-admin-dirty="true"]')
+        .forEach((form) => form.removeAttribute('data-admin-dirty'));
       dirtyRef.current = false;
       setDirty(false);
       setUpdateWaiting(false);
     };
     window.addEventListener(ADMIN_ACTION_SETTLED_EVENT, settled);
+    window.addEventListener(ADMIN_DIRTY_STATE_CHANGED_EVENT, syncDirtyState);
     const unsubscribe = subscribeContentUpdates(() => {
       if (dirtyRef.current) {
         setUpdateWaiting(true);
@@ -33,6 +45,7 @@ export default function AdminLiveRefresh({ children }: { readonly children: Reac
     });
     return () => {
       window.removeEventListener(ADMIN_ACTION_SETTLED_EVENT, settled);
+      window.removeEventListener(ADMIN_DIRTY_STATE_CHANGED_EVENT, syncDirtyState);
       unsubscribe();
     };
   }, [router]);
@@ -62,6 +75,10 @@ export default function AdminLiveRefresh({ children }: { readonly children: Reac
 
   const markDirty = (event: SyntheticEvent<HTMLElement>): void => {
     if (isEditableTarget(event)) {
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        target.closest<HTMLFormElement>('.admin-form')?.setAttribute('data-admin-dirty', 'true');
+      }
       dirtyRef.current = true;
       setDirty(true);
     }
@@ -70,6 +87,7 @@ export default function AdminLiveRefresh({ children }: { readonly children: Reac
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (target.closest('.admin-form button[type="button"]')) {
+      target.closest<HTMLFormElement>('.admin-form')?.setAttribute('data-admin-dirty', 'true');
       dirtyRef.current = true;
       setDirty(true);
     }
@@ -102,6 +120,7 @@ export default function AdminLiveRefresh({ children }: { readonly children: Reac
 
   return (
     <div
+      ref={rootRef}
       className="admin-live-refresh"
       onInputCapture={markDirty}
       onChangeCapture={markDirty}

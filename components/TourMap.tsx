@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
+import type { Map as LeafletMap, Marker as LeafletMarker, Polyline as LeafletPolyline } from 'leaflet';
 import {
   getScene,
   getSceneEdges,
@@ -21,9 +21,12 @@ interface TourMapProps {
   readonly currentSceneId: SceneId;
   readonly content: PublicContentSnapshot;
   readonly onNavigate: (sceneId: SceneId) => void;
-  readonly expanded: boolean;
+  readonly mode: TourMapMode;
   readonly onExpandedChange: (expanded: boolean) => void;
+  readonly guidedRouteSceneIds?: readonly SceneId[];
 }
+
+export type TourMapMode = 'preview' | 'panel' | 'fullscreen';
 
 interface CalibrationPoint {
   readonly x: number;
@@ -33,15 +36,39 @@ interface CalibrationPoint {
 const isDevelopment = process.env.NODE_ENV === 'development';
 const toLatLngTuple = ({ x, y }: MapPosition): [number, number] => [tourMap.height - y, x];
 
-export default function TourMap({ locale, currentSceneId, content, onNavigate, expanded, onExpandedChange }: TourMapProps) {
+function setMapInteractionMode(map: LeafletMap, preview: boolean): void {
+  const method = preview ? 'disable' : 'enable';
+  map.dragging[method]();
+  map.touchZoom[method]();
+  map.doubleClickZoom[method]();
+  map.scrollWheelZoom[method]();
+  map.boxZoom[method]();
+  map.keyboard[method]();
+  map.getContainer().setAttribute('tabindex', preview ? '-1' : '0');
+}
+
+export default function TourMap({
+  locale,
+  currentSceneId,
+  content,
+  onNavigate,
+  mode,
+  onExpandedChange,
+  guidedRouteSceneIds = []
+}: TourMapProps) {
+  const preview = mode === 'preview';
+  const expanded = mode === 'fullscreen';
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRefs = useRef(new Map<SceneId, LeafletMarker>());
   const userMarkerRef = useRef<LeafletMarker | null>(null);
+  const guidedRouteLayerRef = useRef<LeafletPolyline | null>(null);
+  const guidedRouteSceneIdsRef = useRef(guidedRouteSceneIds);
   const onNavigateRef = useRef(onNavigate);
   const localeRef = useRef(locale);
   const currentSceneIdRef = useRef(currentSceneId);
   const contentRef = useRef(content);
+  const previewRef = useRef(preview);
   const followingRef = useRef(true);
   const coverMapRef = useRef<(() => void) | null>(null);
   const preservedMapViewRef = useRef<{ lat: number; lng: number; zoom: number } | null>(null);
@@ -53,6 +80,8 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
   localeRef.current = locale;
   currentSceneIdRef.current = currentSceneId;
   contentRef.current = content;
+  previewRef.current = preview;
+  guidedRouteSceneIdsRef.current = guidedRouteSceneIds;
   const tourStructureSignature = getTourStructureSignature();
   const landmarkScenes = getMapLandmarkScenes();
 
@@ -96,6 +125,11 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
           toLatLng(getScene(edge.to).mapPosition)
         ]),
         { color: '#0ea5e9', weight: 3, opacity: 0.82, dashArray: '8 6' }
+      ).addTo(map);
+
+      guidedRouteLayerRef.current = leaflet.polyline(
+        guidedRouteSceneIdsRef.current.map((sceneId) => toLatLng(getScene(sceneId).mapPosition)),
+        { color: '#f97316', weight: 7, opacity: guidedRouteSceneIdsRef.current.length > 1 ? 0.95 : 0, lineCap: 'round' }
       ).addTo(map);
 
       for (const scene of landmarkScenes) {
@@ -162,6 +196,10 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
       }
 
       mapRef.current = map;
+      setMapInteractionMode(map, previewRef.current);
+      for (const marker of markerRefs.current.values()) {
+        marker.getElement()?.setAttribute('tabindex', previewRef.current ? '-1' : '0');
+      }
       initializeFrame = window.requestAnimationFrame(() => {
         initializeFrame = undefined;
         if (cancelled) return;
@@ -184,6 +222,7 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
       resizeObserver.disconnect();
       markerRefs.current.clear();
       userMarkerRef.current = null;
+      guidedRouteLayerRef.current = null;
       coverMapRef.current = null;
       if (mapRef.current) {
         const center = mapRef.current.getCenter();
@@ -222,12 +261,32 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
   }, [content, currentSceneId, locale]);
 
   useEffect(() => {
+    const layer = guidedRouteLayerRef.current;
+    if (!layer) return;
+    layer.setLatLngs(guidedRouteSceneIds.map((sceneId) => toLatLngTuple(getScene(sceneId).mapPosition)));
+    layer.setStyle({ opacity: guidedRouteSceneIds.length > 1 ? 0.95 : 0 });
+    if (guidedRouteSceneIds.length > 1) layer.bringToFront();
+  }, [guidedRouteSceneIds]);
+
+  useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       coverMapRef.current?.();
       if (followingRef.current) mapRef.current?.panTo(toLatLngTuple(getScene(currentSceneIdRef.current).mapPosition), { animate: false });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [expanded]);
+  }, [mode]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    setMapInteractionMode(map, preview);
+    for (const marker of markerRefs.current.values()) {
+      marker.getElement()?.setAttribute('tabindex', preview ? '-1' : '0');
+    }
+    if (preview) setControlsOpen(false);
+    const frame = window.requestAnimationFrame(() => coverMapRef.current?.());
+    return () => window.cancelAnimationFrame(frame);
+  }, [preview]);
 
   useEffect(() => {
     if (!controlsOpen) return;
@@ -265,9 +324,9 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
   };
 
   return (
-    <div className="route-map tour-map-panel">
-      <div id="tour-map-canvas" ref={containerRef} className="leaflet-tour-map" role="application" aria-label={message(locale, 'mapTitle')} />
-      <div className={`map-controls${controlsOpen ? ' is-open' : ''}`}>
+    <div className={`route-map tour-map-panel${preview ? ' is-preview' : ''}`} aria-hidden={preview || undefined}>
+      <div id="tour-map-canvas" ref={containerRef} className="leaflet-tour-map" role={preview ? 'img' : 'application'} aria-label={message(locale, 'mapTitle')} />
+      {!preview ? <div className={`map-controls${controlsOpen ? ' is-open' : ''}`}>
         <button
           className="map-controls__toggle"
           type="button"
@@ -287,8 +346,8 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
             {message(locale, expanded ? 'mapCollapse' : 'mapExpand')}
           </button>
         </div>
-      </div>
-      {isDevelopment ? (
+      </div> : null}
+      {isDevelopment && !preview ? (
         <div className="map-calibration" aria-live="polite">
           <strong>{message(locale, 'mapCalibration')}</strong>
           <span>{calibrationPoint ? `{ x: ${calibrationPoint.x}, y: ${calibrationPoint.y} }` : message(locale, 'mapClickCoordinates')}</span>
@@ -297,13 +356,13 @@ export default function TourMap({ locale, currentSceneId, content, onNavigate, e
           </button>
         </div>
       ) : null}
-      <div className="sr-only">
+      {!preview ? <div className="sr-only">
         {landmarkScenes.map((scene) => (
           <button key={scene.id} type="button" onClick={() => onNavigate(scene.id)}>
             {goToScene(locale, localize(resolveTourScene(scene, content).title, locale))}
           </button>
         ))}
-      </div>
+      </div> : null}
     </div>
   );
 }

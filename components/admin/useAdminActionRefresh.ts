@@ -10,6 +10,7 @@ import {
 } from '../../src/content-updates';
 
 export const ADMIN_ACTION_SETTLED_EVENT = 'fitm-admin-action-settled';
+export const ADMIN_DIRTY_STATE_CHANGED_EVENT = 'fitm-admin-dirty-state-changed';
 
 export function useAdminActionRefresh(
   state: AdminActionState,

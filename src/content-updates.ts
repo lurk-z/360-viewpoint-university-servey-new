@@ -1,4 +1,5 @@
 import type { ContentKind } from './content';
+import { createBrowserId } from './browser-id';
 
 export type ContentUpdateScope = 'draft' | 'public';
 export type ContentUpdateKind = ContentKind | 'media' | 'tour';
@@ -26,7 +27,7 @@ const CONTENT_UPDATE_KINDS: readonly ContentUpdateKind[] = [
 let browserSenderId: string | undefined;
 
 function getSenderId(): string {
-  if (!browserSenderId) browserSenderId = crypto.randomUUID();
+  if (!browserSenderId) browserSenderId = createBrowserId();
   return browserSenderId;
 }
 

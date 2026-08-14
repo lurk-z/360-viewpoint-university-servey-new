@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '../../lib/supabase/server';
 import { getPublicSupabaseConfig } from '../../lib/supabase/env';
@@ -10,7 +11,7 @@ export interface AdminSession {
   readonly role: AdminRole;
 }
 
-export async function getAdminSession(): Promise<AdminSession | null> {
+export const getAdminSession = cache(async (): Promise<AdminSession | null> => {
   if (!getPublicSupabaseConfig()) return null;
   try {
     const supabase = await createServerSupabaseClient();
@@ -32,7 +33,7 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   } catch {
     return null;
   }
-}
+});
 
 export async function requireStaff(): Promise<AdminSession> {
   const session = await getAdminSession();

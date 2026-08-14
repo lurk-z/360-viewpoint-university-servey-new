@@ -48,6 +48,10 @@ function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
 }
 
+function lines(formData: FormData, key: string): string[] {
+  return [...new Set(text(formData, key).split(/\r?\n/u).map((value) => value.trim()).filter(Boolean))];
+}
+
 function sourceFromForm(formData: FormData) {
   return {
     label: { th: text(formData, 'sourceLabelTh'), en: text(formData, 'sourceLabelEn') },
@@ -83,6 +87,10 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
   if (kind === 'programs') {
     const departmentTh = text(formData, 'departmentTh');
     const departmentEn = text(formData, 'departmentEn');
+    const interestTagsTh = lines(formData, 'interestTagsTh');
+    const interestTagsEn = lines(formData, 'interestTagsEn');
+    const careerTagsTh = lines(formData, 'careerTagsTh');
+    const careerTagsEn = lines(formData, 'careerTagsEn');
     return programDataSchema.parse({
       name: { th: text(formData, 'nameTh'), en: text(formData, 'nameEn') },
       department: departmentTh || departmentEn ? { th: departmentTh, en: departmentEn } : undefined,
@@ -90,6 +98,12 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
       summary: { th: text(formData, 'summaryTh'), en: text(formData, 'summaryEn') },
       description: { th: text(formData, 'descriptionTh'), en: text(formData, 'descriptionEn') },
       admission: { th: text(formData, 'admissionTh'), en: text(formData, 'admissionEn') },
+      interestTags: interestTagsTh.length || interestTagsEn.length
+        ? { th: interestTagsTh, en: interestTagsEn }
+        : undefined,
+      careerTags: careerTagsTh.length || careerTagsEn.length
+        ? { th: careerTagsTh, en: careerTagsEn }
+        : undefined,
       imageUrl: text(formData, 'imageUrl'),
       source: sourceFromForm(formData)
     });

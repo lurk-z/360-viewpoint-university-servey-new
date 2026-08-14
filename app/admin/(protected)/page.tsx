@@ -1,17 +1,20 @@
 import Link from 'next/link';
+import AdminAiStatus from '../../../components/admin/AdminAiStatus';
 import AdminTourPlaceSync from '../../../components/admin/AdminTourPlaceSync';
+import { getAiRuntimeStatus } from '../../../src/server/ai-status';
 import { getVisitStatistics, listAdminContent } from '../../../src/server/admin-repository';
 import { requireStaff } from '../../../src/server/auth';
 import { getTourPlaceSyncStatus } from '../../../src/tour-places';
 
 export default async function AdminDashboardPage() {
   const session = await requireStaff();
-  const [stats, faculties, programs, activities, hotspots] = await Promise.all([
+  const [stats, faculties, programs, activities, hotspots, aiStatus] = await Promise.all([
     getVisitStatistics(),
     listAdminContent('faculties'),
     listAdminContent('programs'),
     listAdminContent('activities'),
-    listAdminContent('hotspot_contents')
+    listAdminContent('hotspot_contents'),
+    getAiRuntimeStatus()
   ]);
   const maximum = Math.max(1, ...stats.last7Days.map((day) => day.count));
   const managedHotspotIds = new Set(faculties.flatMap((row) => row.hotspotId ? [row.hotspotId] : []));
@@ -25,6 +28,11 @@ export default async function AdminDashboardPage() {
     <section className="admin-page">
       <header className="admin-page__header"><div><p>DASHBOARD</p><h1>ภาพรวมระบบ</h1><span>สวัสดี {session.displayName || session.email}</span></div><a href="/?preview=admin" target="_blank">ดูเว็บไซต์แบบสด ↗</a></header>
       <AdminTourPlaceSync status={tourPlaceSyncStatus} role={session.role} />
+      <AdminAiStatus
+        status={aiStatus}
+        publishedFaculties={faculties.filter((row) => row.publishedData && !row.archivedAt).length}
+        publishedPrograms={programs.filter((row) => row.publishedData && !row.archivedAt).length}
+      />
       <div className="admin-stats">
         <article><span>เข้าชมวันนี้</span><strong>{stats.today.toLocaleString()}</strong><small>ครั้ง</small></article>
         <article><span>เข้าชมทั้งหมด</span><strong>{stats.total.toLocaleString()}</strong><small>ครั้ง</small></article>

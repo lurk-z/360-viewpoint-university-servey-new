@@ -17,6 +17,11 @@ export interface LocalizedContent {
   readonly en: string;
 }
 
+export interface LocalizedTagList {
+  readonly th: readonly string[];
+  readonly en: readonly string[];
+}
+
 export interface ContentSource {
   readonly label: LocalizedContent;
   readonly url?: string;
@@ -50,6 +55,8 @@ export interface ProgramContent {
   readonly summary: LocalizedContent;
   readonly description: LocalizedContent;
   readonly admission: LocalizedContent;
+  readonly interestTags?: LocalizedTagList;
+  readonly careerTags?: LocalizedTagList;
   readonly imageUrl?: string;
   readonly source: ContentSource;
 }
@@ -110,6 +117,13 @@ const imageSchema = z.object({
   caption: requiredLocalizedSchema.optional()
 });
 
+const localizedTagListSchema = z.object({
+  th: z.array(z.string().trim().min(1).max(120)).max(20),
+  en: z.array(z.string().trim().min(1).max(120)).max(20)
+}).refine((value) => value.th.length > 0 && value.en.length > 0, {
+  message: 'Recommendation tags must contain both Thai and English values'
+});
+
 export const facultyDataSchema = z.object({
   name: requiredLocalizedSchema,
   summary: requiredLocalizedSchema,
@@ -125,6 +139,8 @@ export const programDataSchema = z.object({
   summary: requiredLocalizedSchema,
   description: requiredLocalizedSchema,
   admission: requiredLocalizedSchema,
+  interestTags: localizedTagListSchema.optional(),
+  careerTags: localizedTagListSchema.optional(),
   imageUrl: optionalUrlSchema,
   source: sourceSchema
 });

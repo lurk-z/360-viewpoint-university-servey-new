@@ -278,13 +278,41 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       const hotspot = resolveInfoHotspot(baseHotspot, callbacksRef.current.content);
       const element = document.createElement('button') as HTMLButtonElement & MarkerElement;
       const title = localize(hotspot.title, callbacksRef.current.locale);
+      const tapMovementThreshold = 10;
+      let touchPointer: { pointerId: number; x: number; y: number } | null = null;
+      let suppressClickUntil = 0;
+      const openHotspot = (): void => callbacksRef.current.onInfo(hotspot);
       element.type = 'button';
       element.className = 'info-hotspot';
       element.textContent = 'i';
       element.setAttribute('aria-label', `${message(callbacksRef.current.locale, 'infoPoint')}: ${title}`);
+      element.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' || !event.isPrimary) return;
+        touchPointer = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+      });
+      element.addEventListener('pointermove', (event) => {
+        if (!touchPointer || event.pointerId !== touchPointer.pointerId) return;
+        if (Math.hypot(event.clientX - touchPointer.x, event.clientY - touchPointer.y) > tapMovementThreshold) {
+          touchPointer = null;
+        }
+      });
+      element.addEventListener('pointercancel', () => {
+        touchPointer = null;
+      });
+      element.addEventListener('pointerup', (event) => {
+        if (!touchPointer || event.pointerId !== touchPointer.pointerId) return;
+        const moved = Math.hypot(event.clientX - touchPointer.x, event.clientY - touchPointer.y);
+        touchPointer = null;
+        if (moved > tapMovementThreshold) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClickUntil = performance.now() + 750;
+        openHotspot();
+      });
       element.addEventListener('click', (event) => {
         event.stopPropagation();
-        callbacksRef.current.onInfo(hotspot);
+        if (performance.now() < suppressClickUntil) return;
+        openHotspot();
       });
       return {
         id: hotspot.id,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserSupabaseClient } from '../../lib/supabase/client';
 import { broadcastContentUpdate } from '../../src/content-updates';
 import { ADMIN_ACTION_SETTLED_EVENT } from './useAdminActionRefresh';
+import { createBrowserId } from '../../src/browser-id';
 
 export default function AdminMediaUploader() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function AdminMediaUploader() {
     setStatus('กำลังอัปโหลด…');
     try {
       const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
-      const path = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+      const path = `${Date.now()}-${createBrowserId()}-${safeName}`;
       const supabase = createBrowserSupabaseClient();
       const { error } = await supabase.storage.from('content-media').upload(path, file, {
         cacheControl: '3600',

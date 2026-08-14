@@ -342,6 +342,7 @@ describe('tour configuration', () => {
       'fitmInterior10:universityCafeteria',
       'fitmInterior11:fitmInterior12',
       'fitmInterior11:fitmInterior13',
+      'fitmInterior11:fitmInterior9',
       'fitmInterior13:fitmInterior14',
       'fitmInterior14:fitmInterior15',
       'fitmInterior15:fitmInterior16',
@@ -491,7 +492,7 @@ describe('tour configuration', () => {
       .not.toContain('multipurposeGym');
     expect(getNavigationHotspots(getScene('campusRoad46'))).toEqual(expect.arrayContaining([
       expect.objectContaining({ target: 'campusRoad45', yaw: 0, pitch: -3 }),
-      expect.objectContaining({ target: 'campusRoad51', yaw: 180, pitch: -3 })
+      expect.objectContaining({ target: 'campusRoad51', yaw: 150, pitch: -3 })
     ]));
     expect(getNavigationHotspots(getScene('campusRoad45'))).toEqual(expect.arrayContaining([
       expect.objectContaining({ target: 'campusRoad44', yaw: -90, pitch: -3 }),
@@ -686,8 +687,8 @@ describe('tour configuration', () => {
 
   it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    expect(infoHotspots).toHaveLength(36);
-    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(36);
+    expect(infoHotspots).toHaveLength(37);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(37);
 
     for (const hotspot of infoHotspots) {
       expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);

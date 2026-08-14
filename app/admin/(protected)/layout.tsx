@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { requireStaff } from '../../../src/server/auth';
 import { logoutAction } from '../actions';
 import AdminLiveRefresh from '../../../components/admin/AdminLiveRefresh';
+import AdminNavigation from '../../../components/admin/AdminNavigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,14 +17,14 @@ const links = [
 
 export default async function ProtectedAdminLayout({ children }: { readonly children: ReactNode }) {
   const session = await requireStaff();
+  const navigationLinks = session.role === 'admin'
+    ? [...links, ['ผู้ใช้งาน', '/admin/users'] as const]
+    : links;
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <a className="admin-brand" href="/admin"><img src="/mainimages/Logo_FitM/FITM_LOGO.png" alt="FITM" width={200} height={117} /><span>Tour CMS</span></a>
-        <nav aria-label="เมนูผู้ดูแล">
-          {links.map(([label, href]) => <Link href={href} key={href}>{label}</Link>)}
-          {session.role === 'admin' ? <Link href="/admin/users">ผู้ใช้งาน</Link> : null}
-        </nav>
+        <AdminNavigation links={navigationLinks} />
         <footer>
           <span>{session.displayName || session.email}</span>
           <strong>{session.role === 'admin' ? 'Admin' : 'Editor'}</strong>

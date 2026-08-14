@@ -31,13 +31,13 @@ describe('ground navigation arrows', () => {
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
   });
 
-  it('keeps all 131 configured links including high-branch navigation scenes', () => {
+  it('keeps all configured links including high-branch navigation scenes', () => {
     const linkCount = tourScenes.reduce(
       (total, scene) => total + getNavigationHotspots(scene).length,
       0
     );
     expect(tourScenes).toHaveLength(93);
-    expect(linkCount).toBe(205);
+    expect(linkCount).toBe(207);
     expect(getNavigationHotspots(getScene('campusRoad4'))).toHaveLength(4);
     expect(getNavigationHotspots(getScene('campusRoad31'))).toHaveLength(3);
     expect(getNavigationHotspots(getScene('campusRoad36'))).toHaveLength(3);

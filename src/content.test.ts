@@ -5,6 +5,7 @@ import {
   facultyDataSchema,
   hotspotDataSchema,
   mergeMissingScenePresentation,
+  programDataSchema,
   resolveInfoHotspot,
   resolveTourScene
 } from './content';
@@ -108,6 +109,28 @@ describe('public CMS content', () => {
       description: { th: 'รายละเอียด', en: 'Description' },
       reference: { label: { th: 'แหล่งข้อมูล', en: 'Source' }, url: 'javascript:alert(1)' },
       images: []
+    }).success).toBe(false);
+  });
+
+  it('accepts optional bilingual recommendation tags and limits them to 20 per language', () => {
+    const program = {
+      name: { th: 'หลักสูตรทดสอบ', en: 'Test program' },
+      level: { th: 'ปริญญาตรี', en: "Bachelor's degree" },
+      summary: { th: 'สรุป', en: 'Summary' },
+      description: { th: 'รายละเอียด', en: 'Description' },
+      admission: { th: 'ข้อมูลรับสมัคร', en: 'Admission information' },
+      source: { label: { th: 'แหล่งข้อมูล', en: 'Source' } },
+      interestTags: { th: ['ซอฟต์แวร์'], en: ['software'] },
+      careerTags: { th: ['นักพัฒนา'], en: ['developer'] }
+    };
+    expect(programDataSchema.safeParse(program).success).toBe(true);
+    expect(programDataSchema.safeParse({
+      ...program,
+      interestTags: { th: ['ซอฟต์แวร์'], en: [] }
+    }).success).toBe(false);
+    expect(programDataSchema.safeParse({
+      ...program,
+      careerTags: { th: Array.from({ length: 21 }, (_, index) => `งาน ${index}`), en: ['career'] }
     }).success).toBe(false);
   });
 });
