@@ -1,28 +1,20 @@
 import Link from 'next/link';
 import AdminAiStatus from '../../../components/admin/AdminAiStatus';
 import AdminTourPlaceSync from '../../../components/admin/AdminTourPlaceSync';
-import { getAiRuntimeStatus } from '../../../src/server/ai-status';
-import { getVisitStatistics, listAdminContent } from '../../../src/server/admin-repository';
+import { getAiConfigurationStatus } from '../../../src/server/ai-status';
+import { getAdminDashboardSummary, getVisitStatistics } from '../../../src/server/admin-repository';
 import { requireStaff } from '../../../src/server/auth';
 import { getTourPlaceSyncStatus } from '../../../src/tour-places';
 
 export default async function AdminDashboardPage() {
   const session = await requireStaff();
-  const [stats, faculties, programs, activities, hotspots, aiStatus] = await Promise.all([
+  const [stats, summary, aiStatus] = await Promise.all([
     getVisitStatistics(),
-    listAdminContent('faculties'),
-    listAdminContent('programs'),
-    listAdminContent('activities'),
-    listAdminContent('hotspot_contents'),
-    getAiRuntimeStatus()
+    getAdminDashboardSummary(),
+    getAiConfigurationStatus()
   ]);
   const maximum = Math.max(1, ...stats.last7Days.map((day) => day.count));
-  const managedHotspotIds = new Set(faculties.flatMap((row) => row.hotspotId ? [row.hotspotId] : []));
-  const places = hotspots.filter((row) => !managedHotspotIds.has(row.id));
-  const tourPlaceSyncStatus = getTourPlaceSyncStatus(hotspots.map((row) => ({
-    id: row.id,
-    sceneId: row.sceneId
-  })));
+  const tourPlaceSyncStatus = getTourPlaceSyncStatus(summary.hotspotLinks);
 
   return (
     <section className="admin-page">
@@ -30,13 +22,13 @@ export default async function AdminDashboardPage() {
       <AdminTourPlaceSync status={tourPlaceSyncStatus} role={session.role} />
       <AdminAiStatus
         status={aiStatus}
-        publishedFaculties={faculties.filter((row) => row.publishedData && !row.archivedAt).length}
-        publishedPrograms={programs.filter((row) => row.publishedData && !row.archivedAt).length}
+        publishedFaculties={summary.publishedFaculties}
+        publishedPrograms={summary.publishedPrograms}
       />
       <div className="admin-stats">
         <article><span>เข้าชมวันนี้</span><strong>{stats.today.toLocaleString()}</strong><small>ครั้ง</small></article>
         <article><span>เข้าชมทั้งหมด</span><strong>{stats.total.toLocaleString()}</strong><small>ครั้ง</small></article>
-        <article><span>เนื้อหาที่เผยแพร่</span><strong>{[...faculties, ...programs, ...activities, ...hotspots].filter((row) => row.publishedData && !row.archivedAt).length}</strong><small>รายการ</small></article>
+        <article><span>เนื้อหาที่เผยแพร่</span><strong>{summary.publishedContentCount}</strong><small>รายการ</small></article>
       </div>
       <section className="admin-chart">
         <header><h2>ยอดเข้าชม 7 วันล่าสุด</h2><span>เก็บเฉพาะยอดรวม ไม่บันทึก IP หรือ session ID</span></header>
@@ -54,10 +46,10 @@ export default async function AdminDashboardPage() {
       </details>
       <div className="admin-collections">
         {[
-          ['คณะ', faculties.length, '/admin/faculties'],
-          ['หลักสูตร', programs.length, '/admin/programs'],
-          ['กิจกรรม', activities.length, '/admin/activities'],
-          ['สถานที่สำคัญ', places.length, '/admin/places']
+          ['คณะ', summary.collectionCounts.faculties, '/admin/faculties'],
+          ['หลักสูตร', summary.collectionCounts.programs, '/admin/programs'],
+          ['กิจกรรม', summary.collectionCounts.activities, '/admin/activities'],
+          ['สถานที่สำคัญ', summary.collectionCounts.places, '/admin/places']
         ].map(([label, count, href]) => <Link href={String(href)} key={String(href)}><strong>{String(label)}</strong><span>{String(count)} รายการ</span><b>จัดการ →</b></Link>)}
       </div>
     </section>

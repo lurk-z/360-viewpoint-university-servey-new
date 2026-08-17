@@ -21,6 +21,8 @@ describe('live update integration', () => {
   it('refreshes content on public messages, focus, visibility, and reconnect', () => {
     const hook = source('components/usePublicContent.ts');
     expect(hook).toContain("message.scope === 'public'");
+    expect(hook).toContain("method: 'HEAD'");
+    expect(hook).toContain("response.headers.get('X-Content-Version')");
     expect(hook).toContain("window.addEventListener('focus'");
     expect(hook).toContain("window.addEventListener('online'");
     expect(hook).toContain("document.addEventListener('visibilitychange'");
@@ -60,5 +62,32 @@ describe('live update integration', () => {
     expect(tourApp.indexOf("message(locale, 'adminLogin')"))
       .toBeLessThan(tourApp.indexOf("message(locale, 'academicsButton')"));
     expect(source('components/usePublicContent.ts')).toContain('LIVE_REFRESH_INTERVAL_MS = 5_000');
+  });
+
+  it('caches public content and invalidates it only for public Admin actions', () => {
+    const repository = source('src/server/content-repository.ts');
+    const contentRoute = source('app/api/content/route.ts');
+    const actions = source('app/admin/actions.ts');
+    expect(repository).toContain('unstable_cache');
+    expect(repository).toContain("PUBLIC_CONTENT_CACHE_TAG = 'public-content'");
+    expect(repository).toContain('revalidate: 15');
+    expect(contentRoute).toContain('export async function HEAD()');
+    expect(contentRoute).toContain("'X-Content-Version'");
+    expect(actions).toContain("updateTag(PUBLIC_CONTENT_CACHE_TAG)");
+  });
+
+  it('loads secondary tour interfaces on demand and preserves chat after its first mount', () => {
+    const tourApp = source('components/TourApp.tsx');
+    for (const component of ['TourMap', 'TourChat', 'ActivitiesDialog', 'FacultyProgramsDialog']) {
+      expect(tourApp).toContain(`const ${component} = dynamic(`);
+    }
+    expect(tourApp).toContain('if (chatOpen) setChatMounted(true)');
+    expect(tourApp).toContain('{chatMounted ? (');
+  });
+
+  it('keeps the Login form tolerant only of extension-added control attributes', () => {
+    const login = source('app/admin/(auth)/login/page.tsx');
+    expect(login.match(/suppressHydrationWarning/g)).toHaveLength(3);
+    expect(login).not.toContain('<main suppressHydrationWarning');
   });
 });

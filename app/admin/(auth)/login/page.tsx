@@ -30,9 +30,9 @@ export default async function AdminLoginPage({ searchParams }: {
         {error ? <p className="admin-form-error" role="alert">{error}</p> : null}
         <form action={loginAction} className="admin-login__form">
           <input type="hidden" name="next" value={query.next ?? '/admin'} />
-          <label htmlFor="admin-email"><span>อีเมล</span><input id="admin-email" type="email" name="email" autoComplete="username" required disabled={!configured} /></label>
-          <label htmlFor="admin-password"><span>รหัสผ่าน</span><input id="admin-password" type="password" name="password" autoComplete="current-password" required disabled={!configured} /></label>
-          <button type="submit" disabled={!configured}>เข้าสู่ระบบ</button>
+          <label htmlFor="admin-email"><span>อีเมล</span><input id="admin-email" type="email" name="email" autoComplete="username" required disabled={!configured} suppressHydrationWarning /></label>
+          <label htmlFor="admin-password"><span>รหัสผ่าน</span><input id="admin-password" type="password" name="password" autoComplete="current-password" required disabled={!configured} suppressHydrationWarning /></label>
+          <button type="submit" disabled={!configured} suppressHydrationWarning>เข้าสู่ระบบ</button>
         </form>
         <a href="/">← กลับไปหน้าทัวร์</a>
       </section>

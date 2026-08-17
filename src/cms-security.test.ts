@@ -13,10 +13,18 @@ const linkedContentMigration = readFileSync(
 );
 const adminActions = readFileSync(resolve(process.cwd(), 'app/admin/actions.ts'), 'utf8');
 const adminEditor = readFileSync(resolve(process.cwd(), 'components/admin/AdminContentEditor.tsx'), 'utf8');
-const adminSectionPage = readFileSync(resolve(process.cwd(), 'app/admin/(protected)/[section]/page.tsx'), 'utf8');
+const adminSectionPage = readFileSync(resolve(process.cwd(), 'components/admin/AdminSectionPage.tsx'), 'utf8');
 const publicContentRepository = readFileSync(resolve(process.cwd(), 'src/server/content-repository.ts'), 'utf8');
+const adminRepository = readFileSync(resolve(process.cwd(), 'src/server/admin-repository.ts'), 'utf8');
+const adminDashboard = readFileSync(resolve(process.cwd(), 'app/admin/(protected)/page.tsx'), 'utf8');
 const mediaGallery = readFileSync(resolve(process.cwd(), 'components/admin/AdminImageGalleryFields.tsx'), 'utf8');
 const cmsSeed = readFileSync(resolve(process.cwd(), 'scripts/seed-cms.ts'), 'utf8');
+const adminStaticRoutes = Object.fromEntries(
+  ['faculties', 'programs', 'activities', 'places', 'hotspots'].map((section) => [
+    section,
+    readFileSync(resolve(process.cwd(), `app/admin/(protected)/${section}/page.tsx`), 'utf8')
+  ])
+);
 
 describe('CMS security and aggregate visits', () => {
   it('keeps public tables behind RLS and restricts privileged RPCs to service_role', () => {
@@ -59,6 +67,14 @@ describe('CMS security and aggregate visits', () => {
     expect(adminSectionPage).toContain("row.facultyId === facultyFilter.id");
   });
 
+  it('registers fixed admin content routes without relying on a dynamic section route', () => {
+    for (const section of ['faculties', 'programs', 'activities', 'places']) {
+      expect(adminStaticRoutes[section]).toMatch(new RegExp(`<AdminSectionPage\\s+section="${section}"`));
+    }
+    expect(adminStaticRoutes.programs).toContain('requestedFacultyId=');
+    expect(adminStaticRoutes.hotspots).toContain("redirect('/admin/places')");
+  });
+
   it('keeps tour-place synchronization admin-only and validates structural links before publishing', () => {
     expect(adminActions).toContain('syncTourPlacesAction');
     expect(adminActions).toContain('const session = await requireAdmin()');
@@ -91,5 +107,13 @@ describe('CMS security and aggregate visits', () => {
       { date: '2026-08-06', count: 0 },
       { date: '2026-08-07', count: 0 }
     ]);
+  });
+
+  it('loads dashboard totals through aggregate queries without waiting for Gemini model probing', () => {
+    expect(adminRepository).toContain('getAdminDashboardSummary');
+    expect(adminRepository.match(/head: true/g)?.length).toBeGreaterThanOrEqual(7);
+    expect(adminDashboard).toContain('getAdminDashboardSummary()');
+    expect(adminDashboard).toContain('getAiConfigurationStatus()');
+    expect(adminDashboard).not.toContain('getAiRuntimeStatus()');
   });
 });

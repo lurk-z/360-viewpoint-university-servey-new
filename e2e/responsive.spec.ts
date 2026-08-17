@@ -64,6 +64,27 @@ async function openHeaderAction(page: Page, name: RegExp): Promise<void> {
   await action.click();
 }
 
+test('Admin Login tolerates password-manager attributes added before hydration', async ({ page }) => {
+  const hydrationErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error' && message.text().includes('hydrated')) {
+      hydrationErrors.push(message.text());
+    }
+  });
+  await page.addInitScript(() => {
+    const markLoginControls = (): void => {
+      document.querySelectorAll<HTMLInputElement | HTMLButtonElement>(
+        '#admin-email, #admin-password, .admin-login__form button'
+      ).forEach((control, index) => control.setAttribute('fdprocessedid', `test-${index}`));
+    };
+    new MutationObserver(markLoginControls).observe(document, { childList: true, subtree: true });
+    markLoginControls();
+  });
+  await page.goto('/admin/login', { waitUntil: 'networkidle' });
+  await expect(page.locator('#admin-email')).toHaveAttribute('fdprocessedid');
+  expect(hydrationErrors).toEqual([]);
+});
+
 test('public tour and AI chat remain available at the configured viewport', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('img[src="/mainimages/Logo_FitM/FITM_LOGO.png"]').first()).toBeVisible();

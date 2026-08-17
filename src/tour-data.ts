@@ -1715,7 +1715,8 @@ export const tourScenes = [
     hotspots: [
       { id: 'fitm-interior-10-to-interior-9', type: 'scene', target: 'fitmInterior9', yaw: 180, pitch: -3 },
       { id: 'fitm-interior-10-to-campus-road-36', type: 'scene', target: 'campusRoad36', yaw: 90, pitch: -3 },
-      { id: 'fitm-interior-10-to-cafeteria', type: 'scene', target: 'universityCafeteria', yaw: 0, pitch: -3 }
+      { id: 'fitm-interior-10-to-cafeteria', type: 'scene', target: 'universityCafeteria', yaw: 0, pitch: -3 },
+      { id: 'info-office-and-educational-services-unit', type: 'info', yaw: -125, pitch: 0 }
     ]
   },
   {

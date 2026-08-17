@@ -32,6 +32,21 @@ npm run dev
 
 เปิด `http://127.0.0.1:3000`
 
+### เปิดและปิด Development Server บน Windows
+
+- เปิดโปรเจกต์ด้วย `npm run dev` และเปิด `http://localhost:3000`
+- ปิด Server จาก Terminal เดิมด้วย `Ctrl+C` แล้วกด `Y` หาก Command Prompt ขอให้ยืนยัน
+- หากปิด Terminal เดิมไปแล้ว ให้หา PID ที่ใช้พอร์ต 3000 แล้วหยุดเฉพาะ Process นั้น:
+
+```cmd
+netstat -ano | findstr :3000
+taskkill /PID ใส่-PID-ที่พบ /T /F
+```
+
+- หลัง Restart Server ให้กด `Ctrl+F5` เพื่อไม่ใช้ JavaScript ของ Turbopack ที่ค้างจาก Process เดิม
+- เปิดจากมือถือด้วย `http://IP-ของคอมพิวเตอร์:3000` โดยดู IP จาก `ipconfig` และให้อุปกรณ์อยู่ใน Wi-Fi เดียวกัน
+- ห้ามรัน `npm run dev` ซ้ำขณะที่ Server เดิมยังทำงาน เพราะจะเกิด `EADDRINUSE`
+
 สำหรับ production:
 
 ```bash

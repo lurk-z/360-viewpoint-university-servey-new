@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createAdminSupabaseClient } from '../../lib/supabase/admin';
@@ -17,6 +17,7 @@ import { requireAdmin, requireStaff } from '../../src/server/auth';
 import { DuplicateTourPlaceIdError, syncTourPlaces } from '../../src/server/tour-place-sync';
 import { isTourPlaceLink } from '../../src/tour-places';
 import { getMediaUsageIndex } from '../../src/server/media-usage';
+import { PUBLIC_CONTENT_CACHE_TAG } from '../../src/server/content-repository';
 
 const contentKindSchema = z.enum(['faculties', 'programs', 'activities', 'hotspot_contents']);
 const slugSchema = z.string().trim().min(2).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -139,9 +140,13 @@ function validatePublishData(kind: ContentKind, value: unknown): Record<string, 
 }
 
 function revalidateAdmin(kind?: ContentKind): void {
-  revalidatePath('/');
   revalidatePath('/admin');
   if (kind) revalidatePath(`/admin/${kind === 'hotspot_contents' ? 'places' : kind}`);
+}
+
+function revalidatePublicContent(): void {
+  updateTag(PUBLIC_CONTENT_CACHE_TAG);
+  revalidatePath('/');
 }
 
 async function assertPublishedFaculty(
@@ -262,6 +267,7 @@ export async function publishContentAction(
     }).eq('id', id);
     if (error) throw error;
     revalidateAdmin(kind);
+    revalidatePublicContent();
     return actionSuccess('อัปเดตข้อมูลที่เผยแพร่แล้ว หน้า Tour จะใช้ข้อมูลฉบับล่าสุด');
   } catch (error) {
     return actionFailure(error, 'ไม่สามารถเผยแพร่ข้อมูลได้ กรุณาลองอีกครั้ง');
@@ -299,6 +305,7 @@ export async function unpublishContentAction(
     }).eq('id', text(formData, 'id'));
     if (error) throw error;
     revalidateAdmin(kind);
+    revalidatePublicContent();
     return actionSuccess(kind === 'faculties'
       ? 'นำคณะออกจากหน้าเว็บแล้ว หลักสูตรของคณะถูกซ่อนชั่วคราวและจะกลับมาเมื่อเผยแพร่คณะอีกครั้ง'
       : 'นำรายการออกจากหน้าเว็บแล้ว');
@@ -321,6 +328,7 @@ export async function archiveContentAction(
     }).eq('id', text(formData, 'id'));
     if (error) throw error;
     revalidateAdmin(kind);
+    revalidatePublicContent();
     return actionSuccess(kind === 'faculties'
       ? 'เก็บคณะเข้าคลังแล้ว หลักสูตรของคณะถูกซ่อนชั่วคราว'
       : 'เก็บรายการเข้าคลังแล้ว');
@@ -370,6 +378,7 @@ export async function deleteContentAction(
     const { error } = await supabase.from(kind).delete().eq('id', id);
     if (error) throw error;
     revalidateAdmin(kind);
+    revalidatePublicContent();
     return actionSuccess('ลบรายการถาวรแล้ว');
   } catch (error) {
     return actionFailure(error, 'ไม่สามารถลบรายการได้ กรุณาลองอีกครั้ง');

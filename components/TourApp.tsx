@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   getInfoHotspots,
@@ -28,11 +29,8 @@ import {
   resolveTourScene
 } from '../src/content';
 import { ModalDialog } from './ModalDialog';
-import ActivitiesDialog from './ActivitiesDialog';
-import FacultyProgramsDialog from './FacultyProgramsDialog';
-import TourChat from './TourChat';
 import TourViewer, { type TourViewerHandle } from './TourViewer';
-import TourMap, { type TourMapMode } from './TourMap';
+import type { TourMapMode } from './TourMap';
 import { usePublicContent } from './usePublicContent';
 import { findShortestTourPath } from '../src/tour-routing';
 
@@ -40,6 +38,10 @@ type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | 
 type CompactOverlay = 'info' | 'map' | 'tools' | 'chat' | null;
 const FITM_LOGO_URL = '/mainimages/Logo_FitM/FITM_LOGO.png';
 const COMPACT_TOUR_QUERY = '(max-width: 1024px)';
+const TourMap = dynamic(() => import('./TourMap'), { ssr: false });
+const TourChat = dynamic(() => import('./TourChat'), { ssr: false });
+const ActivitiesDialog = dynamic(() => import('./ActivitiesDialog'), { ssr: false });
+const FacultyProgramsDialog = dynamic(() => import('./FacultyProgramsDialog'), { ssr: false });
 
 function subscribeCompactTourUi(callback: () => void): () => void {
   const media = window.matchMedia(COMPACT_TOUR_QUERY);
@@ -124,6 +126,7 @@ export default function TourApp() {
   const [isHydrated, setIsHydrated] = useState(false);
   const { content } = usePublicContent();
   const [desktopChatOpen, setDesktopChatOpen] = useState(false);
+  const [chatMounted, setChatMounted] = useState(false);
   const [compactOverlay, setCompactOverlay] = useState<CompactOverlay>(null);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [academicSelection, setAcademicSelection] = useState<AcademicSelection>({});
@@ -178,6 +181,10 @@ export default function TourApp() {
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (chatOpen) setChatMounted(true);
+  }, [chatOpen]);
 
   useEffect(() => {
     setHeaderMenuOpen(false);
@@ -456,15 +463,17 @@ export default function TourApp() {
             inert={compactMapHidden ? true : undefined}
           >
             <h2 id="persistent-map-title" className="tour-map-title">{message(locale, 'mapTitle')}</h2>
-            <TourMap
-              locale={locale}
-              currentSceneId={activeSceneId}
-              content={content}
-              onNavigate={(sceneId) => void navigate(sceneId)}
-              mode={mapMode}
-              onExpandedChange={setMapExpanded}
-              guidedRouteSceneIds={guidedTour?.sceneIds ?? []}
-            />
+            {ready ? (
+              <TourMap
+                locale={locale}
+                currentSceneId={activeSceneId}
+                content={content}
+                onNavigate={(sceneId) => void navigate(sceneId)}
+                mode={mapMode}
+                onExpandedChange={setMapExpanded}
+                guidedRouteSceneIds={guidedTour?.sceneIds ?? []}
+              />
+            ) : <div className="tour-map-loading" aria-hidden="true" />}
             {mapMode === 'preview' && !compactMapHidden ? (
               <button
                 className="map-preview-trigger"
@@ -648,22 +657,42 @@ export default function TourApp() {
             <span>{message(locale, 'loadingScene')}</span>
           </div>
 
-          <TourChat
-            open={chatOpen}
-            locale={locale}
-            sceneId={activeSceneId}
-            content={content}
-            onNavigate={(sceneId) => void navigate(sceneId)}
-            onOpenProgram={(programId) => {
-              const program = content.programs.find((item) => item.id === programId);
-              if (program) openAcademics(program.facultyId, program.id);
-            }}
-            onOpenFaculty={(facultyId) => openAcademics(facultyId)}
-            onOpenAcademics={() => openAcademics()}
-            onStartTour={startGuidedTour}
-            onStartTourTo={startGuidedTourTo}
-            onOpenChange={setChatOpen}
-          />
+          {!chatMounted && !compactTourUi ? (
+            <div className="tour-chat">
+              <button
+                className="tour-chat__toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="tour-chat-panel"
+                aria-label={message(locale, 'aiOpen')}
+                onClick={() => setChatOpen(true)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 5h14v10H9l-4 4V5Z" /><path d="M8 9h8M8 12h5" />
+                </svg>
+                <span>AI</span>
+              </button>
+            </div>
+          ) : null}
+
+          {chatMounted ? (
+            <TourChat
+              open={chatOpen}
+              locale={locale}
+              sceneId={activeSceneId}
+              content={content}
+              onNavigate={(sceneId) => void navigate(sceneId)}
+              onOpenProgram={(programId) => {
+                const program = content.programs.find((item) => item.id === programId);
+                if (program) openAcademics(program.facultyId, program.id);
+              }}
+              onOpenFaculty={(facultyId) => openAcademics(facultyId)}
+              onOpenAcademics={() => openAcademics()}
+              onStartTour={startGuidedTour}
+              onStartTourTo={startGuidedTourTo}
+              onOpenChange={setChatOpen}
+            />
+          ) : null}
 
           {guidedTour && guidedDestinationScene ? (
             <section className={`guided-tour${guidedTour.currentIndex === guidedTour.sceneIds.length - 1 ? ' is-arrived' : ''}`} aria-live="polite">
@@ -782,34 +811,38 @@ export default function TourApp() {
         </> : null}
       </ModalDialog>
 
-      <FacultyProgramsDialog
-        open={dialog === 'academics'}
-        locale={locale}
-        content={content}
-        initialFacultyId={academicSelection.facultyId}
-        initialProgramId={academicSelection.programId}
-        onClose={closeDialog}
-        onNavigate={(sceneId) => {
-          closeDialog();
-          void navigate(sceneId);
-        }}
-      />
+      {dialog === 'academics' ? (
+        <FacultyProgramsDialog
+          open
+          locale={locale}
+          content={content}
+          initialFacultyId={academicSelection.facultyId}
+          initialProgramId={academicSelection.programId}
+          onClose={closeDialog}
+          onNavigate={(sceneId) => {
+            closeDialog();
+            void navigate(sceneId);
+          }}
+        />
+      ) : null}
 
-      <ActivitiesDialog
-        open={dialog === 'activities'}
-        locale={locale}
-        content={content}
-        onClose={closeDialog}
-        onNavigate={(sceneId) => void navigate(sceneId)}
-        onOpenImage={(activity) => {
-          if (!activity.imageUrl) return;
-          openImage([{
-            src: activity.imageUrl,
-            alt: activity.title,
-            caption: activity.title
-          }], 0);
-        }}
-      />
+      {dialog === 'activities' ? (
+        <ActivitiesDialog
+          open
+          locale={locale}
+          content={content}
+          onClose={closeDialog}
+          onNavigate={(sceneId) => void navigate(sceneId)}
+          onOpenImage={(activity) => {
+            if (!activity.imageUrl) return;
+            openImage([{
+              src: activity.imageUrl,
+              alt: activity.title,
+              caption: activity.title
+            }], 0);
+          }}
+        />
+      ) : null}
 
       <ModalDialog
         open={Boolean(imageViewer && activeImage)}

@@ -1,10 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
+import { unstable_cache } from 'next/cache';
 import { createAdminSupabaseClient } from '../../lib/supabase/admin';
 import { isSupabaseConfigured } from '../../lib/supabase/env';
 import type { ChatFallbackReason } from '../chat';
 import { classifyGeminiError } from './chat-service';
 
-export type AiProviderStatus = 'ready' | ChatFallbackReason;
+export type AiProviderStatus = 'checking' | 'ready' | ChatFallbackReason;
 
 export interface AiRuntimeStatus {
   readonly configured: boolean;
@@ -65,4 +66,32 @@ export async function getAiRuntimeStatus(): Promise<AiRuntimeStatus> {
     quotaLimit: dailyLimit(),
     checkedAt: new Date().toISOString()
   };
+}
+
+export async function getAiConfigurationStatus(): Promise<AiRuntimeStatus> {
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+  const supabaseConfigured = isSupabaseConfigured();
+  const geminiConfigured = Boolean(apiKey && apiKey !== 'your-gemini-api-key');
+  const configured = geminiConfigured && supabaseConfigured;
+  return {
+    configured,
+    geminiConfigured,
+    supabaseConfigured,
+    providerStatus: configured ? 'checking' : 'not-configured',
+    model,
+    quotaUsed: await readQuotaUsed(),
+    quotaLimit: dailyLimit(),
+    checkedAt: new Date().toISOString()
+  };
+}
+
+const getCachedAiRuntimeStatusInternal = unstable_cache(
+  getAiRuntimeStatus,
+  ['ai-runtime-status'],
+  { revalidate: 60 }
+);
+
+export async function getCachedAiRuntimeStatus(): Promise<AiRuntimeStatus> {
+  return getCachedAiRuntimeStatusInternal();
 }

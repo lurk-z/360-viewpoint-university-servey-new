@@ -11,6 +11,7 @@ import {
   type ProgramContent,
   type PublicContentSnapshot
 } from '../content';
+import { unstable_cache } from 'next/cache';
 import { createAdminSupabaseClient } from '../../lib/supabase/admin';
 import { isSupabaseConfigured } from '../../lib/supabase/env';
 import { isTourPlaceLink } from '../tour-places';
@@ -68,7 +69,9 @@ function compact<T>(values: readonly (T | null)[]): T[] {
   return values.filter((value): value is T => value !== null);
 }
 
-export async function getPublicContentSnapshot(): Promise<PublicContentSnapshot> {
+export const PUBLIC_CONTENT_CACHE_TAG = 'public-content';
+
+async function readPublicContentSnapshot(): Promise<PublicContentSnapshot> {
   if (!isSupabaseConfigured()) return createFallbackContentSnapshot();
 
   try {
@@ -121,4 +124,17 @@ export async function getPublicContentSnapshot(): Promise<PublicContentSnapshot>
   } catch {
     return createFallbackContentSnapshot();
   }
+}
+
+const readCachedPublicContentSnapshot = unstable_cache(
+  readPublicContentSnapshot,
+  [PUBLIC_CONTENT_CACHE_TAG],
+  {
+    tags: [PUBLIC_CONTENT_CACHE_TAG],
+    revalidate: 15
+  }
+);
+
+export async function getPublicContentSnapshot(): Promise<PublicContentSnapshot> {
+  return readCachedPublicContentSnapshot();
 }

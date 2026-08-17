@@ -687,8 +687,8 @@ describe('tour configuration', () => {
 
   it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    expect(infoHotspots).toHaveLength(37);
-    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(37);
+    expect(infoHotspots).toHaveLength(38);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(38);
 
     for (const hotspot of infoHotspots) {
       expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);

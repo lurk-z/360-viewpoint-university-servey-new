@@ -25,6 +25,94 @@ interface RawAdminRow {
   readonly updated_at: string;
 }
 
+export interface AdminDashboardSummary {
+  readonly collectionCounts: {
+    readonly faculties: number;
+    readonly programs: number;
+    readonly activities: number;
+    readonly places: number;
+  };
+  readonly publishedContentCount: number;
+  readonly publishedFaculties: number;
+  readonly publishedPrograms: number;
+  readonly hotspotLinks: readonly { id: string; sceneId?: string }[];
+}
+
+export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
+  const supabase = await createServerSupabaseClient();
+  const [
+    facultyLinksResult,
+    hotspotLinksResult,
+    facultyCountResult,
+    programCountResult,
+    activityCountResult,
+    publishedFacultyResult,
+    publishedProgramResult,
+    publishedActivityResult,
+    publishedHotspotResult
+  ] = await Promise.all([
+    supabase.from('faculties').select('id,hotspot_id'),
+    supabase.from('hotspot_contents').select('id,scene_id'),
+    supabase.from('faculties').select('id', { count: 'exact', head: true }),
+    supabase.from('programs').select('id', { count: 'exact', head: true }),
+    supabase.from('activities').select('id', { count: 'exact', head: true }),
+    supabase.from('faculties').select('id', { count: 'exact', head: true })
+      .is('archived_at', null).not('published_data', 'is', null),
+    supabase.from('programs').select('id', { count: 'exact', head: true })
+      .is('archived_at', null).not('published_data', 'is', null),
+    supabase.from('activities').select('id', { count: 'exact', head: true })
+      .is('archived_at', null).not('published_data', 'is', null),
+    supabase.from('hotspot_contents').select('id', { count: 'exact', head: true })
+      .is('archived_at', null).not('published_data', 'is', null)
+  ]);
+
+  const firstError = [
+    facultyLinksResult.error,
+    hotspotLinksResult.error,
+    facultyCountResult.error,
+    programCountResult.error,
+    activityCountResult.error,
+    publishedFacultyResult.error,
+    publishedProgramResult.error,
+    publishedActivityResult.error,
+    publishedHotspotResult.error
+  ].find(Boolean);
+  if (firstError) throw firstError;
+
+  const facultyLinks = (facultyLinksResult.data ?? []) as readonly {
+    id: string;
+    hotspot_id: string | null;
+  }[];
+  const hotspotLinks = ((hotspotLinksResult.data ?? []) as readonly {
+    id: string;
+    scene_id: string | null;
+  }[]).map((row) => ({
+    id: row.id,
+    ...(row.scene_id ? { sceneId: row.scene_id } : {})
+  }));
+  const facultyManagedHotspots = new Set(
+    facultyLinks.flatMap((row) => row.hotspot_id ? [row.hotspot_id] : [])
+  );
+  const publishedFaculties = publishedFacultyResult.count ?? 0;
+  const publishedPrograms = publishedProgramResult.count ?? 0;
+
+  return {
+    collectionCounts: {
+      faculties: facultyCountResult.count ?? 0,
+      programs: programCountResult.count ?? 0,
+      activities: activityCountResult.count ?? 0,
+      places: hotspotLinks.filter((row) => !facultyManagedHotspots.has(row.id)).length
+    },
+    publishedContentCount: publishedFaculties
+      + publishedPrograms
+      + (publishedActivityResult.count ?? 0)
+      + (publishedHotspotResult.count ?? 0),
+    publishedFaculties,
+    publishedPrograms,
+    hotspotLinks
+  };
+}
+
 export async function listAdminContent(kind: ContentKind): Promise<AdminContentRow[]> {
   const supabase = await createServerSupabaseClient();
   const columns = kind === 'programs'

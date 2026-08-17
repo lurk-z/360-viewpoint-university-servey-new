@@ -28,7 +28,9 @@ export function usePublicContent(): PublicContentState {
   const [livePreview, setLivePreview] = useState(process.env.NODE_ENV === 'development');
   const versionRef = useRef(content.version);
   const requestRef = useRef<Promise<void> | null>(null);
+  const checkRequestRef = useRef<Promise<void> | null>(null);
   const requestControllerRef = useRef<AbortController | null>(null);
+  const checkControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
 
   const refresh = useCallback((): Promise<void> => {
@@ -56,14 +58,44 @@ export function usePublicContent(): PublicContentState {
     return request;
   }, []);
 
+  const checkForUpdate = useCallback((): Promise<void> => {
+    if (checkRequestRef.current) return checkRequestRef.current;
+    const controller = new AbortController();
+    checkControllerRef.current = controller;
+    const request = fetch('/api/content', {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: controller.signal
+    })
+      .then(async (response) => {
+        if (!response.ok || !mountedRef.current) return;
+        const nextVersion = Number(response.headers.get('X-Content-Version'));
+        if (!Number.isFinite(nextVersion) || nextVersion !== versionRef.current) {
+          await refresh();
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (checkRequestRef.current === request) {
+          checkRequestRef.current = null;
+          checkControllerRef.current = null;
+        }
+      });
+    checkRequestRef.current = request;
+    return request;
+  }, [refresh]);
+
   useEffect(() => {
     mountedRef.current = true;
     void refresh();
     return () => {
       mountedRef.current = false;
       requestControllerRef.current?.abort();
+      checkControllerRef.current?.abort();
       requestControllerRef.current = null;
+      checkControllerRef.current = null;
       requestRef.current = null;
+      checkRequestRef.current = null;
     };
   }, [refresh]);
 
@@ -82,9 +114,9 @@ export function usePublicContent(): PublicContentState {
 
   useEffect(() => {
     const refreshWhenVisible = (): void => {
-      if (document.visibilityState === 'visible') void refresh();
+      if (document.visibilityState === 'visible') void checkForUpdate();
     };
-    const refreshOnline = (): void => { void refresh(); };
+    const refreshOnline = (): void => { void checkForUpdate(); };
     window.addEventListener('focus', refreshWhenVisible);
     window.addEventListener('online', refreshOnline);
     document.addEventListener('visibilitychange', refreshWhenVisible);
@@ -93,15 +125,15 @@ export function usePublicContent(): PublicContentState {
       window.removeEventListener('online', refreshOnline);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [refresh]);
+  }, [checkForUpdate]);
 
   useEffect(() => {
     if (!livePreview) return;
     const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible' && navigator.onLine) void refresh();
+      if (document.visibilityState === 'visible' && navigator.onLine) void checkForUpdate();
     }, LIVE_REFRESH_INTERVAL_MS);
     return () => window.clearInterval(interval);
-  }, [livePreview, refresh]);
+  }, [checkForUpdate, livePreview]);
 
   return { content };
 }
