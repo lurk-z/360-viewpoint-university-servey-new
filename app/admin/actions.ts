@@ -92,6 +92,10 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
     const interestTagsEn = lines(formData, 'interestTagsEn');
     const careerTagsTh = lines(formData, 'careerTagsTh');
     const careerTagsEn = lines(formData, 'careerTagsEn');
+    const eligibleQualifications = formData.getAll('eligibleQualifications')
+      .map((value) => String(value))
+      .filter((value) => ['m3', 'm6-pvoc', 'high-vocational', 'bachelor', 'other'].includes(value));
+    const studyLevel = text(formData, 'studyLevel');
     return programDataSchema.parse({
       name: { th: text(formData, 'nameTh'), en: text(formData, 'nameEn') },
       department: departmentTh || departmentEn ? { th: departmentTh, en: departmentEn } : undefined,
@@ -105,6 +109,8 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
       careerTags: careerTagsTh.length || careerTagsEn.length
         ? { th: careerTagsTh, en: careerTagsEn }
         : undefined,
+      eligibleQualifications: eligibleQualifications.length ? eligibleQualifications : undefined,
+      studyLevel: studyLevel || undefined,
       imageUrl: text(formData, 'imageUrl'),
       source: sourceFromForm(formData)
     });

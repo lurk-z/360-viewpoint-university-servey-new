@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { chatRequestSchema } from './chat';
 import { createFallbackContentSnapshot } from './content';
+import { getInfoHotspots, getScene } from './tour-data';
 import {
+  answerGroundedQuestion,
   buildKnowledgeDocuments,
   classifyGeminiError,
   createFallbackChatResponse,
@@ -28,14 +30,16 @@ describe('grounded tour chat', () => {
     const grounded = validateGroundedAnswer({
       intent: 'answer',
       answered: true,
-      answer: 'คำตอบจากข้อมูล',
+      answer: 'คำตอบจากข้อมูล [1]\nอ้างอิง: https://example.com/source',
       citationIds: [known.citation.id, 'invented-source'],
       relatedSceneIds: [known.sceneId ?? 'entrance', 'invented-scene'],
-      destinationSceneId: '',
+      destinationSceneIds: [],
+      comparisonProgramIds: [],
       programRecommendations: []
     }, documents);
     expect(grounded?.citations.map((citation) => citation.id)).toEqual([known.citation.id]);
     expect(grounded?.relatedSceneIds).not.toContain('invented-scene');
+    expect(grounded?.answer).toBe('คำตอบจากข้อมูล');
   });
 
   it('returns related published information when Gemini is unavailable', () => {
@@ -48,7 +52,7 @@ describe('grounded tour chat', () => {
     }, content);
     expect(fallback.fallback).toBe(true);
     expect(fallback.answered).toBe(false);
-    expect(fallback.citations.length).toBeGreaterThan(0);
+    expect(fallback).not.toHaveProperty('citations');
     expect(fallback.relatedProgramIds).toEqual([]);
   });
 
@@ -112,6 +116,7 @@ describe('grounded tour chat', () => {
       desiredLevel: 'bachelor'
     }, content, 'en');
     expect(recommendations[0]?.programId).toBe('program-software');
+    expect(recommendations[0]?.facultyId).toBe('faculty-fitm');
     expect(recommendations.every((item) => content.programs.some((program) => program.id === item.programId))).toBe(true);
     const grounded = validateGroundedAnswer({
       intent: 'program-recommendation',
@@ -119,7 +124,8 @@ describe('grounded tour chat', () => {
       answer: 'Verified recommendation',
       citationIds: [],
       relatedSceneIds: [],
-      destinationSceneId: '',
+      destinationSceneIds: [],
+      comparisonProgramIds: [],
       programRecommendations: [
         { programId: 'program-software', reason: 'Matches software interests' },
         { programId: 'invented-program', reason: 'Invented' }
@@ -128,6 +134,43 @@ describe('grounded tour chat', () => {
     expect(grounded?.programRecommendations).toEqual([
       { programId: 'program-software', reason: 'Matches software interests' }
     ]);
+  });
+
+  it('does not force unrelated or incompatible program recommendations', () => {
+    const content = createFallbackContentSnapshot();
+    expect(rankProgramsForProfile({
+      interests: 'ดาราศาสตร์และอวกาศ',
+      currentQualification: 'm6-pvoc',
+      desiredLevel: 'bachelor'
+    }, content, 'th')).toEqual([]);
+  });
+
+  it('builds direct tours and comparisons without exposing citations', async () => {
+    const content = createFallbackContentSnapshot();
+    const tour = await answerGroundedQuestion({
+      message: 'พาไปโรงอาหารมหาวิทยาลัย',
+      locale: 'th',
+      sceneId: 'entrance',
+      history: []
+    }, content);
+    expect(tour.intent).toBe('tour');
+    expect(tour.tourPlan?.stopSceneIds.length).toBeGreaterThan(0);
+    expect(tour).not.toHaveProperty('citations');
+  });
+
+  it('uses the current viewer yaw to describe a nearby published Info point', async () => {
+    const content = createFallbackContentSnapshot();
+    const hotspot = getInfoHotspots(getScene('entrance'))[0];
+    expect(hotspot).toBeDefined();
+    const response = await answerGroundedQuestion({
+      message: 'ตอนนี้กำลังมองอะไร',
+      locale: 'th',
+      sceneId: 'entrance',
+      history: [],
+      viewYaw: hotspot?.yaw
+    }, content);
+    expect(response.answered).toBe(true);
+    expect(response.answer).toContain(content.hotspots.find((item) => item.hotspotId === hotspot?.id)?.title.th ?? '');
   });
 
   it('uses a linked faculty as the canonical AI source instead of duplicating its Info hotspot', () => {

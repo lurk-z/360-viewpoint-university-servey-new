@@ -207,10 +207,10 @@ test('AI route card starts a guided tour and highlights the real scene path', as
         intent: 'tour',
         answered: true,
         answer: 'A verified route to the University Cafeteria is ready.',
-        citations: [],
         relatedSceneIds: [],
         relatedProgramIds: [],
-        tourPlan: { destinationSceneId: 'universityCafeteria', sceneIds: ['entrance', 'universityCafeteria'] },
+        comparisonProgramIds: [],
+        tourPlan: { destinationSceneId: 'universityCafeteria', stopSceneIds: ['universityCafeteria'], sceneIds: ['entrance', 'universityCafeteria'] },
         programRecommendations: [],
         needsRecommendationProfile: false,
         fallback: false
@@ -249,19 +249,19 @@ test('AI recommendation form uses the visitor profile and opens verified program
         intent: 'program-recommendation',
         answered: true,
         answer: 'This recommendation uses published Admin content.',
-        citations: [],
         relatedSceneIds: [],
         relatedProgramIds: ['program-with-scene'],
-        programRecommendations: [{ programId: 'program-with-scene', reason: 'Matches your interest in software.' }],
+        comparisonProgramIds: [],
+        programRecommendations: [{ programId: 'program-with-scene', facultyId: 'faculty-with-scene', reason: 'Matches your interest in software.' }],
         needsRecommendationProfile: false,
         fallback: false
       } : {
         intent: 'program-recommendation',
         answered: false,
         answer: 'Tell us about your interests first.',
-        citations: [],
         relatedSceneIds: [],
         relatedProgramIds: [],
+        comparisonProgramIds: [],
         programRecommendations: [],
         needsRecommendationProfile: true,
         fallback: false
@@ -284,6 +284,7 @@ test('AI recommendation form uses the visitor profile and opens verified program
 
   const recommendation = page.locator('.tour-chat__recommendations');
   await expect(recommendation).toContainText('Program with tour scene');
+  await expect(recommendation).toContainText('Faculty with tour scene');
   await expect(recommendation).toContainText('Matches your interest in software.');
   await recommendation.getByRole('button', { name: 'View program details' }).click();
   await expect(page.locator('dialog[open]')).toContainText('Program with tour scene');

@@ -22,6 +22,9 @@ export interface LocalizedTagList {
   readonly en: readonly string[];
 }
 
+export type ProgramEligibleQualification = 'm3' | 'm6-pvoc' | 'high-vocational' | 'bachelor' | 'other';
+export type ProgramStudyLevel = 'vocational' | 'bachelor' | 'transfer' | 'master';
+
 export interface ContentSource {
   readonly label: LocalizedContent;
   readonly url?: string;
@@ -55,6 +58,8 @@ export interface ProgramContent {
   readonly summary: LocalizedContent;
   readonly description: LocalizedContent;
   readonly admission: LocalizedContent;
+  readonly eligibleQualifications?: readonly ProgramEligibleQualification[];
+  readonly studyLevel?: ProgramStudyLevel;
   readonly interestTags?: LocalizedTagList;
   readonly careerTags?: LocalizedTagList;
   readonly imageUrl?: string;
@@ -139,6 +144,10 @@ export const programDataSchema = z.object({
   summary: requiredLocalizedSchema,
   description: requiredLocalizedSchema,
   admission: requiredLocalizedSchema,
+  eligibleQualifications: z.array(z.enum(['m3', 'm6-pvoc', 'high-vocational', 'bachelor', 'other']))
+    .max(5)
+    .optional(),
+  studyLevel: z.enum(['vocational', 'bachelor', 'transfer', 'master']).optional(),
   interestTags: localizedTagListSchema.optional(),
   careerTags: localizedTagListSchema.optional(),
   imageUrl: optionalUrlSchema,

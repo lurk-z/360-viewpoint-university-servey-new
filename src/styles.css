@@ -1003,7 +1003,9 @@ svg {
 
 .tour-chat__welcome strong,
 .tour-chat__citations strong,
-.tour-chat__programs strong {
+.tour-chat__programs strong,
+.tour-chat__faculties strong,
+.tour-chat__activities strong {
   color: var(--ink-soft);
   font-size: 0.68rem;
   letter-spacing: 0.07em;
@@ -1012,7 +1014,9 @@ svg {
 
 .tour-chat__suggestions,
 .tour-chat__citations,
-.tour-chat__programs {
+.tour-chat__programs,
+.tour-chat__faculties,
+.tour-chat__activities {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1021,6 +1025,8 @@ svg {
 .tour-chat__suggestions button,
 .tour-chat__citations button,
 .tour-chat__programs button,
+.tour-chat__faculties button,
+.tour-chat__activities button,
 .tour-chat__citations a,
 .tour-chat__citations span,
 .tour-chat__scene-link {
@@ -1037,6 +1043,8 @@ svg {
 .tour-chat__suggestions button:hover,
 .tour-chat__citations button:hover,
 .tour-chat__programs button:hover,
+.tour-chat__faculties button:hover,
+.tour-chat__activities button:hover,
 .tour-chat__scene-link:hover {
   border-color: var(--fitm-sky);
   background: var(--fitm-tint);
@@ -1074,12 +1082,16 @@ svg {
   margin-top: 9px;
 }
 
-.tour-chat__programs {
+.tour-chat__programs,
+.tour-chat__faculties,
+.tour-chat__activities {
   margin-top: 9px;
 }
 
 .tour-chat__citations strong,
-.tour-chat__programs strong {
+.tour-chat__programs strong,
+.tour-chat__faculties strong,
+.tour-chat__activities strong {
   width: 100%;
 }
 
@@ -1207,6 +1219,18 @@ svg {
   font-weight: 850;
 }
 
+.tour-chat__route-stops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+}
+
+.tour-chat__route-stops small {
+  padding: 3px 6px;
+  border-radius: 99px;
+  background: var(--white);
+}
+
 .tour-chat__route-card small,
 .tour-chat__recommendations small {
   color: var(--ink-muted);
@@ -1258,6 +1282,108 @@ svg {
 .tour-chat__recommendation-disclaimer {
   color: var(--ink-muted);
   font-size: 0.67rem;
+}
+
+.tour-chat__program-faculty {
+  margin: 0 0 5px !important;
+  color: var(--fitm-blue-dark);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.tour-chat__programs button,
+.tour-chat__faculties button,
+.tour-chat__activities button {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.tour-chat__faculties button,
+.tour-chat__activities button {
+  flex: 1 1 100%;
+}
+
+.tour-chat__programs button small,
+.tour-chat__faculties button small,
+.tour-chat__activities button small {
+  color: var(--ink-muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.tour-chat__comparison {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.tour-chat__comparison-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.tour-chat__comparison article {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+}
+
+.tour-chat__comparison h3 {
+  margin: 0;
+  color: var(--fitm-navy);
+  font-size: 0.78rem;
+}
+
+.tour-chat__comparison article > strong,
+.tour-chat__comparison article > span,
+.tour-chat__comparison article > small {
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+}
+
+.tour-chat__comparison-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tour-chat__comparison-tags span {
+  padding: 3px 6px;
+  border-radius: 99px;
+  background: var(--fitm-tint);
+  color: var(--fitm-blue-dark);
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.tour-chat__comparison button,
+.tour-chat__retry,
+.tour-chat__thinking button {
+  min-height: 34px;
+  border: 1px solid var(--fitm-blue);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--fitm-blue-dark);
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.tour-chat__thinking {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.tour-chat__retry {
+  align-self: flex-start;
 }
 
 .guided-tour {

@@ -1,9 +1,33 @@
 import { describe, expect, it } from 'vitest';
 import { createFallbackContentSnapshot, type PublicContentSnapshot } from './content';
 import { getNavigationHotspots, getScene } from './tour-data';
-import { findShortestTourPath, findTourDestinationCandidates } from './tour-routing';
+import {
+  buildMultiStopTourPath,
+  findShortestTourPath,
+  findTourDestinationCandidates,
+  findTourDestinationMentions
+} from './tour-routing';
 
 describe('guided tour routing', () => {
+  it('joins ordered stops without duplicating segment boundaries', () => {
+    const result = buildMultiStopTourPath('entrance', ['campusRoad1', 'campusRoad2']);
+    expect(result?.stopSceneIds).toEqual(['campusRoad1', 'campusRoad2']);
+    expect(result?.sceneIds[0]).toBe('entrance');
+    expect(result?.sceneIds.at(-1)).toBe('campusRoad2');
+    expect(result && new Set(result.sceneIds).size).toBe(result?.sceneIds.length);
+  });
+
+  it('keeps explicitly named destinations in the order written by the visitor', () => {
+    const content = createFallbackContentSnapshot();
+    const first = getScene('universityCafeteria').title.th;
+    const second = getScene('multipurposeGym').title.th;
+    const destinations = findTourDestinationMentions(`พาไป ${first} แล้วไป ${second}`, content, 'th');
+    expect(destinations.slice(0, 2).map((item) => item.sceneId)).toEqual([
+      'universityCafeteria',
+      'multipurposeGym'
+    ]);
+  });
+
   it('builds a shortest path exclusively from configured navigation hotspots', () => {
     const path = findShortestTourPath('entrance', 'universityCafeteria');
     expect(path?.[0]).toBe('entrance');

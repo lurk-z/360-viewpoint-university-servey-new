@@ -55,6 +55,11 @@ function localizedList(data: Record<string, unknown>, key: string, locale: 'th' 
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string').join('\n') : '';
 }
 
+function stringList(data: Record<string, unknown>, key: string): string[] {
+  const value = data[key];
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 function source(data: Record<string, unknown>, kind: ContentKind): Record<string, unknown> {
   return object(data[kind === 'hotspot_contents' ? 'reference' : 'source']);
 }
@@ -204,6 +209,36 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
       <TextField prefix={prefix} name="departmentEn" label="Department (English, optional)" value={localized(data, 'department', 'en')} />
       <TextField prefix={prefix} name="levelTh" label="ระดับการศึกษา (ไทย)" value={localized(data, 'level', 'th')} required />
       <TextField prefix={prefix} name="levelEn" label="Degree level (English)" value={localized(data, 'level', 'en')} required />
+      <label htmlFor={inputId(prefix, 'studyLevel')}>
+        <span>ระดับการศึกษาแบบโครงสร้าง (ใช้สำหรับ AI)</span>
+        <select id={inputId(prefix, 'studyLevel')} name="studyLevel" defaultValue={field(data, 'studyLevel')}>
+          <option value="">ให้ระบบอ่านจากข้อความเดิม</option>
+          <option value="vocational">อาชีวศึกษา/โรงเรียน–โรงงาน</option>
+          <option value="bachelor">ปริญญาตรี</option>
+          <option value="transfer">ปริญญาตรีเทียบโอน</option>
+          <option value="master">ปริญญาโท</option>
+        </select>
+      </label>
+      <fieldset className="admin-field--wide admin-checkbox-group">
+        <legend>วุฒิที่รับสมัครแบบโครงสร้าง (เลือกได้หลายข้อ)</legend>
+        {([
+          ['m3', 'ม.3'],
+          ['m6-pvoc', 'ม.6 / ปวช.'],
+          ['high-vocational', 'ปวส.'],
+          ['bachelor', 'ปริญญาตรี'],
+          ['other', 'วุฒิอื่น']
+        ] as const).map(([value, label]) => (
+          <label key={value}>
+            <input
+              type="checkbox"
+              name="eligibleQualifications"
+              value={value}
+              defaultChecked={stringList(data, 'eligibleQualifications').includes(value)}
+            />
+            <span>{label}</span>
+          </label>
+        ))}
+      </fieldset>
     </> : null}
     {kind !== 'hotspot_contents' ? <>
       <TextArea prefix={prefix} name="summaryTh" label="สรุปย่อ (ไทย)" value={localized(data, 'summary', 'th')} required rows={2} />

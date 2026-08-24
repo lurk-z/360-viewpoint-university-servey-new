@@ -32,7 +32,7 @@ import { ModalDialog } from './ModalDialog';
 import TourViewer, { type TourViewerHandle } from './TourViewer';
 import type { TourMapMode } from './TourMap';
 import { usePublicContent } from './usePublicContent';
-import { findShortestTourPath } from '../src/tour-routing';
+import { buildMultiStopTourPath, findShortestTourPath } from '../src/tour-routing';
 
 type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | null;
 type CompactOverlay = 'info' | 'map' | 'tools' | 'chat' | null;
@@ -119,6 +119,7 @@ export default function TourApp() {
   const setSceneInfoVisible = useTourStore((state) => state.setSceneInfoVisible);
   const setAutorotate = useTourStore((state) => state.setAutorotate);
   const viewerRef = useRef<TourViewerHandle>(null);
+  const viewYawRef = useRef<number | undefined>(undefined);
   const [dialog, setDialog] = useState<DialogName>(null);
   const [selectedInfoSelection, setSelectedInfoSelection] = useState<InfoSelection | null>(null);
   const [imageViewer, setImageViewer] = useState<ImageViewerState | null>(null);
@@ -130,6 +131,7 @@ export default function TourApp() {
   const [compactOverlay, setCompactOverlay] = useState<CompactOverlay>(null);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [academicSelection, setAcademicSelection] = useState<AcademicSelection>({});
+  const [selectedActivityId, setSelectedActivityId] = useState<string>();
   const [mapExpanded, setMapExpanded] = useState(false);
   const [guidedTour, setGuidedTour] = useState<GuidedTourState | null>(null);
   const headerMenuRef = useRef<HTMLDivElement>(null);
@@ -155,6 +157,13 @@ export default function TourApp() {
   const guidedDestinationScene = guidedTour
     ? resolveTourScene(getScene(guidedTour.destinationSceneId), content)
     : undefined;
+  const guidedCurrentStop = guidedTour?.stopSceneIds.find((stopSceneId) => {
+    const stopIndex = guidedTour.sceneIds.indexOf(stopSceneId);
+    return stopIndex >= guidedTour.currentIndex;
+  }) ?? guidedTour?.destinationSceneId;
+  const guidedRemainingStops = guidedTour
+    ? guidedTour.stopSceneIds.filter((stopSceneId) => guidedTour.sceneIds.indexOf(stopSceneId) >= guidedTour.currentIndex).length
+    : 0;
   const guidedDestinationFaculty = guidedTour
     ? content.faculties.find((faculty) => faculty.sceneId === guidedTour.destinationSceneId)
     : undefined;
@@ -221,9 +230,20 @@ export default function TourApp() {
       if (!current) return null;
       const currentIndex = current.sceneIds.indexOf(activeSceneId);
       if (currentIndex >= 0) return currentIndex === current.currentIndex ? current : { ...current, currentIndex };
-      const recalculated = findShortestTourPath(activeSceneId, current.destinationSceneId);
+      const remainingStops = current.stopSceneIds.filter((stopSceneId) => (
+        current.sceneIds.indexOf(stopSceneId) > current.currentIndex
+      ));
+      const recalculated = buildMultiStopTourPath(
+        activeSceneId,
+        remainingStops.length ? remainingStops : [current.destinationSceneId]
+      );
       return recalculated
-        ? { destinationSceneId: current.destinationSceneId, sceneIds: recalculated, currentIndex: 0 }
+        ? {
+          destinationSceneId: recalculated.stopSceneIds.at(-1) ?? current.destinationSceneId,
+          stopSceneIds: recalculated.stopSceneIds,
+          sceneIds: recalculated.sceneIds,
+          currentIndex: 0
+        }
         : null;
     });
   }, [activeSceneId]);
@@ -315,13 +335,19 @@ export default function TourApp() {
 
   const openHeaderDialog = (name: Exclude<DialogName, 'info' | null>): void => {
     setHeaderMenuOpen(false);
+    if (name === 'activities') setSelectedActivityId(undefined);
     setDialog(name);
   };
 
   const startGuidedTour = (plan: TourPlan): void => {
-    const sceneIds = findShortestTourPath(activeSceneId, plan.destinationSceneId);
-    if (!sceneIds) return;
-    setGuidedTour({ destinationSceneId: plan.destinationSceneId, sceneIds, currentIndex: 0 });
+    const route = buildMultiStopTourPath(activeSceneId, plan.stopSceneIds);
+    if (!route) return;
+    setGuidedTour({
+      destinationSceneId: route.stopSceneIds.at(-1) ?? plan.destinationSceneId,
+      stopSceneIds: route.stopSceneIds,
+      sceneIds: route.sceneIds,
+      currentIndex: 0
+    });
     announce(locale === 'th'
       ? `เริ่มพาทัวร์ไป ${localize(resolveTourScene(getScene(plan.destinationSceneId), content).title, locale)}`
       : `Guided tour started to ${localize(resolveTourScene(getScene(plan.destinationSceneId), content).title, locale)}`);
@@ -329,7 +355,7 @@ export default function TourApp() {
 
   const startGuidedTourTo = (destinationSceneId: SceneId): void => {
     const sceneIds = findShortestTourPath(activeSceneId, destinationSceneId);
-    if (sceneIds) startGuidedTour({ destinationSceneId, sceneIds });
+    if (sceneIds) startGuidedTour({ destinationSceneId, stopSceneIds: [destinationSceneId], sceneIds });
   };
 
   const openImage = (images: readonly InfoImage[], index: number): void => {
@@ -349,11 +375,18 @@ export default function TourApp() {
     setDialog('academics');
   };
 
+  const openActivity = (activityId: string): void => {
+    if (!content.activities.some((activity) => activity.id === activityId)) return;
+    setSelectedActivityId(activityId);
+    setDialog('activities');
+  };
+
   const closeDialog = (): void => {
     setImageViewer(null);
     setDialog(null);
     setSelectedInfoSelection(null);
     setAcademicSelection({});
+    setSelectedActivityId(undefined);
   };
 
   const handleSceneChange = (sceneId: SceneId): void => {
@@ -453,6 +486,7 @@ export default function TourApp() {
             onSceneChange={handleSceneChange}
             onError={() => setError(message(locale, 'loadErrorDescription'))}
             onAutorotate={setAutorotate}
+            onViewYaw={(yaw) => { viewYawRef.current = yaw; }}
           />
           <div className="viewer-vignette" aria-hidden="true" />
 
@@ -687,10 +721,12 @@ export default function TourApp() {
                 if (program) openAcademics(program.facultyId, program.id);
               }}
               onOpenFaculty={(facultyId) => openAcademics(facultyId)}
+              onOpenActivity={openActivity}
               onOpenAcademics={() => openAcademics()}
               onStartTour={startGuidedTour}
               onStartTourTo={startGuidedTourTo}
               onOpenChange={setChatOpen}
+              getViewYaw={() => viewYawRef.current}
             />
           ) : null}
 
@@ -700,8 +736,11 @@ export default function TourApp() {
                 <span>{guidedTour.currentIndex === guidedTour.sceneIds.length - 1
                   ? message(locale, 'guidedTourArrived')
                   : message(locale, 'guidedTourTitle')}</span>
-                <strong>{localize(guidedDestinationScene.title, locale)}</strong>
+                <strong>{localize(resolveTourScene(getScene(guidedCurrentStop ?? guidedTour.destinationSceneId), content).title, locale)}</strong>
                 <small>{guidedTour.currentIndex + 1} / {guidedTour.sceneIds.length}</small>
+                {guidedTour.stopSceneIds.length > 1 ? (
+                  <small>{locale === 'th' ? `เหลือ ${guidedRemainingStops} จุดหมาย` : `${guidedRemainingStops} stops remaining`}</small>
+                ) : null}
               </div>
               <div className="guided-tour__actions">
                 <button
@@ -831,6 +870,7 @@ export default function TourApp() {
           open
           locale={locale}
           content={content}
+          initialActivityId={selectedActivityId}
           onClose={closeDialog}
           onNavigate={(sceneId) => void navigate(sceneId)}
           onOpenImage={(activity) => {

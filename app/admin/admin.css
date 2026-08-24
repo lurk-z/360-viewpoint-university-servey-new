@@ -192,6 +192,19 @@
 .admin-ai-status > footer small { color: var(--admin-muted); font-size: .68rem; }
 .admin-ai-status > footer button { padding: 8px 11px; border: 0; border-radius: 9px; background: var(--admin-blue); color: #fff; font: inherit; font-size: .72rem; font-weight: 850; }
 .admin-ai-status > footer button:disabled { opacity: .58; }
+.admin-ai-status__metrics summary { color: var(--admin-blue); cursor: pointer; font-size: .75rem; font-weight: 850; }
+.admin-ai-status__metrics ul { display: grid; gap: 6px; margin: 10px 0 0; padding-left: 20px; color: var(--admin-muted); font-size: .72rem; }
+.admin-tag-drafting { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; width: 100%; max-width: 1180px; margin: 0 auto; padding: 16px 18px; border: 1px solid #7dd3fc; border-radius: 16px; background: #f0f9ff; }
+.admin-tag-drafting h2 { margin: 0 0 4px; color: var(--admin-navy); font-size: 1rem; }
+.admin-tag-drafting p { grid-column: 1 / -1; margin: 0; color: var(--admin-muted); font-size: .75rem; line-height: 1.5; }
+.admin-tag-drafting div p { grid-column: auto; }
+.admin-tag-drafting > strong { color: var(--admin-blue); font-size: .78rem; white-space: nowrap; }
+.admin-tag-drafting button { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 10px; background: var(--admin-blue); color: #fff; font: inherit; font-size: .75rem; font-weight: 850; }
+.admin-tag-drafting button:disabled { opacity: .58; }
+.admin-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px 14px; min-width: 0; margin: 0; padding: 12px; border: 1px solid var(--admin-line); border-radius: 11px; }
+.admin-checkbox-group legend { padding: 0 5px; color: var(--admin-muted); font-size: .72rem; font-weight: 800; }
+.admin-checkbox-group label { display: flex; flex-direction: row; align-items: center; gap: 7px; }
+.admin-checkbox-group input { width: 18px; min-height: 18px; }
 .admin-chart { padding: 20px; border: 1px solid var(--admin-line); border-radius: 18px; background: #fff; }
 .admin-chart header h2 { margin: 0; font-size: 1rem; }
 .admin-chart header span { color: var(--admin-muted); font-size: .72rem; }
@@ -376,6 +389,8 @@
 }
 
 @media (max-width: 600px) {
+  .admin-tag-drafting { grid-template-columns: 1fr; align-items: stretch; }
+  .admin-tag-drafting > strong { white-space: normal; }
   .admin-main { padding: 18px 12px; }
   .admin-page { gap: 16px; }
   .admin-page__header { flex-direction: column; }

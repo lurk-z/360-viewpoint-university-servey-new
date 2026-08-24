@@ -1,10 +1,12 @@
 import AdminContentEditor from './AdminContentEditor';
+import AdminProgramTagDrafting from './AdminProgramTagDrafting';
 import type { AdminMediaOption } from './AdminImageGalleryFields';
 import { createServerSupabaseClient } from '../../lib/supabase/server';
-import { hotspotDataSchema, type ContentKind } from '../../src/content';
+import { hotspotDataSchema, programDataSchema, type ContentKind } from '../../src/content';
 import { listAdminContent } from '../../src/server/admin-repository';
 import { requireStaff } from '../../src/server/auth';
 import { isTourPlaceLink } from '../../src/tour-places';
+import { hasMissingProgramRecommendationData } from '../../src/program-recommendation-data';
 
 const sections = {
   faculties: {
@@ -100,17 +102,33 @@ export default async function AdminSectionPage({
         draftReady: hotspotDataSchema.safeParse(row.draftData).success
       }]))
     : undefined;
+  const missingProgramTagCount = config.kind === 'programs'
+    ? allRows.filter((row) => {
+      if (!row.publishedData || row.archivedAt) return false;
+      const draft = programDataSchema.safeParse(row.draftData);
+      const published = programDataSchema.safeParse(row.publishedData);
+      return draft.success && published.success && (
+        hasMissingProgramRecommendationData(draft.data)
+        || hasMissingProgramRecommendationData(published.data)
+      );
+    }).length
+    : 0;
 
   return (
-    <AdminContentEditor
-      {...config}
-      rows={rows}
-      role={session.role}
-      faculties={faculties}
-      facultyProgramStats={facultyProgramStats}
-      facultyFilter={facultyFilter}
-      media={media}
-      placeStatuses={placeStatuses}
-    />
+    <>
+      {config.kind === 'programs' && session.role === 'admin' ? (
+        <AdminProgramTagDrafting missingCount={missingProgramTagCount} />
+      ) : null}
+      <AdminContentEditor
+        {...config}
+        rows={rows}
+        role={session.role}
+        faculties={faculties}
+        facultyProgramStats={facultyProgramStats}
+        facultyFilter={facultyFilter}
+        media={media}
+        placeStatuses={placeStatuses}
+      />
+    </>
   );
 }

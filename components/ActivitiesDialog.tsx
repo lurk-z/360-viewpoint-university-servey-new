@@ -11,6 +11,7 @@ interface ActivitiesDialogProps {
   readonly open: boolean;
   readonly locale: Locale;
   readonly content: PublicContentSnapshot;
+  readonly initialActivityId?: string;
   readonly onClose: () => void;
   readonly onNavigate: (sceneId: SceneId) => void;
   readonly onOpenImage: (activity: ActivityContent) => void;
@@ -37,6 +38,7 @@ export default function ActivitiesDialog({
   open,
   locale,
   content,
+  initialActivityId,
   onClose,
   onNavigate,
   onOpenImage
@@ -50,9 +52,17 @@ export default function ActivitiesDialog({
   const alternativeLocale = locale === 'th' ? 'en' : 'th';
 
   useEffect(() => {
-    if (!open) setSelectedId(undefined);
-    if (selectedId && !content.activities.some((activity) => activity.id === selectedId)) setSelectedId(undefined);
-  }, [content.activities, open, selectedId]);
+    if (!open) {
+      setSelectedId(undefined);
+      return;
+    }
+    setSelectedId((current) => {
+      if (current && content.activities.some((activity) => activity.id === current)) return current;
+      return initialActivityId && content.activities.some((activity) => activity.id === initialActivityId)
+        ? initialActivityId
+        : undefined;
+    });
+  }, [content.activities, initialActivityId, open]);
 
   return (
     <ModalDialog open={open} titleId="activities-dialog-title" wide closeLabel={message(locale, 'close')} onClose={onClose}>

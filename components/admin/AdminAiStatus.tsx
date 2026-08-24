@@ -15,6 +15,7 @@ const STATUS_LABELS: Record<AiRuntimeStatus['providerStatus'], string> = {
   'not-configured': 'ตั้งค่าไม่ครบ',
   'invalid-key': 'API key ถูกปฏิเสธ',
   'quota-exceeded': 'โควตาเต็ม',
+  'rate-limited': 'คำขอต่อนาทีเต็ม',
   'model-unavailable': 'เชื่อมต่อโมเดลไม่ได้',
   timeout: 'ตรวจสอบหมดเวลา',
   'invalid-response': 'คำตอบไม่ถูกต้อง',
@@ -68,8 +69,24 @@ export default function AdminAiStatus({ status, publishedFaculties, publishedPro
         <div><dt>โมเดล</dt><dd><code>{currentStatus.model}</code></dd></div>
         <div><dt>การเข้าถึงโมเดล</dt><dd>{STATUS_LABELS[currentStatus.providerStatus]}</dd></div>
         <div><dt>โควตาวันนี้</dt><dd>{currentStatus.quotaUsed === null ? 'ตรวจสอบไม่ได้' : `${currentStatus.quotaUsed.toLocaleString()} / ${currentStatus.quotaLimit.toLocaleString()}`}</dd></div>
+        <div><dt>โควตานาทีนี้</dt><dd>{currentStatus.minuteUsed === null ? 'รอรัน Migration' : `${currentStatus.minuteUsed.toLocaleString()} / ${currentStatus.minuteLimit.toLocaleString()}`}</dd></div>
         <div><dt>ข้อมูลเผยแพร่</dt><dd>{publishedFaculties} คณะ · {publishedPrograms} หลักสูตร</dd></div>
+        <div><dt>หลักสูตรมีแท็กครบ</dt><dd>{currentStatus.taggedPrograms === null ? 'รอรัน Migration' : `${currentStatus.taggedPrograms} รายการ`}</dd></div>
+        <div><dt>วุฒิ/ระดับแบบโครงสร้าง</dt><dd>{currentStatus.structuredPrograms === null ? 'รอรัน Migration' : `${currentStatus.structuredPrograms} รายการ`}</dd></div>
+        <div><dt>รอตรวจสอบข้อมูล AI</dt><dd>{currentStatus.pendingPrograms === null ? 'รอรัน Migration' : `${currentStatus.pendingPrograms} รายการ`}</dd></div>
       </dl>
+      {currentStatus.metrics.length ? (
+        <details className="admin-ai-status__metrics">
+          <summary>สถิติ AI วันนี้ (ยอดรวม ไม่เก็บข้อความหรือผู้ใช้)</summary>
+          <ul>
+            {currentStatus.metrics.map((metric) => (
+              <li key={`${metric.intent}-${metric.outcome}`}>
+                <strong>{metric.intent}</strong> · {metric.outcome}: {metric.count} ครั้ง · เฉลี่ย {metric.averageLatencyMs.toLocaleString()} ms
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
       {!ready ? (
         <p className="admin-ai-status__help">
           {currentStatus.providerStatus === 'invalid-key'

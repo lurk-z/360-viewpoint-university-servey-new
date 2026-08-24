@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { getServerSupabaseConfig } from './env';
+import { getServerSupabaseConfig } from './env.ts';
 
 export function createAdminSupabaseClient() {
   const config = getServerSupabaseConfig();

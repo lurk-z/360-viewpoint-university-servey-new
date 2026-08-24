@@ -64,6 +64,7 @@ interface TourViewerProps {
   readonly onSceneChange: (sceneId: SceneId) => void;
   readonly onError: () => void;
   readonly onAutorotate: (enabled: boolean) => void;
+  readonly onViewYaw?: (yaw: number) => void;
 }
 
 interface ViewerCallbacks {
@@ -75,6 +76,7 @@ interface ViewerCallbacks {
   onSceneChange: (sceneId: SceneId) => void;
   onError: () => void;
   onAutorotate: (enabled: boolean) => void;
+  onViewYaw?: (yaw: number) => void;
 }
 
 interface PreservedViewerState {
@@ -97,7 +99,7 @@ const buildTourNodes = (): VirtualTourNode[] => tourScenes.map((scene) => ({
 }));
 
 const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourViewer(
-  { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate },
+  { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate, onViewYaw },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,9 +119,10 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     onReady,
     onSceneChange,
     onError,
-    onAutorotate
+    onAutorotate,
+    onViewYaw
   });
-  callbacksRef.current = { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate };
+  callbacksRef.current = { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate, onViewYaw };
   const tourStructureSignature = getTourStructureSignature();
 
   useImperativeHandle(ref, () => ({
@@ -171,6 +174,8 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       ? preservedState.sceneId
       : 'entrance';
     const settleFrames = new Set<number>();
+    let yawFrame = 0;
+    let pendingYaw = 0;
     let disposed = false;
     let restoringInitialView = Boolean(preservedState && preservedState.sceneId === startSceneId);
     let cleanupViewer: (() => void) | undefined;
@@ -354,6 +359,14 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     viewer.addEventListener(viewerEvents.PanoramaLoadedEvent.type, () => {
       if (!disposed) viewer.hideError();
     });
+    viewer.addEventListener(viewerEvents.PositionUpdatedEvent.type, ({ position }) => {
+      pendingYaw = ((position.yaw * 180 / Math.PI + 180) % 360 + 360) % 360 - 180;
+      if (yawFrame) return;
+      yawFrame = window.requestAnimationFrame(() => {
+        yawFrame = 0;
+        if (!disposed) callbacksRef.current.onViewYaw?.(pendingYaw);
+      });
+    });
     virtualTourPlugin.addEventListener(virtualTourEvents.NodeChangedEvent.type, ({ node, data }) => {
       if (disposed) return;
       const sceneId = node.id as SceneId;
@@ -386,6 +399,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
         viewAnimationIdRef.current += 1;
         settleFrames.forEach((frame) => window.cancelAnimationFrame(frame));
         settleFrames.clear();
+        if (yawFrame) window.cancelAnimationFrame(yawFrame);
         try {
           const sceneId = virtualTourPlugin.getCurrentNode()?.id as SceneId | undefined;
           if (sceneId) {
