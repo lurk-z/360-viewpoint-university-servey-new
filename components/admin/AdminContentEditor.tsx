@@ -4,6 +4,9 @@ import { useActionState, useMemo, useRef, useState, type FormEvent, type ReactNo
 import type { AdminRole, ContentImage, ContentKind } from '../../src/content';
 import type { AdminContentRow } from '../../src/server/admin-repository';
 import AdminImageGalleryFields, { type AdminMediaOption } from './AdminImageGalleryFields';
+import AdminDraftRecovery from './AdminDraftRecovery';
+import AdminRevisionHistory from './AdminRevisionHistory';
+import AdminContentDiff from './AdminContentDiff';
 import { ADMIN_DIRTY_STATE_CHANGED_EVENT, useAdminActionRefresh } from './useAdminActionRefresh';
 import type { ContentUpdateScope } from '../../src/content-updates';
 import {
@@ -25,6 +28,7 @@ interface AdminContentEditorProps {
   readonly kind: ContentKind;
   readonly title: string;
   readonly description: string;
+  readonly initialStatusFilter?: string;
   readonly rows: readonly AdminContentRow[];
   readonly role: AdminRole;
   readonly faculties?: readonly FacultyOption[];
@@ -122,9 +126,7 @@ function LazyDetails({ className, summary, children, confirmDirtyClose = false }
 function DraftPreview({ kind, data }: { readonly kind: ContentKind; readonly data: Record<string, unknown> }) {
   const nameKey = kind === 'activities' || kind === 'hotspot_contents' ? 'title' : 'name';
   const images = contentImages(data);
-  const imageUrl = kind === 'hotspot_contents' || kind === 'faculties'
-    ? images[0]?.src ?? ''
-    : field(data, 'imageUrl');
+  const imageUrl = images[0]?.src ?? field(data, 'imageUrl');
   const sourceData = source(data, kind);
   return (
     <LazyDetails className="admin-preview" summary="ดูตัวอย่างฉบับร่าง">
@@ -177,97 +179,98 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
   const sourceData = source(data, kind);
   const prefix = row?.id ?? `new-${kind}`;
   const nameKey = kind === 'activities' || kind === 'hotspot_contents' ? 'title' : 'name';
+  const [step, setStep] = useState(0);
+  const steps = ['ข้อมูลทั่วไป', 'ภาษาไทย', 'English', 'รูปและอ้างอิง', 'ตรวจสอบ'] as const;
+  const existingImages = contentImages(data);
+  const legacyImageUrl = field(data, 'imageUrl');
+  const galleryImages = existingImages.length || !legacyImageUrl ? existingImages : [{
+    src: legacyImageUrl,
+    alt: {
+      th: localized(data, nameKey, 'th') || 'รูปประกอบ',
+      en: localized(data, nameKey, 'en') || 'Content image'
+    }
+  }];
+  const requiredValues = [
+    localized(data, nameKey, 'th'),
+    localized(data, nameKey, 'en'),
+    localized(data, 'description', 'th'),
+    localized(data, 'description', 'en'),
+    localized(sourceData, 'label', 'th'),
+    localized(sourceData, 'label', 'en')
+  ];
+  if (kind !== 'hotspot_contents') requiredValues.push(localized(data, 'summary', 'th'), localized(data, 'summary', 'en'));
+  if (kind === 'programs') requiredValues.push(localized(data, 'level', 'th'), localized(data, 'level', 'en'), localized(data, 'admission', 'th'), localized(data, 'admission', 'en'), row?.facultyId ?? '');
+  if (kind === 'hotspot_contents') requiredValues.push(localized(data, 'sceneTitle', 'th'), localized(data, 'sceneTitle', 'en'), localized(data, 'sceneDescription', 'th'), localized(data, 'sceneDescription', 'en'), galleryImages[0]?.src ?? '');
+  if (kind === 'faculties') requiredValues.push(galleryImages[0]?.src ?? '');
+  const completeCount = requiredValues.filter((value) => value.trim()).length;
 
-  return <>
-    {kind !== 'hotspot_contents' ? <>
-      <TextField prefix={prefix} name="slug" label="Slug (อังกฤษ ตัวเล็ก และขีดกลาง)" value={row?.slug} required readOnly={Boolean(row)} />
-      {kind === 'faculties' && row?.sceneId ? <TextField prefix={prefix} name="linkedSceneId" label="Scene ID ที่เชื่อมอยู่" value={row.sceneId} readOnly /> : null}
-      {kind === 'faculties' && row?.hotspotId ? <TextField prefix={prefix} name="linkedHotspotId" label="Info hotspot ที่เชื่อมอยู่" value={row.hotspotId} readOnly /> : null}
-    </> : <>
-      <TextField prefix={prefix} name="hotspotId" label="Hotspot ID" value={row?.id} readOnly />
-      <TextField prefix={prefix} name="sceneId" label="Scene ID" value={row?.sceneId} readOnly />
-      <h3 className="admin-form-section">ข้อมูลบนการ์ดฉาก</h3>
-      <TextField prefix={prefix} name="sceneTitleTh" label="ชื่อฉาก (ไทย)" value={localized(data, 'sceneTitle', 'th')} required />
-      <TextField prefix={prefix} name="sceneTitleEn" label="Scene title (English)" value={localized(data, 'sceneTitle', 'en')} required />
-      <TextArea prefix={prefix} name="sceneDescriptionTh" label="คำอธิบายฉาก (ไทย)" value={localized(data, 'sceneDescription', 'th')} required rows={3} />
-      <TextArea prefix={prefix} name="sceneDescriptionEn" label="Scene description (English)" value={localized(data, 'sceneDescription', 'en')} required rows={3} />
-      <h3 className="admin-form-section">ข้อมูลในปุ่ม Info</h3>
-    </>}
-    {kind === 'programs' ? (
-      <label htmlFor={inputId(prefix, 'facultyId')}>
-        <span>คณะ</span>
-        <select id={inputId(prefix, 'facultyId')} name="facultyId" defaultValue={row?.facultyId} required>
-          <option value="">เลือกคณะ</option>
-          {faculties.map((faculty) => <option value={faculty.id} key={faculty.id}>{faculty.label}</option>)}
-        </select>
-      </label>
-    ) : null}
-    <TextField prefix={prefix} name="nameTh" label={kind === 'activities' ? 'ชื่อกิจกรรม (ไทย)' : kind === 'hotspot_contents' ? 'ชื่อ Info (ไทย)' : 'ชื่อ (ไทย)'} value={localized(data, nameKey, 'th')} required />
-    <TextField prefix={prefix} name="nameEn" label={kind === 'activities' ? 'Activity name (English)' : 'Name (English)'} value={localized(data, nameKey, 'en')} required />
-    {kind === 'programs' ? <>
-      <TextField prefix={prefix} name="departmentTh" label="ภาควิชา/หน่วยงาน (ไทย ไม่บังคับ)" value={localized(data, 'department', 'th')} />
-      <TextField prefix={prefix} name="departmentEn" label="Department (English, optional)" value={localized(data, 'department', 'en')} />
-      <TextField prefix={prefix} name="levelTh" label="ระดับการศึกษา (ไทย)" value={localized(data, 'level', 'th')} required />
-      <TextField prefix={prefix} name="levelEn" label="Degree level (English)" value={localized(data, 'level', 'en')} required />
-      <label htmlFor={inputId(prefix, 'studyLevel')}>
-        <span>ระดับการศึกษาแบบโครงสร้าง (ใช้สำหรับ AI)</span>
-        <select id={inputId(prefix, 'studyLevel')} name="studyLevel" defaultValue={field(data, 'studyLevel')}>
-          <option value="">ให้ระบบอ่านจากข้อความเดิม</option>
-          <option value="vocational">อาชีวศึกษา/โรงเรียน–โรงงาน</option>
-          <option value="bachelor">ปริญญาตรี</option>
-          <option value="transfer">ปริญญาตรีเทียบโอน</option>
-          <option value="master">ปริญญาโท</option>
-        </select>
-      </label>
-      <fieldset className="admin-field--wide admin-checkbox-group">
-        <legend>วุฒิที่รับสมัครแบบโครงสร้าง (เลือกได้หลายข้อ)</legend>
-        {([
-          ['m3', 'ม.3'],
-          ['m6-pvoc', 'ม.6 / ปวช.'],
-          ['high-vocational', 'ปวส.'],
-          ['bachelor', 'ปริญญาตรี'],
-          ['other', 'วุฒิอื่น']
-        ] as const).map(([value, label]) => (
-          <label key={value}>
-            <input
-              type="checkbox"
-              name="eligibleQualifications"
-              value={value}
-              defaultChecked={stringList(data, 'eligibleQualifications').includes(value)}
-            />
-            <span>{label}</span>
-          </label>
-        ))}
-      </fieldset>
-    </> : null}
-    {kind !== 'hotspot_contents' ? <>
-      <TextArea prefix={prefix} name="summaryTh" label="สรุปย่อ (ไทย)" value={localized(data, 'summary', 'th')} required rows={2} />
-      <TextArea prefix={prefix} name="summaryEn" label="Summary (English)" value={localized(data, 'summary', 'en')} required rows={2} />
-    </> : null}
-    <TextArea prefix={prefix} name="descriptionTh" label="รายละเอียด (ไทย)" value={localized(data, 'description', 'th')} required rows={5} />
-    <TextArea prefix={prefix} name="descriptionEn" label="Description (English)" value={localized(data, 'description', 'en')} required rows={5} />
-    {kind === 'programs' ? <>
-      <TextArea prefix={prefix} name="admissionTh" label="ข้อมูลการรับสมัคร (ไทย)" value={localized(data, 'admission', 'th')} required />
-      <TextArea prefix={prefix} name="admissionEn" label="Admission information (English)" value={localized(data, 'admission', 'en')} required />
-      <TextArea prefix={prefix} name="interestTagsTh" label="แท็กความสนใจ (ไทย ไม่บังคับ · หนึ่งรายการต่อบรรทัด)" value={localizedList(data, 'interestTags', 'th')} rows={4} />
-      <TextArea prefix={prefix} name="interestTagsEn" label="Interest tags (English, optional · one per line)" value={localizedList(data, 'interestTags', 'en')} rows={4} />
-      <TextArea prefix={prefix} name="careerTagsTh" label="แท็กแนวทางอาชีพ (ไทย ไม่บังคับ · หนึ่งรายการต่อบรรทัด)" value={localizedList(data, 'careerTags', 'th')} rows={4} />
-      <TextArea prefix={prefix} name="careerTagsEn" label="Career tags (English, optional · one per line)" value={localizedList(data, 'careerTags', 'en')} rows={4} />
-    </> : null}
-    {kind === 'activities' ? <>
-      <TextField prefix={prefix} name="startDate" label="วันเริ่มต้น" type="date" value={field(data, 'startDate')} />
-      <TextField prefix={prefix} name="endDate" label="วันสิ้นสุด" type="date" value={field(data, 'endDate')} />
-      <TextField prefix={prefix} name="sceneId" label="Scene ID ที่เกี่ยวข้อง" value={field(data, 'sceneId')} />
-    </> : null}
-    {kind === 'hotspot_contents' || kind === 'faculties' ? (
-      <AdminImageGalleryFields images={contentImages(data)} media={media} />
-    ) : (
-      <TextField prefix={prefix} name="imageUrl" label="URL รูปภาพ" value={field(data, 'imageUrl')} />
-    )}
-    <TextField prefix={prefix} name="sourceLabelTh" label="ชื่อแหล่งอ้างอิง (ไทย)" value={localized(sourceData, 'label', 'th')} required />
-    <TextField prefix={prefix} name="sourceLabelEn" label="Source label (English)" value={localized(sourceData, 'label', 'en')} required />
-    <TextField prefix={prefix} name="sourceUrl" label="URL แหล่งอ้างอิง (ถ้ามี)" type="url" value={field(sourceData, 'url')} />
-  </>;
+  return <div className="admin-form-stepper">
+    <nav aria-label="ขั้นตอนกรอกข้อมูล">
+      {steps.map((label, index) => (
+        <button type="button" className={step === index ? 'is-active' : ''} aria-current={step === index ? 'step' : undefined} onClick={() => setStep(index)} key={label}>
+          <b>{index + 1}</b><span>{label}</span>
+        </button>
+      ))}
+    </nav>
+    <p className="admin-form-progress">ข้อมูลบังคับที่มีอยู่ {completeCount}/{requiredValues.length} ช่อง · ระบบจะตรวจอีกครั้งตอนบันทึก</p>
+
+    <section className="admin-form-step" hidden={step !== 0}>
+      <header><h3>ข้อมูลทั่วไป</h3><p>เลือกประเภทและความสัมพันธ์ก่อน ส่วนรหัสทางเทคนิคอยู่ด้านล่าง</p></header>
+      {kind === 'programs' ? (
+        <label htmlFor={inputId(prefix, 'facultyId')}><span>คณะที่สังกัด</span><select id={inputId(prefix, 'facultyId')} name="facultyId" defaultValue={row?.facultyId} required><option value="">เลือกคณะ</option>{faculties.map((faculty) => <option value={faculty.id} key={faculty.id}>{faculty.label}</option>)}</select></label>
+      ) : null}
+      {kind === 'programs' ? <>
+        <label htmlFor={inputId(prefix, 'studyLevel')}><span>ระดับการศึกษาแบบโครงสร้าง (ช่วยให้ AI แนะนำแม่นขึ้น)</span><select id={inputId(prefix, 'studyLevel')} name="studyLevel" defaultValue={field(data, 'studyLevel')}><option value="">ให้ระบบอ่านจากข้อความเดิม</option><option value="vocational">อาชีวศึกษา/โรงเรียน–โรงงาน</option><option value="bachelor">ปริญญาตรี</option><option value="transfer">ปริญญาตรีเทียบโอน</option><option value="master">ปริญญาโท</option></select></label>
+        <fieldset className="admin-field--wide admin-checkbox-group"><legend>วุฒิที่รับสมัคร (เลือกได้หลายข้อ)</legend>{([['m3', 'ม.3'], ['m6-pvoc', 'ม.6 / ปวช.'], ['high-vocational', 'ปวส.'], ['bachelor', 'ปริญญาตรี'], ['other', 'วุฒิอื่น']] as const).map(([value, label]) => <label key={value}><input type="checkbox" name="eligibleQualifications" value={value} defaultChecked={stringList(data, 'eligibleQualifications').includes(value)} /><span>{label}</span></label>)}</fieldset>
+      </> : null}
+      {kind === 'activities' ? <><TextField prefix={prefix} name="startDate" label="วันเริ่มต้น" type="date" value={field(data, 'startDate')} /><TextField prefix={prefix} name="endDate" label="วันสิ้นสุด" type="date" value={field(data, 'endDate')} /></> : null}
+      <details className="admin-advanced-settings"><summary>ตั้งค่าขั้นสูง (ผู้ใช้ทั่วไปไม่ต้องแก้)</summary><div>
+        {kind !== 'hotspot_contents' ? <TextField prefix={prefix} name="slug" label="Slug · เว้นว่างเพื่อให้ระบบสร้างอัตโนมัติ" value={row?.slug} readOnly={Boolean(row)} /> : <><TextField prefix={prefix} name="hotspotId" label="Hotspot ID" value={row?.id} readOnly /><TextField prefix={prefix} name="sceneId" label="Scene ID" value={row?.sceneId} readOnly /></>}
+        {kind === 'faculties' && row?.sceneId ? <TextField prefix={prefix} name="linkedSceneId" label="Scene ID ที่เชื่อมอยู่" value={row.sceneId} readOnly /> : null}
+        {kind === 'faculties' && row?.hotspotId ? <TextField prefix={prefix} name="linkedHotspotId" label="Info hotspot ที่เชื่อมอยู่" value={row.hotspotId} readOnly /> : null}
+        {kind === 'activities' ? <TextField prefix={prefix} name="sceneId" label="Scene ID ที่เกี่ยวข้อง (ไม่บังคับ)" value={field(data, 'sceneId')} /> : null}
+      </div></details>
+    </section>
+
+    <section className="admin-form-step" hidden={step !== 1} lang="th">
+      <header><h3>ข้อมูลภาษาไทย</h3><p>เขียนให้อ่านง่ายและตรวจสอบชื่อเฉพาะให้ถูกต้อง</p></header>
+      {kind === 'hotspot_contents' ? <><TextField prefix={prefix} name="sceneTitleTh" label="ชื่อบนการ์ดฉาก" value={localized(data, 'sceneTitle', 'th')} required /><TextArea prefix={prefix} name="sceneDescriptionTh" label="คำอธิบายการ์ดฉาก" value={localized(data, 'sceneDescription', 'th')} required rows={3} /></> : null}
+      <TextField prefix={prefix} name="nameTh" label={kind === 'activities' ? 'ชื่อกิจกรรม' : kind === 'hotspot_contents' ? 'ชื่อในปุ่ม Info' : 'ชื่อ'} value={localized(data, nameKey, 'th')} required />
+      {kind === 'programs' ? <><TextField prefix={prefix} name="departmentTh" label="ภาควิชา/หน่วยงาน (ไม่บังคับ)" value={localized(data, 'department', 'th')} /><TextField prefix={prefix} name="levelTh" label="ระดับการศึกษา" value={localized(data, 'level', 'th')} required /></> : null}
+      {kind !== 'hotspot_contents' ? <TextArea prefix={prefix} name="summaryTh" label="สรุปย่อ" value={localized(data, 'summary', 'th')} required rows={2} /> : null}
+      <TextArea prefix={prefix} name="descriptionTh" label="รายละเอียด" value={localized(data, 'description', 'th')} required rows={5} />
+      {kind === 'programs' ? <><TextArea prefix={prefix} name="admissionTh" label="ข้อมูลการรับสมัคร" value={localized(data, 'admission', 'th')} required /><TextArea prefix={prefix} name="interestTagsTh" label="แท็กความสนใจ (หนึ่งรายการต่อบรรทัด)" value={localizedList(data, 'interestTags', 'th')} rows={4} /><TextArea prefix={prefix} name="careerTagsTh" label="แท็กแนวทางอาชีพ (หนึ่งรายการต่อบรรทัด)" value={localizedList(data, 'careerTags', 'th')} rows={4} /></> : null}
+    </section>
+
+    <section className="admin-form-step" hidden={step !== 2} lang="en">
+      <header><h3>English information</h3><p>English fields are required before publishing.</p></header>
+      {kind === 'hotspot_contents' ? <><TextField prefix={prefix} name="sceneTitleEn" label="Scene title" value={localized(data, 'sceneTitle', 'en')} required /><TextArea prefix={prefix} name="sceneDescriptionEn" label="Scene description" value={localized(data, 'sceneDescription', 'en')} required rows={3} /></> : null}
+      <TextField prefix={prefix} name="nameEn" label={kind === 'activities' ? 'Activity name' : kind === 'hotspot_contents' ? 'Info title' : 'Name'} value={localized(data, nameKey, 'en')} required />
+      {kind === 'programs' ? <><TextField prefix={prefix} name="departmentEn" label="Department (optional)" value={localized(data, 'department', 'en')} /><TextField prefix={prefix} name="levelEn" label="Degree level" value={localized(data, 'level', 'en')} required /></> : null}
+      {kind !== 'hotspot_contents' ? <TextArea prefix={prefix} name="summaryEn" label="Summary" value={localized(data, 'summary', 'en')} required rows={2} /> : null}
+      <TextArea prefix={prefix} name="descriptionEn" label="Description" value={localized(data, 'description', 'en')} required rows={5} />
+      {kind === 'programs' ? <><TextArea prefix={prefix} name="admissionEn" label="Admission information" value={localized(data, 'admission', 'en')} required /><TextArea prefix={prefix} name="interestTagsEn" label="Interest tags (one per line)" value={localizedList(data, 'interestTags', 'en')} rows={4} /><TextArea prefix={prefix} name="careerTagsEn" label="Career tags (one per line)" value={localizedList(data, 'careerTags', 'en')} rows={4} /></> : null}
+    </section>
+
+    <section className="admin-form-step" hidden={step !== 3}>
+      <header><h3>รูปภาพและแหล่งข้อมูล</h3><p>เลือกรูปจาก Media Library แล้วใส่คำอธิบายรูปเพื่อการเข้าถึง</p></header>
+      <AdminImageGalleryFields images={galleryImages} media={media} required={kind === 'faculties' || kind === 'hotspot_contents'} />
+      <TextField prefix={prefix} name="sourceLabelTh" label="ชื่อแหล่งข้อมูล (ไทย)" value={localized(sourceData, 'label', 'th')} required />
+      <TextField prefix={prefix} name="sourceLabelEn" label="Source name (English)" value={localized(sourceData, 'label', 'en')} required />
+      <TextField prefix={prefix} name="sourceUrl" label="URL แหล่งข้อมูล (ถ้ามี)" type="url" value={field(sourceData, 'url')} />
+    </section>
+
+    <section className="admin-form-step admin-form-review" hidden={step !== 4}>
+      <header><h3>ตรวจสอบก่อนบันทึก</h3><p>บันทึกครั้งนี้เป็นฉบับร่าง หน้า Tour จะยังไม่เปลี่ยนจนกว่า Admin จะกดเผยแพร่</p></header>
+      <div><strong>{completeCount === requiredValues.length ? 'ข้อมูลหลักครบแล้ว' : `ยังควรตรวจอีก ${requiredValues.length - completeCount} ช่อง`}</strong><span>สามารถย้อนกลับไปแต่ละขั้นจากแถบด้านบน</span></div>
+    </section>
+
+    <footer className="admin-form-stepper__controls">
+      <button type="button" disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>← ย้อนกลับ</button>
+      <span>ขั้นที่ {step + 1} จาก {steps.length}</span>
+      <button type="button" disabled={step === steps.length - 1} onClick={() => setStep((current) => Math.min(steps.length - 1, current + 1))}>ถัดไป →</button>
+    </footer>
+  </div>;
 }
 
 function ActionMessage({ state }: { readonly state: AdminActionState }) {
@@ -282,14 +285,30 @@ function SaveForm({ kind, id, children, label }: {
   readonly label: string;
 }) {
   const [state, action, pending] = useActionState(saveContentAction, INITIAL_ACTION_STATE);
+  const [validationMessage, setValidationMessage] = useState('');
   useAdminActionRefresh(state, { scope: 'draft', kind, id });
+  const validate = (event: FormEvent<HTMLFormElement>): void => {
+    const form = event.currentTarget;
+    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('[required]')];
+    const invalid = fields.find((field) => !field.validity.valid || !field.value.trim());
+    if (!invalid) { setValidationMessage(''); return; }
+    event.preventDefault();
+    const section = invalid.closest<HTMLElement>('.admin-form-step');
+    const sections = [...form.querySelectorAll<HTMLElement>('.admin-form-step')];
+    const stepIndex = section ? sections.indexOf(section) : -1;
+    if (stepIndex >= 0) form.querySelectorAll<HTMLButtonElement>('.admin-form-stepper > nav button')[stepIndex]?.click();
+    setValidationMessage(`กรุณากรอกช่อง “${invalid.closest('label')?.querySelector('span')?.textContent ?? invalid.name}” ให้ถูกต้อง`);
+    window.requestAnimationFrame(() => { invalid.focus(); invalid.reportValidity(); });
+  };
   return (
-    <form action={action} className="admin-form">
+    <form action={action} className="admin-form" noValidate onSubmit={validate}>
       <input type="hidden" name="kind" value={kind} />
       {id ? <input type="hidden" name="id" value={id} /> : null}
+      <AdminDraftRecovery storageKey={`fitm-admin-draft:${kind}:${id ?? 'new'}`} state={state} />
       {children}
       <div className="admin-form__actions">
         <button className="admin-button" type="submit" disabled={pending}>{pending ? 'กำลังบันทึก…' : label}</button>
+        {validationMessage ? <p className="admin-action-message is-error" role="alert">{validationMessage}</p> : null}
         <ActionMessage state={state} />
       </div>
     </form>
@@ -361,10 +380,14 @@ export default function AdminContentEditor({
   facultyProgramStats = {},
   facultyFilter,
   media = [],
-  placeStatuses = {}
+  placeStatuses = {},
+  initialStatusFilter
 }: AdminContentEditorProps) {
   const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'archived' | 'pending' | 'orphaned'>('all');
+  const validInitialStatus = ['all', 'published', 'draft', 'archived', 'pending', 'orphaned'].includes(initialStatusFilter ?? '')
+    ? initialStatusFilter as 'all' | 'published' | 'draft' | 'archived' | 'pending' | 'orphaned'
+    : 'all';
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'archived' | 'pending' | 'orphaned'>(validInitialStatus);
   const filteredRows = useMemo(() => {
     const keyword = query.trim().toLocaleLowerCase('th');
     return rows.filter((row) => {
@@ -453,9 +476,12 @@ export default function AdminContentEditor({
                 </SaveForm>
               </LazyDetails>
               <DraftPreview kind={kind} data={row.draftData} />
+              <LazyDetails className="admin-revisions" summary="ประวัติและกู้คืนเวอร์ชัน">
+                <AdminRevisionHistory kind={kind} id={row.id} currentDraft={row.draftData} />
+              </LazyDetails>
               {row.publishedData ? (
-                <LazyDetails className="admin-preview" summary="ดูข้อมูลที่เผยแพร่อยู่">
-                  <pre>{JSON.stringify(row.publishedData, null, 2)}</pre>
+                <LazyDetails className="admin-preview" summary="เปรียบเทียบฉบับร่างกับข้อมูลที่เผยแพร่">
+                  <AdminContentDiff draft={row.draftData} published={row.publishedData} />
                 </LazyDetails>
               ) : null}
               {kind === 'faculties' && !published && programStats.published > 0 ? (

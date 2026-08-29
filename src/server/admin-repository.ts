@@ -1,5 +1,9 @@
 import { createServerSupabaseClient } from '../../lib/supabase/server';
 import type { ContentKind } from '../content';
+import { activityDataSchema, facultyDataSchema, hotspotDataSchema, programDataSchema } from '../content';
+import { createAdminSupabaseClient } from '../../lib/supabase/admin';
+import { isSupabaseConfigured } from '../../lib/supabase/env';
+import { createBootstrapTourStructureData, tourStructureDataSchema } from '../tour-structure';
 
 export interface AdminContentRow {
   readonly id: string;
@@ -142,6 +146,166 @@ export async function listAdminContent(kind: ContentKind): Promise<AdminContentR
     archivedAt: row.archived_at,
     updatedAt: row.updated_at
   }));
+}
+
+export interface AdminTaskSummary {
+  readonly draftOnly: number;
+  readonly incomplete: number;
+  readonly archived: number;
+  readonly missingImages: number;
+  readonly missingSources: number;
+}
+
+function schemaFor(kind: ContentKind) {
+  if (kind === 'faculties') return facultyDataSchema;
+  if (kind === 'programs') return programDataSchema;
+  if (kind === 'activities') return activityDataSchema;
+  return hotspotDataSchema;
+}
+
+function hasImages(kind: ContentKind, data: Record<string, unknown>): boolean {
+  if (kind === 'programs' || kind === 'activities') {
+    return Boolean(data.imageUrl) || (Array.isArray(data.images) && data.images.length > 0);
+  }
+  return Array.isArray(data.images) && data.images.length > 0;
+}
+
+function hasSource(kind: ContentKind, data: Record<string, unknown>): boolean {
+  const value = kind === 'hotspot_contents' ? data.reference : data.source;
+  if (!value || typeof value !== 'object') return false;
+  const label = (value as { label?: unknown }).label;
+  return Boolean(label && typeof label === 'object'
+    && String((label as { th?: unknown }).th ?? '').trim()
+    && String((label as { en?: unknown }).en ?? '').trim());
+}
+
+export async function getAdminTaskSummary(): Promise<AdminTaskSummary> {
+  const kinds: readonly ContentKind[] = ['faculties', 'programs', 'activities', 'hotspot_contents'];
+  const supabase = await createServerSupabaseClient();
+  const results = await Promise.all(kinds.map((kind) => supabase.from(kind)
+    .select('draft_data,published_data,archived_at')));
+  const error = results.find((result) => result.error)?.error;
+  if (error) throw error;
+  let draftOnly = 0;
+  let incomplete = 0;
+  let archived = 0;
+  let missingImages = 0;
+  let missingSources = 0;
+  results.forEach((result, index) => {
+    const kind = kinds[index]!;
+    (result.data ?? []).forEach((raw) => {
+      const row = raw as { draft_data: Record<string, unknown>; published_data: unknown; archived_at: string | null };
+      if (row.archived_at) archived += 1;
+      else if (!row.published_data) draftOnly += 1;
+      if (!schemaFor(kind).safeParse(row.draft_data).success) incomplete += 1;
+      if (!hasImages(kind, row.draft_data)) missingImages += 1;
+      if (!hasSource(kind, row.draft_data)) missingSources += 1;
+    });
+  });
+  return { draftOnly, incomplete, archived, missingImages, missingSources };
+}
+
+export interface AdminSystemStatus {
+  readonly supabaseConfigured: boolean;
+  readonly migrations: readonly string[];
+  readonly missingMigrations: readonly string[];
+  readonly contentMediaReady: boolean;
+  readonly panoramaStorageReady: boolean;
+  readonly dynamicTourReady: boolean;
+  readonly tourStructureMatchesBootstrap: boolean;
+  readonly uploadedPanoramas: number;
+}
+
+const REQUIRED_MIGRATIONS = ['202608070001', '202608070002', '202608240001', '202608290001'] as const;
+
+export async function getAdminSystemStatus(): Promise<AdminSystemStatus> {
+  if (!isSupabaseConfigured()) {
+    return {
+      supabaseConfigured: false,
+      migrations: [],
+      missingMigrations: [...REQUIRED_MIGRATIONS],
+      contentMediaReady: false,
+      panoramaStorageReady: false,
+      dynamicTourReady: false,
+      tourStructureMatchesBootstrap: false,
+      uploadedPanoramas: 0
+    };
+  }
+  const admin = createAdminSupabaseClient();
+  const [versionsResult, bucketsResult, tourResult, assetsResult] = await Promise.all([
+    admin.from('app_schema_versions').select('version'),
+    admin.storage.listBuckets(),
+    admin.from('tour_projects').select('id,published_data').eq('id', 'main').maybeSingle(),
+    admin.from('tour_assets').select('id', { count: 'exact', head: true })
+  ]);
+  const migrations = versionsResult.error
+    ? []
+    : (versionsResult.data ?? []).map((row) => String(row.version));
+  const buckets = new Set((bucketsResult.data ?? []).map((bucket) => bucket.id));
+  const publishedStructure = tourStructureDataSchema.safeParse(tourResult.data?.published_data);
+  const tourStructureMatchesBootstrap = publishedStructure.success
+    && JSON.stringify(publishedStructure.data) === JSON.stringify(createBootstrapTourStructureData());
+  return {
+    supabaseConfigured: true,
+    migrations,
+    missingMigrations: REQUIRED_MIGRATIONS.filter((version) => !migrations.includes(version)),
+    contentMediaReady: buckets.has('content-media'),
+    panoramaStorageReady: buckets.has('tour-panoramas'),
+    dynamicTourReady: !tourResult.error && Boolean(tourResult.data),
+    tourStructureMatchesBootstrap,
+    uploadedPanoramas: assetsResult.error ? 0 : (assetsResult.count ?? 0)
+  };
+}
+
+export interface AdminContentRevision {
+  readonly id: string;
+  readonly action: string;
+  readonly snapshot: Record<string, unknown>;
+  readonly createdAt: string;
+}
+
+export async function listContentRevisions(kind: ContentKind, id: string): Promise<AdminContentRevision[]> {
+  const { data, error } = await (await createServerSupabaseClient())
+    .from('content_revisions')
+    .select('id,action,snapshot,created_at')
+    .eq('entity_kind', kind)
+    .eq('entity_id', id)
+    .order('created_at', { ascending: false })
+    .limit(30);
+  if (error) return [];
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    action: String(row.action),
+    snapshot: row.snapshot as Record<string, unknown>,
+    createdAt: String(row.created_at)
+  }));
+}
+
+export interface AdminAuditEntry {
+  readonly id: string;
+  readonly action: string;
+  readonly entityKind: string;
+  readonly entityId?: string;
+  readonly summary: Record<string, unknown>;
+  readonly createdAt: string;
+}
+
+export async function listAdminAuditLog(): Promise<readonly AdminAuditEntry[]> {
+  try {
+    const { data, error } = await createAdminSupabaseClient().from('admin_audit_logs')
+      .select('id,action,entity_kind,entity_id,summary,created_at')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) return [];
+    return (data ?? []).map((row) => ({
+      id: String(row.id), action: String(row.action), entityKind: String(row.entity_kind),
+      ...(row.entity_id ? { entityId: String(row.entity_id) } : {}),
+      summary: (row.summary && typeof row.summary === 'object' ? row.summary : {}) as Record<string, unknown>,
+      createdAt: String(row.created_at)
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export interface VisitStatistics {

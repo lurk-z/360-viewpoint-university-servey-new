@@ -171,11 +171,11 @@ export default function FacultyProgramsDialog({
                 </div>
               </section>
             ) : null}
-            {selectedProgram.imageUrl ? (
+            {(selectedProgram.images?.[0]?.src || selectedProgram.imageUrl) ? (
               <img
                 className="academics-program-image"
-                src={selectedProgram.imageUrl}
-                alt={localizeContent(selectedProgram.name, locale)}
+                src={selectedProgram.images?.[0]?.src ?? selectedProgram.imageUrl}
+                alt={localizeContent(selectedProgram.images?.[0]?.alt ?? selectedProgram.name, locale)}
                 loading="lazy"
               />
             ) : null}

@@ -15,6 +15,9 @@ import { unstable_cache } from 'next/cache';
 import { createAdminSupabaseClient } from '../../lib/supabase/admin';
 import { isSupabaseConfigured } from '../../lib/supabase/env';
 import { isTourPlaceLink } from '../tour-places';
+import { activateTourStructure } from '../tour-data';
+import { toRuntimeTourScenes } from '../tour-structure';
+import { getPublishedTourStructureSnapshot } from './tour-structure-repository';
 
 interface CmsRow {
   readonly id: string;
@@ -75,6 +78,8 @@ async function readPublicContentSnapshot(): Promise<PublicContentSnapshot> {
   if (!isSupabaseConfigured()) return createFallbackContentSnapshot();
 
   try {
+    const structure = await getPublishedTourStructureSnapshot();
+    activateTourStructure(toRuntimeTourScenes(structure.data), structure.data.map);
     const supabase = createAdminSupabaseClient();
     let facultiesResult = await supabase.from('faculties')
       .select('id,slug,scene_id,hotspot_id,published_data,updated_at')

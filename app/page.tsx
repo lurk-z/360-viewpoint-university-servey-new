@@ -1,5 +1,7 @@
 import TourApp from '../components/TourApp';
+import { getPublishedTourStructureSnapshot } from '../src/server/tour-structure-repository';
 
-export default function HomePage() {
-  return <TourApp />;
+export default async function HomePage() {
+  const structure = await getPublishedTourStructureSnapshot();
+  return <TourApp initialTourStructure={structure} />;
 }

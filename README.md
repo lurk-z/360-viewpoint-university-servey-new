@@ -1,5 +1,16 @@
 # KMUTNB Prachinburi Virtual Tour
 
+## สถานะระบบปัจจุบัน
+
+- ทัวร์เริ่มต้น 93 ฉาก ใช้แผนที่ `/mainimages/map/mainmap1.png` ขนาด 1096×583
+- ข้อมูลเริ่มต้น 4 คณะและ 35 หลักสูตร จัดการฉบับร่าง/เผยแพร่ผ่าน Admin
+- `src/tour-data.ts` เป็น Bootstrap และ Emergency fallback; หลังรัน Migration ล่าสุดและนำเข้าทัวร์แล้ว ให้แก้ฉาก ลูกศร Info และพิกัดจาก `/admin/tour`
+- Panorama 93 ฉากเดิมยังอยู่ใน `public/mainimages`; ภาพใหม่อัปโหลดไป Supabase bucket `tour-panoramas`
+- หน้า Public โหลดโครงสร้าง Published จาก `/api/tour-structure` และกลับไปใช้ข้อมูลในโค้ดอัตโนมัติเมื่อฐานข้อมูลไม่พร้อม
+- Admin มีประวัติ/กู้คืน สำรอง JSON รายงาน CSV นำเข้าเป็น Draft สถานะระบบ และ Visual Tour Editor
+
+เปิดโปรเจกต์บน Windows โดยดับเบิลคลิก `start-tour.bat` และปิดด้วย `stop-tour.bat` หรือใช้ `npm run dev` / `Ctrl+C` ตามปกติ ตรวจความพร้อมทั้งเครื่องด้วย `npm run doctor`
+
 เว็บไซต์ Virtual Open House แบบ 360° สำหรับมหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี
 
 โปรเจกต์ถูก migrate จาก Vite/Vanilla TypeScript เป็น Next.js App Router เพื่อรองรับการเพิ่มหลายทัวร์, หน้า admin, API, authentication และข้อมูลจากฐานข้อมูลในอนาคต โดยยังคง Photo Sphere Viewer และข้อมูลฉากเดิมไว้
@@ -125,7 +136,17 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-3.5-flash-lite
 GEMINI_DAILY_LIMIT=200
+GEMINI_MINUTE_LIMIT=10
 ```
+
+Migration ต้องรันตามลำดับใน Supabase SQL Editor:
+
+1. `202608070001_cms.sql`
+2. `202608070002_linked_faculty_content.sql`
+3. `202608240001_ai_rate_limits_and_metrics.sql`
+4. `202608290001_admin_workflow_and_tour_structure.sql`
+
+หลัง Migration ลำดับที่ 4 ให้เปิด `/admin/system` แล้วกด “นำ 93 ฉากเข้า Visual Tour Editor” หนึ่งครั้ง ระบบเป็น idempotent และไม่เขียนทับโครงการที่มีอยู่แล้ว
 
 `Editor` แก้ draft และอัปโหลดรูปได้ ส่วน `Admin` จึงจะเผยแพร่ ยกเลิกเผยแพร่ เก็บเข้าคลัง ลบ และจัดการบัญชีได้ ตำแหน่ง `yaw/pitch`, เส้นทาง และพิกัดแผนที่ยังแก้เฉพาะใน `src/tour-data.ts` เพื่อรักษา topology ของทัวร์
 

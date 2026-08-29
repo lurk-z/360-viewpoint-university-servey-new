@@ -3,6 +3,7 @@ import { requireStaff } from '../../../src/server/auth';
 import { logoutAction } from '../actions';
 import AdminLiveRefresh from '../../../components/admin/AdminLiveRefresh';
 import AdminNavigation from '../../../components/admin/AdminNavigation';
+import AdminToastRegion from '../../../components/admin/AdminToastRegion';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,13 +13,20 @@ const links = [
   ['หลักสูตร', '/admin/programs'],
   ['กิจกรรม', '/admin/activities'],
   ['สถานที่สำคัญ', '/admin/places'],
-  ['Media', '/admin/media']
+  ['โครงสร้างทัวร์', '/admin/tour'],
+  ['Media', '/admin/media'],
+  ['สถานะระบบ', '/admin/system'],
+  ['ความสัมพันธ์', '/admin/relationships'],
+  ['คู่มือ', '/admin/help']
 ] as const;
 
 export default async function ProtectedAdminLayout({ children }: { readonly children: ReactNode }) {
   const session = await requireStaff();
   const navigationLinks = session.role === 'admin'
-    ? [...links, ['ผู้ใช้งาน', '/admin/users'] as const]
+    ? [...links,
+      ['สำรองข้อมูล', '/admin/backup'] as const,
+      ['ประวัติระบบ', '/admin/audit'] as const,
+      ['ผู้ใช้งาน', '/admin/users'] as const]
     : links;
   return (
     <div className="admin-shell">
@@ -32,7 +40,7 @@ export default async function ProtectedAdminLayout({ children }: { readonly chil
           <a href="/?preview=admin" target="_blank">เปิดหน้าทัวร์แบบสด ↗</a>
         </footer>
       </aside>
-      <main className="admin-main"><AdminLiveRefresh>{children}</AdminLiveRefresh></main>
+      <main className="admin-main"><AdminLiveRefresh>{children}</AdminLiveRefresh><AdminToastRegion /></main>
     </div>
   );
 }

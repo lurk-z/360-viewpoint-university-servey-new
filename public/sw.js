@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kmuntb-tour-v11';
+const CACHE_NAME = 'kmuntb-tour-v12';
 const sceneCacheJobs = new Map();
 const SHELL_ASSETS = [
   '/',
@@ -6,7 +6,8 @@ const SHELL_ASSETS = [
   '/fitm-favicon.svg',
   '/mainimages/Logo_FitM/FITM_LOGO.png',
   '/mainimages/map/mainmap1.png',
-  '/api/content'
+  '/api/content',
+  '/api/tour-structure'
 ];
 
 self.addEventListener('install', (event) => {
@@ -56,8 +57,9 @@ async function networkFirst(request, navigation = false) {
 
 function isSceneAsset(url) {
   const parsed = new URL(url, self.location.origin);
-  return parsed.origin === self.location.origin
-    && /^\/mainimages\/[^/]+\.jpe?g$/i.test(parsed.pathname);
+  return (parsed.origin === self.location.origin
+    && /^\/mainimages\/[^/]+\.jpe?g$/i.test(parsed.pathname))
+    || /\/storage\/v1\/object\/public\/tour-panoramas\//i.test(parsed.pathname);
 }
 
 async function cacheSceneAssets(sceneId, assets) {
@@ -94,7 +96,13 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (event.request.method !== 'GET') return;
+
+  const isRemotePanorama = /\/storage\/v1\/object\/public\/tour-panoramas\//i.test(url.pathname);
+  if (url.origin !== self.location.origin) {
+    if (isRemotePanorama) event.respondWith(cacheFirst(event.request));
+    return;
+  }
 
   if (event.request.mode === 'navigate') {
     event.respondWith(networkFirst(event.request, true));

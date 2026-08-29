@@ -93,9 +93,9 @@ export default function ActivitiesDialog({
             <p className="eyebrow">{message(locale, 'activityDetails')}</p>
             <h3>{localizeContent(selected.title, locale)}</h3>
             <p className="scene-alt-title">{localizeContent(selected.title, alternativeLocale)}</p>
-            {selected.imageUrl ? (
+            {(selected.images?.[0]?.src || selected.imageUrl) ? (
               <button className="activities-image-button" type="button" onClick={() => onOpenImage(selected)}>
-                <img src={selected.imageUrl} alt={localizeContent(selected.title, locale)} loading="lazy" />
+                <img src={selected.images?.[0]?.src ?? selected.imageUrl} alt={localizeContent(selected.images?.[0]?.alt ?? selected.title, locale)} loading="lazy" />
               </button>
             ) : null}
             <dl className="activities-facts"><dt>{message(locale, 'activityDate')}</dt><dd>{activityDate(selected, locale)}</dd></dl>

@@ -24,9 +24,10 @@ export function useAdminActionRefresh(
   const handledStateRef = useRef<AdminActionState | null>(null);
 
   useEffect(() => {
-    if (state.status !== 'success' || handledStateRef.current === state) return;
+    if (state.status === 'idle' || handledStateRef.current === state) return;
     handledStateRef.current = state;
-    window.dispatchEvent(new Event(ADMIN_ACTION_SETTLED_EVENT));
+    window.dispatchEvent(new CustomEvent(ADMIN_ACTION_SETTLED_EVENT, { detail: state }));
+    if (state.status !== 'success') return;
     broadcastContentUpdate(update);
     router.refresh();
   }, [router, state, update.id, update.kind, update.scope]);

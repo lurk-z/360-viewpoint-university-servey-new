@@ -1,17 +1,25 @@
 import Link from 'next/link';
 import AdminAiStatus from '../../../components/admin/AdminAiStatus';
 import AdminTourPlaceSync from '../../../components/admin/AdminTourPlaceSync';
+import AdminSystemOnboarding from '../../../components/admin/AdminSystemOnboarding';
 import { getAiConfigurationStatus } from '../../../src/server/ai-status';
-import { getAdminDashboardSummary, getVisitStatistics } from '../../../src/server/admin-repository';
+import {
+  getAdminDashboardSummary,
+  getAdminSystemStatus,
+  getAdminTaskSummary,
+  getVisitStatistics
+} from '../../../src/server/admin-repository';
 import { requireStaff } from '../../../src/server/auth';
 import { getTourPlaceSyncStatus } from '../../../src/tour-places';
 
 export default async function AdminDashboardPage() {
   const session = await requireStaff();
-  const [stats, summary, aiStatus] = await Promise.all([
+  const [stats, summary, aiStatus, systemStatus, tasks] = await Promise.all([
     getVisitStatistics(),
     getAdminDashboardSummary(),
-    getAiConfigurationStatus()
+    getAiConfigurationStatus(),
+    getAdminSystemStatus(),
+    getAdminTaskSummary()
   ]);
   const maximum = Math.max(1, ...stats.last7Days.map((day) => day.count));
   const tourPlaceSyncStatus = getTourPlaceSyncStatus(summary.hotspotLinks);
@@ -19,6 +27,17 @@ export default async function AdminDashboardPage() {
   return (
     <section className="admin-page">
       <header className="admin-page__header"><div><p>DASHBOARD</p><h1>ภาพรวมระบบ</h1><span>สวัสดี {session.displayName || session.email}</span></div><a href="/?preview=admin" target="_blank">ดูเว็บไซต์แบบสด ↗</a></header>
+      <AdminSystemOnboarding status={systemStatus} tasks={tasks} role={session.role} compact />
+      <section className="admin-task-inbox" aria-labelledby="admin-task-title">
+        <header><div><p>TO DO</p><h2 id="admin-task-title">งานที่ควรตรวจสอบ</h2></div><a href="/admin/system">ดูรายละเอียดระบบ →</a></header>
+        <div>
+          <a href="/admin/programs?status=draft"><strong>{tasks.draftOnly}</strong><span>ฉบับร่างที่ยังไม่เผยแพร่</span></a>
+          <a href="/admin/places?status=pending"><strong>{tasks.incomplete}</strong><span>รายการข้อมูลไม่ครบ</span></a>
+          <a href="/admin/media"><strong>{tasks.missingImages}</strong><span>รายการที่ยังไม่มีรูป</span></a>
+          <a href="/admin/system"><strong>{tasks.missingSources}</strong><span>รายการที่อ้างอิงไม่ครบ</span></a>
+          <a href="/admin/places?status=archived"><strong>{tasks.archived}</strong><span>รายการในคลัง</span></a>
+        </div>
+      </section>
       <AdminTourPlaceSync status={tourPlaceSyncStatus} role={session.role} />
       <AdminAiStatus
         status={aiStatus}

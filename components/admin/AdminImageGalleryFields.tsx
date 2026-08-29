@@ -31,13 +31,15 @@ function editableImage(image?: ContentImage): EditableImage {
 
 export default function AdminImageGalleryFields({
   images,
-  media = []
+  media = [],
+  required = true
 }: {
   readonly images: readonly ContentImage[];
   readonly media?: readonly AdminMediaOption[];
+  readonly required?: boolean;
 }) {
   const [rows, setRows] = useState<readonly EditableImage[]>(() => (
-    images.length ? images.map(editableImage) : [editableImage()]
+    images.length ? images.map(editableImage) : required ? [editableImage()] : []
   ));
   const update = (key: string, values: Partial<Omit<EditableImage, 'key'>>): void => {
     setRows((current) => current.map((row) => row.key === key ? { ...row, ...values } : row));
@@ -63,9 +65,9 @@ export default function AdminImageGalleryFields({
             </select></label>
           ) : null}
           {row.src ? <img className="admin-gallery-fields__preview" src={row.src} alt="" /> : null}
-          <label><span>URL รูปภาพ</span><input name="imageSrc" type="text" value={row.src} onChange={(event) => update(row.key, { src: event.target.value })} required /></label>
-          <label><span>คำอธิบายรูป (ไทย)</span><input name="imageAltTh" value={row.altTh} onChange={(event) => update(row.key, { altTh: event.target.value })} required /></label>
-          <label><span>Image description (English)</span><input name="imageAltEn" value={row.altEn} onChange={(event) => update(row.key, { altEn: event.target.value })} required /></label>
+          <label><span>URL รูปภาพ</span><input name="imageSrc" type="text" value={row.src} onChange={(event) => update(row.key, { src: event.target.value })} required={required || rows.length > 0} /></label>
+          <label><span>คำอธิบายรูป (ไทย)</span><input name="imageAltTh" value={row.altTh} onChange={(event) => update(row.key, { altTh: event.target.value })} required={required || rows.length > 0} /></label>
+          <label><span>Image description (English)</span><input name="imageAltEn" value={row.altEn} onChange={(event) => update(row.key, { altEn: event.target.value })} required={required || rows.length > 0} /></label>
           <label><span>คำบรรยายใต้ภาพ (ไทย)</span><input name="imageCaptionTh" value={row.captionTh} onChange={(event) => update(row.key, { captionTh: event.target.value })} /></label>
           <label><span>Caption (English)</span><input name="imageCaptionEn" value={row.captionEn} onChange={(event) => update(row.key, { captionEn: event.target.value })} /></label>
         </article>

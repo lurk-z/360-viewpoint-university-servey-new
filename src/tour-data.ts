@@ -17,11 +17,19 @@ function mainPanorama(fileName: string): SceneMedia {
   return { panorama: `${mainImage(fileName)}?v=${PANORAMA_ASSET_VERSION}` };
 }
 
-export const tourMap = {
+export interface TourMapDefinition {
+  readonly image: string;
+  readonly width: number;
+  readonly height: number;
+}
+
+export const fallbackTourMap = {
   image: mainImage('map/mainmap1.png'),
   width: 1096,
   height: 583
 } as const;
+
+export let tourMap: TourMapDefinition = fallbackTourMap;
 
 //เพิ่มรูป
 export const tourMedia = {
@@ -123,8 +131,9 @@ export const tourMedia = {
 export const locales = ['th', 'en'] as const;
 export type Locale = (typeof locales)[number];
 
-export type SceneId = keyof typeof tourMedia;
-export const sceneIds: readonly SceneId[] = Object.keys(tourMedia) as SceneId[];
+/** Scene IDs are validated at runtime so Admin can add scenes without rebuilding TypeScript. */
+export type SceneId = string;
+export let sceneIds: readonly SceneId[] = Object.keys(tourMedia);
 
 export type LocalizedText = Readonly<Record<Locale, string>>;
 
@@ -213,7 +222,7 @@ export function getSceneAssetUrls(scene: TourScene): readonly string[] {
   return [scene.panorama];
 }
 
-export const tourScenes = [
+export const fallbackTourScenes = [
   {
     id: 'entrance',
     ...tourMedia.entrance,
@@ -1865,6 +1874,9 @@ export const tourScenes = [
   }
 ] as const satisfies readonly TourScene[];
 
+/** Active structure. It starts with the versioned bootstrap and can be replaced by a validated CMS snapshot. */
+export let tourScenes: readonly TourScene[] = fallbackTourScenes;
+
 /**
  * Changes whenever viewer geometry or media changes. React Fast Refresh uses this
  * signature to rebuild the imperative Photo Sphere Viewer without a page reload.
@@ -1887,7 +1899,22 @@ export function getTourStructureSignature(): string {
   })));
 }
 
-const sceneById = new Map<SceneId, TourScene>(tourScenes.map((scene) => [scene.id, scene]));
+let sceneById = new Map<SceneId, TourScene>(tourScenes.map((scene) => [scene.id, scene]));
+
+export function activateTourStructure(
+  scenes: readonly TourScene[],
+  map: TourMapDefinition = tourMap
+): void {
+  if (!scenes.length) throw new Error('Tour structure must contain at least one scene');
+  tourScenes = scenes;
+  sceneIds = scenes.map((scene) => scene.id);
+  sceneById = new Map(scenes.map((scene) => [scene.id, scene]));
+  tourMap = map;
+}
+
+export function resetTourStructure(): void {
+  activateTourStructure(fallbackTourScenes, fallbackTourMap);
+}
 
 export function getScene(id: SceneId): TourScene {
   const scene = sceneById.get(id);
@@ -1941,8 +1968,8 @@ export function validateTour(): readonly string[] {
 
     const mediaUrls = getSceneAssetUrls(scene);
     for (const mediaUrl of mediaUrls) {
-      if (!mediaUrl.startsWith('/mainimages/')) {
-        errors.push(`Scene ${scene.id} must use /mainimages media: ${mediaUrl}`);
+      if (!mediaUrl.startsWith('/mainimages/') && !/^https?:\/\//.test(mediaUrl)) {
+        errors.push(`Scene ${scene.id} must use /mainimages or HTTP(S) media: ${mediaUrl}`);
       }
       if (mediaUrl.includes('/tour/pano') || mediaUrl.includes('/tour/thumbs')) {
         errors.push(`Scene ${scene.id} references legacy tour media: ${mediaUrl}`);

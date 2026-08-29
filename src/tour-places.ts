@@ -25,14 +25,17 @@ export interface DuplicateTourPlaceDefinition {
   readonly sceneIds: readonly SceneId[];
 }
 
-export const tourPlaceDefinitions: readonly TourPlaceDefinition[] = tourScenes.flatMap((scene) => (
-  getInfoHotspots(scene).map((hotspot) => ({ id: hotspot.id, sceneId: scene.id }))
-));
+export function getTourPlaceDefinitions(): readonly TourPlaceDefinition[] {
+  return tourScenes.flatMap((scene) => (
+    getInfoHotspots(scene).map((hotspot) => ({ id: hotspot.id, sceneId: scene.id }))
+  ));
+}
 
-const definitionById = new Map(tourPlaceDefinitions.map((definition) => [definition.id, definition]));
+/** @deprecated Use getTourPlaceDefinitions() when runtime tour data may change. */
+export const tourPlaceDefinitions: readonly TourPlaceDefinition[] = getTourPlaceDefinitions();
 
 export function getDuplicateTourPlaceDefinitions(
-  definitions: readonly TourPlaceDefinition[] = tourPlaceDefinitions
+  definitions: readonly TourPlaceDefinition[] = getTourPlaceDefinitions()
 ): readonly DuplicateTourPlaceDefinition[] {
   const scenesById = new Map<string, SceneId[]>();
   for (const definition of definitions) {
@@ -46,7 +49,7 @@ export function getDuplicateTourPlaceDefinitions(
 }
 
 export function isTourPlaceLink(id: string, sceneId: string): boolean {
-  return definitionById.get(id)?.sceneId === sceneId;
+  return getTourPlaceDefinitions().find((definition) => definition.id === id)?.sceneId === sceneId;
 }
 
 export function getTourPlaceDraft(definition: TourPlaceDefinition): HotspotData {
@@ -66,17 +69,19 @@ export function getTourPlaceDraft(definition: TourPlaceDefinition): HotspotData 
 }
 
 export function getTourPlaceSyncStatus(rows: readonly StoredTourPlaceLink[]): TourPlaceSyncStatus {
-  const duplicates = getDuplicateTourPlaceDefinitions();
+  const definitions = getTourPlaceDefinitions();
+  const definitionById = new Map(definitions.map((definition) => [definition.id, definition]));
+  const duplicates = getDuplicateTourPlaceDefinitions(definitions);
   const rowById = new Map(rows.map((row) => [row.id, row]));
-  const missing = tourPlaceDefinitions.filter((definition) => !rowById.has(definition.id));
-  const moved = tourPlaceDefinitions.filter((definition) => {
+  const missing = definitions.filter((definition) => !rowById.has(definition.id));
+  const moved = definitions.filter((definition) => {
     const row = rowById.get(definition.id);
     return Boolean(row && row.sceneId !== definition.sceneId);
   });
   const orphaned = rows.filter((row) => !definitionById.has(row.id));
   return {
-    total: tourPlaceDefinitions.length,
-    synced: tourPlaceDefinitions.length - missing.length - moved.length,
+    total: definitions.length,
+    synced: definitions.length - missing.length - moved.length,
     missing,
     moved,
     orphaned,

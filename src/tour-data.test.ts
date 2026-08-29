@@ -717,7 +717,7 @@ describe('tour configuration', () => {
   });
 
   it('returns only the 93 versioned source panoramas from the tour assets API', async () => {
-    const response = getTourAssets();
+    const response = await getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
     expect(new Set(body.assets).size).toBe(93);

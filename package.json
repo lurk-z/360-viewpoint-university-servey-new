@@ -15,6 +15,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "seed:cms": "node --experimental-strip-types scripts/seed-cms.ts",
+    "bootstrap:tour": "node --experimental-strip-types scripts/bootstrap-tour-structure.ts",
+    "doctor": "node --experimental-strip-types scripts/doctor.ts",
+    "tour:add-scene": "node --experimental-strip-types scripts/tour-add-scene.ts",
     "check:workers": "node --check public/sw.js",
     "check:legacy": "node scripts/check-legacy.mjs",
     "check": "npm run typecheck && npm run test && npm run check:workers && npm run check:legacy && npm run build"

@@ -14,6 +14,8 @@ import {
   type InfoReference,
   type SceneId
 } from '../src/tour-data';
+import { activateTourStructure } from '../src/tour-data';
+import { toRuntimeTourScenes, type TourStructureSnapshot } from '../src/tour-structure';
 import {
   goToScene,
   imageCounter,
@@ -33,6 +35,7 @@ import TourViewer, { type TourViewerHandle } from './TourViewer';
 import type { TourMapMode } from './TourMap';
 import { usePublicContent } from './usePublicContent';
 import { buildMultiStopTourPath, findShortestTourPath } from '../src/tour-routing';
+import { useTourStructure } from './useTourStructure';
 
 type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | null;
 type CompactOverlay = 'info' | 'map' | 'tools' | 'chat' | null;
@@ -100,7 +103,15 @@ function ReferenceLine({ reference, locale }: { readonly reference: InfoReferenc
   );
 }
 
-export default function TourApp() {
+export default function TourApp({ initialTourStructure, lockTourStructure = false }: {
+  readonly initialTourStructure: TourStructureSnapshot;
+  readonly lockTourStructure?: boolean;
+}) {
+  const tourStructure = useTourStructure(initialTourStructure, !lockTourStructure);
+  activateTourStructure(
+    toRuntimeTourScenes(tourStructure.data),
+    tourStructure.data.map
+  );
   const compactTourUi = useCompactTourUi();
   const locale = useTourStore((state) => state.locale);
   const currentSceneId = useTourStore((state) => state.currentSceneId);
@@ -874,11 +885,12 @@ export default function TourApp() {
           onClose={closeDialog}
           onNavigate={(sceneId) => void navigate(sceneId)}
           onOpenImage={(activity) => {
-            if (!activity.imageUrl) return;
+            const activityImage = activity.images?.[0];
+            if (!activityImage?.src && !activity.imageUrl) return;
             openImage([{
-              src: activity.imageUrl,
-              alt: activity.title,
-              caption: activity.title
+              src: activityImage?.src ?? activity.imageUrl!,
+              alt: activityImage?.alt ?? activity.title,
+              caption: activityImage?.caption ?? activity.title
             }], 0);
           }}
         />

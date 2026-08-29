@@ -49,7 +49,7 @@ describe('FITM branding', () => {
     expect(manifest.icons[0]?.src).toBe('/fitm-favicon.svg');
     expect(favicon).toContain('aria-label="FITM"');
     expect(favicon).toContain('fill="#20b5e6"');
-    expect(serviceWorker).toContain("const CACHE_NAME = 'kmuntb-tour-v11'");
+    expect(serviceWorker).toContain("const CACHE_NAME = 'kmuntb-tour-v12'");
     expect(serviceWorker).toContain("'/fitm-favicon.svg'");
     expect(serviceWorker).toContain("'/mainimages/map/mainmap1.png'");
     expect(serviceWorker).not.toContain("'/mainimages/map/mainmap.png'");

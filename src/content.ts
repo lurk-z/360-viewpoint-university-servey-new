@@ -62,6 +62,7 @@ export interface ProgramContent {
   readonly studyLevel?: ProgramStudyLevel;
   readonly interestTags?: LocalizedTagList;
   readonly careerTags?: LocalizedTagList;
+  readonly images?: readonly ContentImage[];
   readonly imageUrl?: string;
   readonly source: ContentSource;
 }
@@ -75,6 +76,7 @@ export interface ActivityContent {
   readonly startDate?: string;
   readonly endDate?: string;
   readonly sceneId?: SceneId;
+  readonly images?: readonly ContentImage[];
   readonly imageUrl?: string;
   readonly source: ContentSource;
 }
@@ -150,6 +152,7 @@ export const programDataSchema = z.object({
   studyLevel: z.enum(['vocational', 'bachelor', 'transfer', 'master']).optional(),
   interestTags: localizedTagListSchema.optional(),
   careerTags: localizedTagListSchema.optional(),
+  images: z.array(imageSchema).max(12).optional(),
   imageUrl: optionalUrlSchema,
   source: sourceSchema
 });
@@ -161,6 +164,7 @@ export const activityDataSchema = z.object({
   startDate: z.iso.date().or(z.literal('')).optional().transform((value) => value || undefined),
   endDate: z.iso.date().or(z.literal('')).optional().transform((value) => value || undefined),
   sceneId: z.string().trim().optional().transform((value) => value || undefined),
+  images: z.array(imageSchema).max(12).optional(),
   imageUrl: optionalUrlSchema,
   source: sourceSchema
 });

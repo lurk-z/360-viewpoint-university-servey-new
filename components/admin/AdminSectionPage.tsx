@@ -36,6 +36,7 @@ export type AdminSection = keyof typeof sections;
 interface AdminSectionPageProps {
   readonly section: AdminSection;
   readonly requestedFacultyId?: string;
+  readonly requestedStatus?: string;
 }
 
 async function listMediaOptions(): Promise<AdminMediaOption[]> {
@@ -53,7 +54,8 @@ async function listMediaOptions(): Promise<AdminMediaOption[]> {
 
 export default async function AdminSectionPage({
   section,
-  requestedFacultyId
+  requestedFacultyId,
+  requestedStatus
 }: AdminSectionPageProps) {
   const config = sections[section];
   const session = await requireStaff();
@@ -65,9 +67,7 @@ export default async function AdminSectionPage({
     config.kind === 'faculties'
       ? listAdminContent('programs')
       : Promise.resolve([]),
-    config.kind === 'faculties' || config.kind === 'hotspot_contents'
-      ? listMediaOptions()
-      : Promise.resolve([])
+    listMediaOptions()
   ]);
   const facultyRows = config.kind === 'faculties' ? allRows : relatedFacultyRows;
   const managedHotspotIds = new Set(facultyRows.flatMap((row) => row.hotspotId ? [row.hotspotId] : []));
@@ -128,6 +128,7 @@ export default async function AdminSectionPage({
         facultyFilter={facultyFilter}
         media={media}
         placeStatuses={placeStatuses}
+        initialStatusFilter={requestedStatus}
       />
     </>
   );
