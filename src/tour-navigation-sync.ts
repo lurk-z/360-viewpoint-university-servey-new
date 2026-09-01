@@ -10,7 +10,8 @@ const navigationEntrySchema = z.object({
   sceneId: z.string().min(1),
   target: z.string().min(1),
   yaw: z.number().finite(),
-  pitch: z.number().finite()
+  pitch: z.number().finite(),
+  direction: z.enum(['standard', 'up', 'down']).optional()
 });
 
 export const navigationSnapshotSchema = z.array(navigationEntrySchema).max(80_000);
@@ -59,7 +60,8 @@ function equalEntry(left: NavigationEntry | undefined, right: NavigationEntry | 
     && left?.sceneId === right?.sceneId
     && left?.target === right?.target
     && left?.yaw === right?.yaw
-    && left?.pitch === right?.pitch;
+    && left?.pitch === right?.pitch
+    && left?.direction === right?.direction;
 }
 
 function entryMap(snapshot: NavigationSnapshot): Map<string, NavigationEntry> {
@@ -74,7 +76,14 @@ export function extractNavigationSnapshot(input: TourStructureData): NavigationS
   const data = tourStructureDataSchema.parse(input);
   return sortEntries(data.scenes.flatMap((scene) => scene.hotspots.flatMap((hotspot) => (
     hotspot.type === 'scene'
-      ? [{ id: hotspot.id, sceneId: scene.id, target: hotspot.target, yaw: hotspot.yaw, pitch: hotspot.pitch }]
+      ? [{
+        id: hotspot.id,
+        sceneId: scene.id,
+        target: hotspot.target,
+        yaw: hotspot.yaw,
+        pitch: hotspot.pitch,
+        ...(hotspot.direction ? { direction: hotspot.direction } : {})
+      }]
       : []
   ))));
 }
@@ -124,6 +133,34 @@ export function overlayCodeNavigation(
 }
 
 /**
+ * Info geometry is Admin-owned whenever a database structure is available.
+ * Report only code entries that are missing from Admin or differ there; extra
+ * Admin entries are expected and must not be treated as conflicts.
+ */
+export function findCodeInfoGeometryDifferences(
+  databaseInput: TourStructureData,
+  codeInput: TourStructureData
+): readonly string[] {
+  const database = tourStructureDataSchema.parse(databaseInput);
+  const code = tourStructureDataSchema.parse(codeInput);
+  const databaseById = new Map(database.scenes.flatMap((scene) => scene.hotspots.flatMap((hotspot) => (
+    hotspot.type === 'info'
+      ? [[hotspot.id, { sceneId: scene.id, yaw: hotspot.yaw, pitch: hotspot.pitch }] as const]
+      : []
+  ))));
+  return code.scenes.flatMap((scene) => scene.hotspots.flatMap((hotspot) => {
+    if (hotspot.type !== 'info') return [];
+    const current = databaseById.get(hotspot.id);
+    return current
+      && current.sceneId === scene.id
+      && current.yaw === hotspot.yaw
+      && current.pitch === hotspot.pitch
+      ? []
+      : [hotspot.id];
+  })).sort();
+}
+
+/**
  * Admin may edit scene content and Info geometry, but navigation is owned by
  * tour-data.ts. This replaces every submitted scene hotspot with the navigation
  * from the latest database draft while preserving submitted Info hotspots.
@@ -151,7 +188,8 @@ export function preserveCurrentNavigation(
       type: 'scene',
       target: entry.target,
       yaw: entry.yaw,
-      pitch: entry.pitch
+      pitch: entry.pitch,
+      ...(entry.direction ? { direction: entry.direction } : {})
     });
   }
   return tourStructureDataSchema.parse(submitted);
@@ -259,7 +297,8 @@ export function mergeNavigationChanges(input: {
       type: 'scene',
       target: desired.target,
       yaw: desired.yaw,
-      pitch: desired.pitch
+      pitch: desired.pitch,
+      ...(desired.direction ? { direction: desired.direction } : {})
     });
   }
 
@@ -294,5 +333,5 @@ export function findNewNavigationIssues(
 
 export function formatNavigationEntry(entry: NavigationEntry | null): string {
   if (!entry) return '(deleted)';
-  return `${entry.sceneId} -> ${entry.target} (yaw ${entry.yaw}, pitch ${entry.pitch})`;
+  return `${entry.sceneId} -> ${entry.target} (yaw ${entry.yaw}, pitch ${entry.pitch}, direction ${entry.direction ?? 'standard'})`;
 }

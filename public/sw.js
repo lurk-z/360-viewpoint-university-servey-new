@@ -1,13 +1,11 @@
-const CACHE_NAME = 'kmuntb-tour-v12';
+const CACHE_NAME = 'kmuntb-tour-v13';
 const sceneCacheJobs = new Map();
 const SHELL_ASSETS = [
   '/',
   '/manifest.webmanifest',
   '/fitm-favicon.svg',
   '/mainimages/Logo_FitM/FITM_LOGO.png',
-  '/mainimages/map/mainmap1.png',
-  '/api/content',
-  '/api/tour-structure'
+  '/mainimages/map/mainmap1.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -41,9 +39,10 @@ async function cacheFirst(request) {
   return response;
 }
 
-async function networkFirst(request, navigation = false) {
+async function networkFirst(request, navigation = false, forceFresh = false) {
   try {
-    const response = await fetch(request);
+    const networkRequest = forceFresh ? new Request(request, { cache: 'no-store' }) : request;
+    const response = await fetch(networkRequest);
     if (response.ok) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put(navigation ? '/' : request, response.clone());
@@ -111,8 +110,11 @@ self.addEventListener('fetch', (event) => {
 
   const isTourImage = url.pathname.startsWith('/mainimages/')
     && /\.(?:jpe?g|png)$/i.test(url.pathname);
+  const isLiveTourApi = url.pathname === '/api/content' || url.pathname === '/api/tour-structure';
 
-  event.respondWith(isTourImage
-    ? cacheFirst(event.request)
-    : networkFirst(event.request));
+  event.respondWith(
+    isTourImage
+      ? cacheFirst(event.request)
+      : networkFirst(event.request, false, isLiveTourApi)
+  );
 });

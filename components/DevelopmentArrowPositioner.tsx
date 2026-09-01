@@ -10,6 +10,7 @@ export interface DevelopmentArrowOption {
   readonly targetLabel: string;
   readonly yaw: number;
   readonly pitch: number;
+  readonly direction?: 'standard' | 'up' | 'down';
 }
 
 interface DevelopmentArrowPositionerProps {
@@ -47,7 +48,7 @@ export default function DevelopmentArrowPositioner({
     ? preview
     : selected;
   const snippet = useMemo(() => selected && position
-    ? `{ id: '${selected.id}', type: 'scene', target: '${selected.target}', yaw: ${numberLiteral(position.yaw)}, pitch: ${numberLiteral(position.pitch)} }`
+    ? `{ id: '${selected.id}', type: 'scene', target: '${selected.target}', yaw: ${numberLiteral(position.yaw)}, pitch: ${numberLiteral(position.pitch)}${selected.direction && selected.direction !== 'standard' ? `, direction: '${selected.direction}'` : ''} }`
     : '', [position, selected]);
 
   useEffect(() => {
@@ -101,6 +102,7 @@ export default function DevelopmentArrowPositioner({
             <div><dt>Target</dt><dd>{selected.target}</dd></div>
             <div><dt>yaw</dt><dd>{position ? numberLiteral(position.yaw) : '—'}</dd></div>
             <div><dt>pitch</dt><dd>{position ? numberLiteral(position.pitch) : '—'}</dd></div>
+            <div><dt>direction</dt><dd>{selected.direction ?? 'standard'}</dd></div>
           </dl>
           <textarea
             value={snippet}

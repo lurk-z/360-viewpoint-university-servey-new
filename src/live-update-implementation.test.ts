@@ -36,7 +36,7 @@ describe('live update integration', () => {
     expect(viewer).toContain('preservedViewerStateRef');
     expect(viewer).toContain('viewer.getPosition()');
     expect(viewer).toContain('viewer.getZoomLevel()');
-    expect(viewer).toContain('}, [viewerInventorySignature]);');
+    expect(viewer).toContain('}, [initialSceneId, viewerInventorySignature]);');
   });
 
   it('does not rebuild Leaflet for yaw/pitch edits and safely preserves only initialized map views', () => {
@@ -66,6 +66,31 @@ describe('live update integration', () => {
     expect(actions).toContain('preserveCurrentNavigation(submittedStructure, current.draft)');
     expect(actions).toContain('preserveCurrentNavigation(restoredStructure, current.draft)');
     expect(importRoute).toContain('preserveCurrentNavigation');
+  });
+
+  it('keeps development tools off the panorama until opened from the control rail', () => {
+    const app = source('components/TourApp.tsx');
+    const styles = source('src/styles.css');
+    expect(app).not.toContain('development-arrow-positioner-toggle');
+    expect(app).not.toContain('development-info-source-warning');
+    expect(styles).not.toContain('.development-arrow-positioner-toggle');
+    expect(styles).not.toContain('.development-info-source-warning');
+    expect(app).toContain("console.warn(");
+    expect(app).toContain("'จัดตำแหน่งลูกศร'");
+    expect(app).toContain('<DevelopmentArrowPositioner');
+    expect(app).toContain('development-navigation-error');
+  });
+
+  it('separates Visual Tour scene presentation from Info fields in Admin', () => {
+    const editor = source('components/admin/AdminContentEditor.tsx');
+    const actions = source('app/admin/actions.ts');
+    expect(editor).toContain('Visual Tour Editor ↗');
+    expect(editor).not.toContain('name="sceneTitleTh"');
+    expect(editor).not.toContain('name="sceneDescriptionTh"');
+    expect(editor).not.toContain('name="sceneTitleEn"');
+    expect(editor).not.toContain('name="sceneDescriptionEn"');
+    expect(actions).toContain(".select('draft_data')");
+    expect(actions).toContain('preserveLegacyInfoScenePresentation');
   });
 
   it('uses code arrows in development and detects same-version tour changes by signature', () => {

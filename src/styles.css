@@ -845,6 +845,22 @@ svg {
   stroke-width: 1.5;
 }
 
+.tour-arrow.is-stairs-down .tour-arrow__icon {
+  filter: drop-shadow(0 3px 1px rgb(2 20 34 / 78%)) drop-shadow(0 8px 9px rgb(2 20 34 / 68%));
+  transform: perspective(110px) rotateX(8deg) translateY(1px);
+}
+
+.tour-arrow.is-stairs-down .tour-arrow__chevron {
+  fill: #fff;
+  stroke: rgb(14 116 144 / 95%);
+  stroke-width: 2;
+}
+
+.tour-arrow.is-stairs-down:hover .tour-arrow__icon,
+.tour-arrow.is-stairs-down:focus-visible .tour-arrow__icon {
+  transform: perspective(110px) rotateX(4deg) translateY(4px) scale(1.08);
+}
+
 .tour-arrow:hover .tour-arrow__icon,
 .tour-arrow:focus-visible .tour-arrow__icon {
   filter: drop-shadow(0 3px 1px rgb(2 20 34 / 75%)) drop-shadow(0 10px 10px rgb(2 20 34 / 62%));
@@ -860,32 +876,6 @@ svg {
 .tour-arrow.is-dev-selected .tour-arrow__icon {
   filter: drop-shadow(0 0 5px #facc15) drop-shadow(0 9px 9px rgb(2 20 34 / 72%));
   transform: perspective(110px) rotateX(16deg) translateY(-3px) scale(1.1);
-}
-
-.development-arrow-positioner-toggle {
-  position: absolute;
-  z-index: 66;
-  top: 18px;
-  left: 50%;
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  border: 1px solid rgb(255 255 255 / 70%);
-  border-radius: 999px;
-  background: rgb(8 47 73 / 92%);
-  box-shadow: 0 10px 28px rgb(2 20 34 / 42%);
-  color: #fff;
-  font-size: .78rem;
-  font-weight: 850;
-  transform: translateX(-50%);
-  backdrop-filter: blur(12px);
-}
-
-.development-arrow-positioner-toggle svg {
-  width: 19px;
-  height: 19px;
 }
 
 .development-navigation-error {

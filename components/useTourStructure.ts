@@ -32,7 +32,10 @@ export function useTourStructure(initial: TourStructureSnapshot, live = true): T
 
   const refresh = useCallback(() => {
     if (requestRef.current) return requestRef.current;
-    const request = fetch('/api/tour-structure', { cache: 'no-store' })
+    const request = fetch('/api/tour-structure', {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
       .then(async (response) => {
         if (!response.ok) return;
         const value: unknown = await response.json();
@@ -64,7 +67,11 @@ export function useTourStructure(initial: TourStructureSnapshot, live = true): T
   useEffect(() => {
     const check = (): void => {
       if (document.visibilityState !== 'visible') return;
-      void fetch('/api/tour-structure', { method: 'HEAD', cache: 'no-store' })
+      void fetch('/api/tour-structure', {
+        method: 'HEAD',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      })
         .then((response) => {
           const version = Number(response.headers.get('X-Tour-Structure-Version'));
           const source = response.headers.get('X-Tour-Structure-Source') ?? 'fallback';

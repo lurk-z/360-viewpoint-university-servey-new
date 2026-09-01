@@ -41,7 +41,7 @@ import {
   type SceneId,
   type TourScene
 } from '../src/tour-data';
-import { goToScene, message } from '../src/i18n';
+import { goDownToScene, goToScene, message } from '../src/i18n';
 import {
   ARROW_SETTLE_DURATION,
   getSceneTransitionOptions
@@ -66,6 +66,7 @@ export interface NavigationPositionPreview {
 }
 
 interface TourViewerProps {
+  readonly initialSceneId?: SceneId;
   readonly locale: Locale;
   readonly content: PublicContentSnapshot;
   readonly onInfo: (hotspot: InfoHotspot) => void;
@@ -111,7 +112,7 @@ function buildSceneLinks(
       yaw: toDegrees(preview?.hotspotId === hotspot.id ? preview.yaw : hotspot.yaw),
       pitch: toDegrees(preview?.hotspotId === hotspot.id ? preview.pitch : hotspot.pitch)
     },
-    data: { hotspotId: hotspot.id }
+    data: { hotspotId: hotspot.id, direction: hotspot.direction ?? 'standard' }
   }));
 }
 
@@ -132,6 +133,7 @@ const buildTourNodes = (preview?: NavigationPositionPreview | null): VirtualTour
 
 const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourViewer(
   {
+    initialSceneId,
     locale,
     content,
     onInfo,
@@ -238,7 +240,9 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const preservedState = preservedViewerStateRef.current;
     const startSceneId = preservedState && tourScenes.some((scene) => scene.id === preservedState.sceneId)
       ? preservedState.sceneId
-      : 'entrance';
+      : initialSceneId && tourScenes.some((scene) => scene.id === initialSceneId)
+        ? initialSceneId
+        : 'entrance';
     const settleFrames = new Set<number>();
     let yawFrame = 0;
     let pendingYaw = 0;
@@ -251,9 +255,10 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const createArrowElement = (link: VirtualTourLink): HTMLElement => {
       const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);
       const targetTitle = localize(target.title, callbacksRef.current.locale);
+      const direction = link.data?.direction === 'down' ? 'down' : 'standard';
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'tour-arrow';
+      button.className = `tour-arrow${direction === 'down' ? ' is-stairs-down' : ''}`;
       button.dataset.target = target.id;
       if (typeof link.data?.hotspotId === 'string') {
         button.dataset.hotspotId = link.data.hotspotId;
@@ -262,7 +267,12 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           callbacksRef.current.navigationPlacementHotspotId === link.data.hotspotId
         );
       }
-      button.setAttribute('aria-label', goToScene(callbacksRef.current.locale, targetTitle));
+      button.setAttribute(
+        'aria-label',
+        direction === 'down'
+          ? goDownToScene(callbacksRef.current.locale, targetTitle)
+          : goToScene(callbacksRef.current.locale, targetTitle)
+      );
 
       const icon = document.createElement('span');
       icon.className = 'tour-arrow__icon';
@@ -272,7 +282,12 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       svg.setAttribute('focusable', 'false');
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('class', 'tour-arrow__chevron');
-      path.setAttribute('d', 'M6 27 36 7 66 27 58 37 36 22 14 37Z');
+      path.setAttribute(
+        'd',
+        direction === 'down'
+          ? 'M10 11 36 30 62 11 69 20 36 40 3 20Z'
+          : 'M6 27 36 7 66 27 58 37 36 22 14 37Z'
+      );
       svg.append(path);
       icon.append(svg);
       button.append(icon);
@@ -319,7 +334,10 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           },
           getLinkTooltip: (_content, link) => {
             const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);
-            return goToScene(callbacksRef.current.locale, localize(target.title, callbacksRef.current.locale));
+            const targetTitle = localize(target.title, callbacksRef.current.locale);
+            return link.data?.direction === 'down'
+              ? goDownToScene(callbacksRef.current.locale, targetTitle)
+              : goToScene(callbacksRef.current.locale, targetTitle);
           }
         })
       ]
@@ -527,7 +545,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
         disposed = true;
       }
     };
-  }, [viewerInventorySignature]);
+  }, [initialSceneId, viewerInventorySignature]);
 
   useEffect(() => {
     const plugin = virtualTourRef.current;
@@ -574,7 +592,12 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       if (!targetId) return;
       const target = resolveTourScene(getScene(targetId), content);
       const targetTitle = localize(target.title, locale);
-      button.setAttribute('aria-label', goToScene(locale, targetTitle));
+      button.setAttribute(
+        'aria-label',
+        button.classList.contains('is-stairs-down')
+          ? goDownToScene(locale, targetTitle)
+          : goToScene(locale, targetTitle)
+      );
     });
     refreshMarkersRef.current?.();
   }, [locale, content]);

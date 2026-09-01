@@ -76,6 +76,29 @@ describe('tour configuration', () => {
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
 
+  it('marks exactly the nine existing downstairs routes without duplicating arrows', () => {
+    const expected = [
+      ['fitmFloor2Point1', 'fitmInterior8'],
+      ['fitmFloor3Point1', 'fitmFloor2Point1'],
+      ['fitmFloor4Point1', 'fitmFloor3Point1'],
+      ['fitmFloor2Point4', 'fitmInterior13'],
+      ['fitmFloor3Point5', 'fitmFloor2Point4'],
+      ['fitmFloor4Point3', 'fitmFloor3Point5'],
+      ['sirindhornLibraryFloor2Point1', 'sirindhornLibraryFloor1Point3'],
+      ['sirindhornLibraryFloor3Point1', 'sirindhornLibraryFloor2Point1'],
+      ['sirindhornLibraryFloor4Point1', 'sirindhornLibraryFloor3Point1']
+    ] as const;
+    const downstairs = tourScenes.flatMap((scene) => getNavigationHotspots(scene)
+      .filter((hotspot) => hotspot.direction === 'down')
+      .map((hotspot) => [scene.id, hotspot.target] as const));
+
+    expect(downstairs.map(([from, to]) => `${from}:${to}`).sort())
+      .toEqual(expected.map(([from, to]) => `${from}:${to}`).sort());
+    for (const [from, to] of expected) {
+      expect(getNavigationHotspots(getScene(from)).filter((hotspot) => hotspot.target === to)).toHaveLength(1);
+    }
+  });
+
   it('shows the configured major campus landmarks on the map', () => {
     expect(getMapLandmarkScenes().map((scene) => scene.id)).toEqual([
       'entrance',
@@ -360,7 +383,6 @@ describe('tour configuration', () => {
       'fitmFloor3Point1:fitmFloor3Point2',
       'fitmFloor3Point1:fitmFloor3Point3',
       'fitmFloor3Point1:fitmFloor4Point1',
-      'fitmFloor3Point2:fitmFloor3Point5',
       'fitmFloor3Point3:fitmFloor3Point4',
       'fitmFloor3Point4:fitmFloor3Point5',
       'fitmFloor3Point5:fitmFloor4Point3',
@@ -718,7 +740,6 @@ describe('tour configuration', () => {
       ['fitmFloor2Point6', 'fitmFloor2Point5'],
       ['fitmFloor2Point5', 'fitmFloor2Point4'],
       ['fitmFloor3Point1', 'fitmFloor3Point2'],
-      ['fitmFloor3Point2', 'fitmFloor3Point5'],
       ['fitmFloor3Point1', 'fitmFloor3Point3'],
       ['fitmFloor3Point3', 'fitmFloor3Point4'],
       ['fitmFloor3Point4', 'fitmFloor3Point5'],
@@ -790,7 +811,7 @@ describe('tour configuration', () => {
       expect(getNavigationHotspots(getScene(to)).map((hotspot) => hotspot.target)).toContain(from);
     }
     expect(getInfoHotspots(getScene('sirindhornLibraryFloor4Point1'))).toEqual([
-      expect.objectContaining({ id: 'sirindhorn-upper-floors-info', yaw: -150, pitch: 8 })
+      expect.objectContaining({ id: 'sirindhorn-upper-floors-info', yaw: -100, pitch: 8 })
     ]);
     expect(getInfoHotspots(getScene('campusRoad22')).map((hotspot) => hotspot.id))
       .not.toContain('Sirindhorn Building-info');
@@ -843,8 +864,8 @@ describe('tour configuration', () => {
 
   it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    expect(infoHotspots).toHaveLength(36);
-    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(36);
+    expect(infoHotspots).toHaveLength(37);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(37);
 
     for (const hotspot of infoHotspots) {
       expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   NavigationPreservationError,
   extractNavigationSnapshot,
+  findCodeInfoGeometryDifferences,
   findNewNavigationIssues,
   mergeNavigationChanges,
   navigationSnapshotsEqual,
@@ -32,7 +33,8 @@ function replaceNavigationEntry(data: TourStructureData, entry: NavigationEntry)
     type: 'scene',
     target: entry.target,
     yaw: entry.yaw,
-    pitch: entry.pitch
+    pitch: entry.pitch,
+    ...(entry.direction ? { direction: entry.direction } : {})
   });
 }
 
@@ -73,6 +75,21 @@ describe('tour navigation development overlay', () => {
 
     const result = overlayCodeNavigation(database, cloneStructure());
     expect(result.scenes.find((scene) => scene.id === source.id)?.hotspots).toEqual(source.hotspots);
+  });
+
+  it('warns when code Info differs but allows Admin-only Info', () => {
+    const database = cloneStructure();
+    const code = cloneStructure();
+    const source = database.scenes[0]!;
+    source.hotspots.push({ id: 'admin-only-info', type: 'info', yaw: 12, pitch: 3 });
+    expect(findCodeInfoGeometryDifferences(database, code)).toEqual([]);
+
+    const codeInfo = code.scenes.flatMap((scene) => scene.hotspots)
+      .find((hotspot) => hotspot.type === 'info');
+    expect(codeInfo).toBeDefined();
+    if (!codeInfo || codeInfo.type !== 'info') return;
+    codeInfo.yaw += 1;
+    expect(findCodeInfoGeometryDifferences(database, code)).toEqual([codeInfo.id]);
   });
 });
 
@@ -133,6 +150,16 @@ describe('Admin navigation protection', () => {
 });
 
 describe('three-way navigation merge', () => {
+  it('syncs the navigation direction field', () => {
+    const baseline = extractNavigationSnapshot(cloneStructure());
+    const entry = baseline.find((item) => item.direction !== 'down')!;
+    const code = baseline.map((item) => item.id === entry.id ? { ...item, direction: 'down' as const } : item);
+    const result = mergeNavigationChanges({ baseline, code, current: cloneStructure() });
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.changed).toBe(true);
+    expect(extractNavigationSnapshot(result.data).find((item) => item.id === entry.id)?.direction).toBe('down');
+  });
   it('applies a VS Code-only edit and preserves unrelated Admin content', () => {
     const baselineStructure = cloneStructure();
     const baseline = extractNavigationSnapshot(baselineStructure);

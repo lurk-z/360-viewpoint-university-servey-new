@@ -345,6 +345,10 @@ export function goToScene(locale: Locale, title: string): string {
   return locale === 'th' ? `ไปยัง ${title}` : `Go to ${title}`;
 }
 
+export function goDownToScene(locale: Locale, title: string): string {
+  return locale === 'th' ? `ลงไปยัง ${title}` : `Go down to ${title}`;
+}
+
 export function currentScene(locale: Locale, title: string): string {
   return locale === 'th' ? `ฉากปัจจุบัน: ${title}` : `Current scene: ${title}`;
 }

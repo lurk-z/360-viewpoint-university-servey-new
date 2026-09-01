@@ -246,6 +246,36 @@ test('Info hotspots open from a real mobile tap without opening after a drag', a
   await expect(page.locator('dialog.app-dialog[open]')).toHaveCount(0);
 });
 
+test('executive office Info and downstairs arrow work from their exact FITM scene', async ({ page }) => {
+  await page.goto('/?scene=fitmFloor3Point2', { waitUntil: 'domcontentloaded' });
+  const startButton = page.locator('.intro .primary-button');
+  await expect(startButton).toBeEnabled({ timeout: 60_000 });
+  await startButton.click();
+  await expect(page.locator('#scene-title')).toContainText(/ภายในอาคาร FITM ชั้น 3 จุดที่ 2|Inside FITM, Floor 3, Point 2/);
+  await expect(page.locator('#scene-title')).not.toContainText(/ห้องผู้บริหาร|Executive Office/);
+
+  const marker = page.locator('.info-hotspot[aria-label*="ห้องผู้บริหาร"], .info-hotspot[aria-label*="Executive Office"]').first();
+  await expect(marker).toBeVisible({ timeout: 15_000 });
+  const viewport = page.viewportSize();
+  if ((viewport?.width ?? 0) <= 1024) {
+    const box = await marker.boundingBox();
+    expect(box).not.toBeNull();
+    await page.touchscreen.tap((box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2);
+  } else {
+    await marker.click();
+  }
+  await expect(page.locator('dialog.app-dialog[open]')).toContainText(/ห้องผู้บริหาร|Executive Office/);
+  await page.keyboard.press('Escape');
+
+  await page.goto('/?scene=fitmFloor3Point5', { waitUntil: 'domcontentloaded' });
+  const nextStartButton = page.locator('.intro .primary-button');
+  await expect(nextStartButton).toBeEnabled({ timeout: 60_000 });
+  await nextStartButton.click();
+  const downstairs = page.locator('.tour-arrow.is-stairs-down[data-target="fitmFloor2Point4"]').first();
+  await expect(downstairs).toHaveCount(1, { timeout: 15_000 });
+  await expect(downstairs).toHaveAttribute('aria-label', /ลงไปยัง|Go down to/);
+});
+
 test('AI route card starts a guided tour and highlights the real scene path', async ({ page }) => {
   await page.route('**/api/chat', async (route) => {
     await route.fulfill({

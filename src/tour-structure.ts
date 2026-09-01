@@ -24,7 +24,8 @@ const sceneHotspotSchema = z.object({
   type: z.literal('scene'),
   target: sceneIdSchema,
   yaw: z.number().finite().min(-360).max(360),
-  pitch: z.number().finite().min(-90).max(90)
+  pitch: z.number().finite().min(-90).max(90),
+  direction: z.enum(['standard', 'up', 'down']).optional()
 });
 
 const infoHotspotSchema = z.object({

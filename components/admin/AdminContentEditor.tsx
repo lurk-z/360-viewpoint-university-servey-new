@@ -29,6 +29,7 @@ interface AdminContentEditorProps {
   readonly title: string;
   readonly description: string;
   readonly initialStatusFilter?: string;
+  readonly initialQuery?: string;
   readonly rows: readonly AdminContentRow[];
   readonly role: AdminRole;
   readonly faculties?: readonly FacultyOption[];
@@ -200,7 +201,7 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
   ];
   if (kind !== 'hotspot_contents') requiredValues.push(localized(data, 'summary', 'th'), localized(data, 'summary', 'en'));
   if (kind === 'programs') requiredValues.push(localized(data, 'level', 'th'), localized(data, 'level', 'en'), localized(data, 'admission', 'th'), localized(data, 'admission', 'en'), row?.facultyId ?? '');
-  if (kind === 'hotspot_contents') requiredValues.push(localized(data, 'sceneTitle', 'th'), localized(data, 'sceneTitle', 'en'), localized(data, 'sceneDescription', 'th'), localized(data, 'sceneDescription', 'en'), galleryImages[0]?.src ?? '');
+  if (kind === 'hotspot_contents') requiredValues.push(galleryImages[0]?.src ?? '');
   if (kind === 'faculties') requiredValues.push(galleryImages[0]?.src ?? '');
   const completeCount = requiredValues.filter((value) => value.trim()).length;
 
@@ -224,6 +225,11 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
         <fieldset className="admin-field--wide admin-checkbox-group"><legend>วุฒิที่รับสมัคร (เลือกได้หลายข้อ)</legend>{([['m3', 'ม.3'], ['m6-pvoc', 'ม.6 / ปวช.'], ['high-vocational', 'ปวส.'], ['bachelor', 'ปริญญาตรี'], ['other', 'วุฒิอื่น']] as const).map(([value, label]) => <label key={value}><input type="checkbox" name="eligibleQualifications" value={value} defaultChecked={stringList(data, 'eligibleQualifications').includes(value)} /><span>{label}</span></label>)}</fieldset>
       </> : null}
       {kind === 'activities' ? <><TextField prefix={prefix} name="startDate" label="วันเริ่มต้น" type="date" value={field(data, 'startDate')} /><TextField prefix={prefix} name="endDate" label="วันสิ้นสุด" type="date" value={field(data, 'endDate')} /></> : null}
+      {kind === 'hotspot_contents' ? (
+        <p className="admin-workflow-note admin-field--wide">
+          ชื่อ คำอธิบาย และแท็กบนการ์ดฉากจัดการแยกจากข้อมูลปุ่ม Info ที่ <a href="/admin/tour" target="_blank" rel="noreferrer">Visual Tour Editor ↗</a>
+        </p>
+      ) : null}
       <details className="admin-advanced-settings"><summary>ตั้งค่าขั้นสูง (ผู้ใช้ทั่วไปไม่ต้องแก้)</summary><div>
         {kind !== 'hotspot_contents' ? <TextField prefix={prefix} name="slug" label="Slug · เว้นว่างเพื่อให้ระบบสร้างอัตโนมัติ" value={row?.slug} readOnly={Boolean(row)} /> : <><TextField prefix={prefix} name="hotspotId" label="Hotspot ID" value={row?.id} readOnly /><TextField prefix={prefix} name="sceneId" label="Scene ID" value={row?.sceneId} readOnly /></>}
         {kind === 'faculties' && row?.sceneId ? <TextField prefix={prefix} name="linkedSceneId" label="Scene ID ที่เชื่อมอยู่" value={row.sceneId} readOnly /> : null}
@@ -234,7 +240,6 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
 
     <section className="admin-form-step" hidden={step !== 1} lang="th">
       <header><h3>ข้อมูลภาษาไทย</h3><p>เขียนให้อ่านง่ายและตรวจสอบชื่อเฉพาะให้ถูกต้อง</p></header>
-      {kind === 'hotspot_contents' ? <><TextField prefix={prefix} name="sceneTitleTh" label="ชื่อบนการ์ดฉาก" value={localized(data, 'sceneTitle', 'th')} required /><TextArea prefix={prefix} name="sceneDescriptionTh" label="คำอธิบายการ์ดฉาก" value={localized(data, 'sceneDescription', 'th')} required rows={3} /></> : null}
       <TextField prefix={prefix} name="nameTh" label={kind === 'activities' ? 'ชื่อกิจกรรม' : kind === 'hotspot_contents' ? 'ชื่อในปุ่ม Info' : 'ชื่อ'} value={localized(data, nameKey, 'th')} required />
       {kind === 'programs' ? <><TextField prefix={prefix} name="departmentTh" label="ภาควิชา/หน่วยงาน (ไม่บังคับ)" value={localized(data, 'department', 'th')} /><TextField prefix={prefix} name="levelTh" label="ระดับการศึกษา" value={localized(data, 'level', 'th')} required /></> : null}
       {kind !== 'hotspot_contents' ? <TextArea prefix={prefix} name="summaryTh" label="สรุปย่อ" value={localized(data, 'summary', 'th')} required rows={2} /> : null}
@@ -244,7 +249,6 @@ function ContentFields({ kind, row, faculties = [], media = [] }: {
 
     <section className="admin-form-step" hidden={step !== 2} lang="en">
       <header><h3>English information</h3><p>English fields are required before publishing.</p></header>
-      {kind === 'hotspot_contents' ? <><TextField prefix={prefix} name="sceneTitleEn" label="Scene title" value={localized(data, 'sceneTitle', 'en')} required /><TextArea prefix={prefix} name="sceneDescriptionEn" label="Scene description" value={localized(data, 'sceneDescription', 'en')} required rows={3} /></> : null}
       <TextField prefix={prefix} name="nameEn" label={kind === 'activities' ? 'Activity name' : kind === 'hotspot_contents' ? 'Info title' : 'Name'} value={localized(data, nameKey, 'en')} required />
       {kind === 'programs' ? <><TextField prefix={prefix} name="departmentEn" label="Department (optional)" value={localized(data, 'department', 'en')} /><TextField prefix={prefix} name="levelEn" label="Degree level" value={localized(data, 'level', 'en')} required /></> : null}
       {kind !== 'hotspot_contents' ? <TextArea prefix={prefix} name="summaryEn" label="Summary" value={localized(data, 'summary', 'en')} required rows={2} /> : null}
@@ -381,9 +385,10 @@ export default function AdminContentEditor({
   facultyFilter,
   media = [],
   placeStatuses = {},
-  initialStatusFilter
+  initialStatusFilter,
+  initialQuery = ''
 }: AdminContentEditorProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const validInitialStatus = ['all', 'published', 'draft', 'archived', 'pending', 'orphaned'].includes(initialStatusFilter ?? '')
     ? initialStatusFilter as 'all' | 'published' | 'draft' | 'archived' | 'pending' | 'orphaned'
     : 'all';

@@ -194,6 +194,17 @@ export function mergeMissingScenePresentation(
   };
 }
 
+export function preserveLegacyInfoScenePresentation(
+  data: Record<string, unknown>,
+  existingData: Record<string, unknown>
+): Record<string, unknown> {
+  return {
+    ...data,
+    ...(existingData.sceneTitle === undefined ? {} : { sceneTitle: existingData.sceneTitle }),
+    ...(existingData.sceneDescription === undefined ? {} : { sceneDescription: existingData.sceneDescription })
+  };
+}
+
 const genericInfoTitle: LocalizedContent = { th: 'ข้อมูลสถานที่', en: 'Place information' };
 const genericInfoDescription: LocalizedContent = {
   th: 'รายละเอียดของสถานที่นี้ยังอยู่ระหว่างการจัดทำ',
@@ -242,12 +253,7 @@ export function resolveTourScene(
   if (faculty) {
     return { ...scene, title: faculty.name, description: faculty.summary };
   }
-
-  const place = content.hotspots.find((item) => (
-    item.sceneId === scene.id && item.sceneTitle && item.sceneDescription
-  ));
-  if (!place?.sceneTitle || !place.sceneDescription) return scene;
-  return { ...scene, title: place.sceneTitle, description: place.sceneDescription };
+  return scene;
 }
 
 export function resolveInfoHotspot(

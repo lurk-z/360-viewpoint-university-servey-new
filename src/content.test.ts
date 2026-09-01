@@ -5,6 +5,7 @@ import {
   facultyDataSchema,
   hotspotDataSchema,
   mergeMissingScenePresentation,
+  preserveLegacyInfoScenePresentation,
   programDataSchema,
   resolveInfoHotspot,
   resolveTourScene
@@ -93,6 +94,45 @@ describe('public CMS content', () => {
     });
     const custom = { th: 'ชื่อฉากที่แก้แล้ว', en: 'Edited scene title' };
     expect(mergeMissingScenePresentation({ sceneTitle: custom }, scene).sceneTitle).toEqual(custom);
+  });
+
+  it('preserves legacy scene presentation when saving Info without exposing editable scene fields', () => {
+    const sceneTitle = { th: 'ชื่อฉากเดิม', en: 'Legacy scene title' };
+    const sceneDescription = { th: 'คำอธิบายฉากเดิม', en: 'Legacy scene description' };
+    expect(preserveLegacyInfoScenePresentation(
+      { title: { th: 'ห้องผู้บริหาร', en: 'Executive Office' } },
+      { sceneTitle, sceneDescription, ignored: 'not copied' }
+    )).toEqual({
+      title: { th: 'ห้องผู้บริหาร', en: 'Executive Office' },
+      sceneTitle,
+      sceneDescription
+    });
+  });
+
+  it('keeps the Tour Structure scene card separate from published Info content', () => {
+    const scene = getScene('fitmFloor3Point2');
+    const hotspot = getInfoHotspots(scene).find((item) => item.id === 'fitmFloor3Point2-info')!;
+    const content = createFallbackContentSnapshot();
+    const executiveOffice = {
+      ...createFallbackHotspotContent(scene, hotspot),
+      title: { th: 'ห้องผู้บริหาร', en: 'Executive Office' },
+      description: { th: 'ห้องสำหรับผู้บริหารในคณะ', en: 'Executive office in the faculty.' },
+      sceneTitle: { th: 'ชื่อจาก Info ที่ไม่ควรใช้', en: 'Info title that must not be used' },
+      sceneDescription: { th: '-', en: '-' }
+    };
+    const snapshot = { ...content, hotspots: [executiveOffice] };
+
+    expect(resolveTourScene(scene, snapshot)).toMatchObject({
+      title: scene.title,
+      description: scene.description,
+      tags: scene.tags
+    });
+    expect(resolveInfoHotspot(hotspot, snapshot)).toMatchObject({
+      title: executiveOffice.title,
+      description: executiveOffice.description,
+      yaw: hotspot.yaw,
+      pitch: hotspot.pitch
+    });
   });
 
   it('requires bilingual content, safe source URLs and at least one Info image', () => {

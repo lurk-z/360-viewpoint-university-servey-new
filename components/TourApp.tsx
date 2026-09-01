@@ -21,7 +21,7 @@ import {
   type TourStructureData,
   type TourStructureSnapshot
 } from '../src/tour-structure';
-import { overlayCodeNavigation } from '../src/tour-navigation-sync';
+import { findCodeInfoGeometryDifferences, overlayCodeNavigation } from '../src/tour-navigation-sync';
 import {
   goToScene,
   imageCounter,
@@ -114,17 +114,20 @@ function ReferenceLine({ reference, locale }: { readonly reference: InfoReferenc
   );
 }
 
-export default function TourApp({ initialTourStructure, lockTourStructure = false }: {
+export default function TourApp({ initialTourStructure, initialSceneId, lockTourStructure = false }: {
   readonly initialTourStructure: TourStructureSnapshot;
+  readonly initialSceneId?: string;
   readonly lockTourStructure?: boolean;
 }) {
   const tourStructure = useTourStructure(initialTourStructure, !lockTourStructure);
   const lastValidCodeStructureRef = useRef<TourStructureData | null>(null);
   let activeTourStructure = tourStructure.data;
   let developmentNavigationError: string | undefined;
+  let developmentInfoDifferenceIds: readonly string[] = [];
   if (DEVELOPMENT_ARROW_TOOL) {
     try {
       const codeStructure = createBootstrapTourStructureData();
+      developmentInfoDifferenceIds = findCodeInfoGeometryDifferences(tourStructure.data, codeStructure);
       activeTourStructure = overlayCodeNavigation(tourStructure.data, codeStructure);
       lastValidCodeStructureRef.current = codeStructure;
     } catch (error) {
@@ -138,6 +141,13 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
       }
     }
   }
+  const developmentInfoDifferenceSignature = developmentInfoDifferenceIds.join(',');
+  useEffect(() => {
+    if (!DEVELOPMENT_ARROW_TOOL || !developmentInfoDifferenceSignature) return;
+    console.warn(
+      `[Tour development] Info geometry from tour-data.ts is ignored. Edit these Info points in Admin: ${developmentInfoDifferenceSignature}`
+    );
+  }, [developmentInfoDifferenceSignature]);
   activateTourStructure(
     toRuntimeTourScenes(activeTourStructure),
     activeTourStructure.map
@@ -181,9 +191,14 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
   const headerMenuRef = useRef<HTMLDivElement>(null);
   const headerMenuButtonRef = useRef<HTMLButtonElement>(null);
 
-  const activeSceneId = tourScenes.some((item) => item.id === currentSceneId)
-    ? currentSceneId
-    : tourScenes[0]?.id ?? 'entrance';
+  const requestedInitialSceneId = initialSceneId && tourScenes.some((item) => item.id === initialSceneId)
+    ? initialSceneId
+    : undefined;
+  const activeSceneId = !ready && requestedInitialSceneId
+    ? requestedInitialSceneId
+    : tourScenes.some((item) => item.id === currentSceneId)
+      ? currentSceneId
+      : tourScenes[0]?.id ?? 'entrance';
   const scene = resolveTourScene(getScene(activeSceneId), content);
   const sceneIndex = tourScenes.findIndex((item) => item.id === scene.id) + 1;
   const sceneNavigationHotspots = getNavigationHotspots(scene);
@@ -191,14 +206,16 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
     id: hotspot.id,
     target: hotspot.target,
     yaw: hotspot.yaw,
-    pitch: hotspot.pitch
+    pitch: hotspot.pitch,
+    direction: hotspot.direction ?? 'standard'
   })));
   const developmentArrowOptions: readonly DevelopmentArrowOption[] = sceneNavigationHotspots.map((hotspot) => ({
     id: hotspot.id,
     target: hotspot.target,
     targetLabel: localize(resolveTourScene(getScene(hotspot.target), content).title, locale),
     yaw: hotspot.yaw,
-    pitch: hotspot.pitch
+    pitch: hotspot.pitch,
+    direction: hotspot.direction
   }));
   const sceneInfoHotspots = getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content));
   const sceneFaculty = content.faculties.find((faculty) => faculty.sceneId === scene.id);
@@ -555,6 +572,7 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
         <section className={`viewer-shell${chatOpen ? ' is-chat-open' : ''}${compactOverlay ? ` has-compact-overlay compact-overlay--${compactOverlay}` : ''}${guidedTour ? ' has-guided-tour' : ''}`} aria-labelledby="scene-title">
           <TourViewer
             ref={viewerRef}
+            initialSceneId={requestedInitialSceneId}
             locale={locale}
             content={content}
             onInfo={openInfo}
@@ -734,17 +752,6 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
               </button>
             ) : null}
           </div>
-
-          {DEVELOPMENT_ARROW_TOOL && !developmentNavigationError && !introOpen && !developmentArrowToolOpen && !compactTourUi ? (
-            <button
-              type="button"
-              className="development-arrow-positioner-toggle"
-              onClick={openDevelopmentArrowTool}
-            >
-              <Icon><path d="M12 3v18M3 12h18" /><circle cx="12" cy="12" r="5" /></Icon>
-              <span>{locale === 'th' ? 'จัดตำแหน่งลูกศร' : 'Position arrows'}</span>
-            </button>
-          ) : null}
 
           {DEVELOPMENT_ARROW_TOOL && developmentNavigationError && !introOpen && !developmentArrowToolOpen ? (
             <div className="development-navigation-error" role="alert">

@@ -193,6 +193,8 @@ interface HotspotBase {
 export interface SceneHotspot extends HotspotBase {
   readonly type: 'scene';
   readonly target: SceneId;
+  /** Optional presentation hint. Navigation remains valid when omitted. */
+  readonly direction?: 'standard' | 'up' | 'down';
 }
 
 export interface InfoImage {
@@ -1906,7 +1908,7 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-2-point-1-to-interior-8', type: 'scene', target: 'fitmInterior8', yaw: 180, pitch: -8 },
+      { id: 'fitm-floor-2-point-1-to-interior-8', type: 'scene', target: 'fitmInterior8', yaw: 0, pitch: -8, direction: 'down' },
       { id: 'fitm-floor-2-point-1-to-floor-3-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 0, pitch: 8 },
       { id: 'fitm-floor-2-point-1-to-point-2', type: 'scene', target: 'fitmFloor2Point2', yaw: -90, pitch: -3 },
       { id: 'fitm-floor-2-point-1-to-point-6', type: 'scene', target: 'fitmFloor2Point6', yaw: 90, pitch: -3 }
@@ -1935,7 +1937,7 @@ export const fallbackTourScenes = [
     mapPosition: { x: 311, y: 358 },
     hotspots: [
       { id: 'fitm-floor-2-point-3-to-point-2', type: 'scene', target: 'fitmFloor2Point2', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-2-point-3-to-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-2-point-3-to-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 90, pitch: -3 }
     ]
   },
   {
@@ -1947,10 +1949,10 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-2-point-4-to-point-3', type: 'scene', target: 'fitmFloor2Point3', yaw: -90, pitch: -3 },
-      { id: 'fitm-floor-2-point-4-to-point-5', type: 'scene', target: 'fitmFloor2Point5', yaw: 90, pitch: -3 },
-      { id: 'fitm-floor-2-point-4-to-interior-13', type: 'scene', target: 'fitmInterior13', yaw: 180, pitch: -8 },
-      { id: 'fitm-floor-2-point-4-to-floor-3-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 0, pitch: 8 }
+      { id: 'fitm-floor-2-point-4-to-point-3', type: 'scene', target: 'fitmFloor2Point3', yaw: -80, pitch: -6 },
+      { id: 'fitm-floor-2-point-4-to-point-5', type: 'scene', target: 'fitmFloor2Point5', yaw: 100, pitch: -6 },
+      { id: 'fitm-floor-2-point-4-to-interior-13', type: 'scene', target: 'fitmInterior13', yaw: 200, pitch: -8, direction: 'down' },
+      { id: 'fitm-floor-2-point-4-to-floor-3-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 200, pitch: 8 }
     ]
   },
   {
@@ -1962,8 +1964,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-2-point-5-to-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-2-point-5-to-point-6', type: 'scene', target: 'fitmFloor2Point6', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-2-point-5-to-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 90, pitch: -6 },
+      { id: 'fitm-floor-2-point-5-to-point-6', type: 'scene', target: 'fitmFloor2Point6', yaw: 10, pitch: -10 }
     ]
   },
   {
@@ -1975,8 +1977,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-2-point-6-to-point-5', type: 'scene', target: 'fitmFloor2Point5', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-2-point-6-to-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-2-point-6-to-point-5', type: 'scene', target: 'fitmFloor2Point5', yaw: 3, pitch: -6 },
+      { id: 'fitm-floor-2-point-6-to-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: -90, pitch: -6 }
     ]
   },
   {
@@ -1988,7 +1990,7 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-3-point-1-to-floor-2-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: 170, pitch: -8 },
+      { id: 'fitm-floor-3-point-1-to-floor-2-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: 170, pitch: -8, direction: 'down' },
       { id: 'fitm-floor-3-point-1-to-floor-4-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: -170, pitch: 8 },
       { id: 'fitm-floor-3-point-1-to-point-2', type: 'scene', target: 'fitmFloor3Point2', yaw: -90, pitch: -3 },
       { id: 'fitm-floor-3-point-1-to-point-3', type: 'scene', target: 'fitmFloor3Point3', yaw: 90, pitch: -3 }
@@ -2016,8 +2018,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-3-point-3-to-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-3-point-3-to-point-4', type: 'scene', target: 'fitmFloor3Point4', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-3-point-3-to-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 90, pitch: -4 },
+      { id: 'fitm-floor-3-point-3-to-point-4', type: 'scene', target: 'fitmFloor3Point4', yaw: 5, pitch: -7 }
     ]
   },
   {
@@ -2029,8 +2031,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-3-point-4-to-point-3', type: 'scene', target: 'fitmFloor3Point3', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-3-point-4-to-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-3-point-4-to-point-3', type: 'scene', target: 'fitmFloor3Point3', yaw: 90, pitch: -5 },
+      { id: 'fitm-floor-3-point-4-to-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 0, pitch: -7 }
     ]
   },
   {
@@ -2042,10 +2044,9 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-3-point-5-to-point-2', type: 'scene', target: 'fitmFloor3Point2', yaw: -90, pitch: -3 },
       { id: 'fitm-floor-3-point-5-to-point-4', type: 'scene', target: 'fitmFloor3Point4', yaw: 90, pitch: -3 },
-      { id: 'fitm-floor-3-point-5-to-floor-2-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 170, pitch: -8 },
-      { id: 'fitm-floor-3-point-5-to-floor-4-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: -170, pitch: 8 }
+      { id: 'fitm-floor-3-point-5-to-floor-2-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 15, pitch: -10, direction: 'down' },
+      { id: 'fitm-floor-3-point-5-to-floor-4-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: -15, pitch: 3 }
     ]
   },
   {
@@ -2057,8 +2058,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-4-point-1-to-floor-3-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 180, pitch: -8 },
-      { id: 'fitm-floor-4-point-1-to-point-2', type: 'scene', target: 'fitmFloor4Point2', yaw: -90, pitch: -3 },
+      { id: 'fitm-floor-4-point-1-to-floor-3-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 70, pitch: -8, direction: 'down' },
+      { id: 'fitm-floor-4-point-1-to-point-2', type: 'scene', target: 'fitmFloor4Point2', yaw: 0, pitch: -10 },
       { id: 'fitm-floor-4-point-1-to-point-6', type: 'scene', target: 'fitmFloor4Point6', yaw: 90, pitch: -3 }
     ]
   },
@@ -2071,8 +2072,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-4-point-2-to-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-4-point-2-to-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-4-point-2-to-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: 90, pitch: -6 },
+      { id: 'fitm-floor-4-point-2-to-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: 0, pitch: -6 }
     ]
   },
   {
@@ -2086,7 +2087,7 @@ export const fallbackTourScenes = [
     hotspots: [
       { id: 'fitm-floor-4-point-3-to-point-2', type: 'scene', target: 'fitmFloor4Point2', yaw: -90, pitch: -3 },
       { id: 'fitm-floor-4-point-3-to-point-4', type: 'scene', target: 'fitmFloor4Point4', yaw: 90, pitch: -3 },
-      { id: 'fitm-floor-4-point-3-to-floor-3-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 180, pitch: -8 }
+      { id: 'fitm-floor-4-point-3-to-floor-3-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 205, pitch: -8, direction: 'down' }
     ]
   },
   {
@@ -2098,8 +2099,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-4-point-4-to-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-4-point-4-to-point-5', type: 'scene', target: 'fitmFloor4Point5', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-4-point-4-to-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: 80, pitch: -6 },
+      { id: 'fitm-floor-4-point-4-to-point-5', type: 'scene', target: 'fitmFloor4Point5', yaw: 0, pitch: -6 }
     ]
   },
   {
@@ -2111,8 +2112,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-4-point-5-to-point-4', type: 'scene', target: 'fitmFloor4Point4', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-4-point-5-to-point-6', type: 'scene', target: 'fitmFloor4Point6', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-4-point-5-to-point-4', type: 'scene', target: 'fitmFloor4Point4', yaw: 95, pitch: -6 },
+      { id: 'fitm-floor-4-point-5-to-point-6', type: 'scene', target: 'fitmFloor4Point6', yaw: 5, pitch: -10 }
     ]
   },
   {
@@ -2124,8 +2125,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-4-point-6-to-point-5', type: 'scene', target: 'fitmFloor4Point5', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-4-point-6-to-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-4-point-6-to-point-5', type: 'scene', target: 'fitmFloor4Point5', yaw: 180, pitch: -8 },
+      { id: 'fitm-floor-4-point-6-to-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: 5, pitch: -8 }
     ]
   },
   {
@@ -2164,8 +2165,8 @@ export const fallbackTourScenes = [
     initialView: { yaw: -115, pitch: 2, zoom: 24 },
     mapPosition: { x: 328, y: 416 },
     hotspots: [
-      { id: 'sirindhorn-library-floor-1-point-3-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor1Point2', yaw: 90, pitch: -3 },
-      { id: 'sirindhorn-library-floor-1-point-3-to-floor-2-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: -115, pitch: 8 },
+      { id: 'sirindhorn-library-floor-1-point-3-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor1Point2', yaw: 70, pitch: -3 },
+      { id: 'sirindhorn-library-floor-1-point-3-to-floor-2-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: -100, pitch: 8 },
       { id: 'sirindhorn-library-floor-1-point-3-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor1Point1', yaw: 180, pitch: -3 }
     ]
   },
@@ -2178,10 +2179,10 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: 0, zoom: 24 },
     mapPosition: { x: 328, y: 416 },
     hotspots: [
-      { id: 'sirindhorn-library-floor-2-point-1-to-floor-1-point-3', type: 'scene', target: 'sirindhornLibraryFloor1Point3', yaw: 170, pitch: -8 },
-      { id: 'sirindhorn-library-floor-2-point-1-to-floor-3-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: -170, pitch: 8 },
-      { id: 'sirindhorn-library-floor-2-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor2Point2', yaw: 90, pitch: -3 },
-      { id: 'sirindhorn-library-floor-2-point-1-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor2Point3', yaw: -90, pitch: -3 }
+      { id: 'sirindhorn-library-floor-2-point-1-to-floor-1-point-3', type: 'scene', target: 'sirindhornLibraryFloor1Point3', yaw: -100, pitch: -8, direction: 'down' },
+      { id: 'sirindhorn-library-floor-2-point-1-to-floor-3-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: -100, pitch: 8 },
+      { id: 'sirindhorn-library-floor-2-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor2Point2', yaw: 70, pitch: -3 },
+      { id: 'sirindhorn-library-floor-2-point-1-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor2Point3', yaw: -70, pitch: -3 }
     ]
   },
   {
@@ -2217,10 +2218,10 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: 0, zoom: 24 },
     mapPosition: { x: 328, y: 416 },
     hotspots: [
-      { id: 'sirindhorn-library-floor-3-point-1-to-floor-2-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: 170, pitch: -8 },
-      { id: 'sirindhorn-library-floor-3-point-1-to-floor-4-point-1', type: 'scene', target: 'sirindhornLibraryFloor4Point1', yaw: -170, pitch: 8 },
-      { id: 'sirindhorn-library-floor-3-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor3Point2', yaw: -90, pitch: -3 },
-      { id: 'sirindhorn-library-floor-3-point-1-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor3Point3', yaw: 90, pitch: -3 }
+      { id: 'sirindhorn-library-floor-3-point-1-to-floor-2-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: -100, pitch: -8, direction: 'down' },
+      { id: 'sirindhorn-library-floor-3-point-1-to-floor-4-point-1', type: 'scene', target: 'sirindhornLibraryFloor4Point1', yaw: -100, pitch: 8 },
+      { id: 'sirindhorn-library-floor-3-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor3Point2', yaw: -70, pitch: -3 },
+      { id: 'sirindhorn-library-floor-3-point-1-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor3Point3', yaw: 70, pitch: -3 }
     ]
   },
   {
@@ -2256,9 +2257,9 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: 0, zoom: 24 },
     mapPosition: { x: 328, y: 416 },
     hotspots: [
-      { id: 'sirindhorn-library-floor-4-point-1-to-floor-3-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: 170, pitch: -8 },
-      { id: 'sirindhorn-library-floor-4-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 0, pitch: -3 },
-      { id: 'sirindhorn-upper-floors-info', type: 'info', yaw: -150, pitch: 8 }
+      { id: 'sirindhorn-library-floor-4-point-1-to-floor-3-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: -100, pitch: -8, direction: 'down' },
+      { id: 'sirindhorn-library-floor-4-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 0, pitch: -8 },
+      { id: 'sirindhorn-upper-floors-info', type: 'info', yaw: -100, pitch: 8 }
     ]
   },
   {
@@ -2270,9 +2271,9 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: 0, zoom: 24 },
     mapPosition: { x: 328, y: 416 },
     hotspots: [
-      { id: 'sirindhorn-library-floor-4-point-2-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor4Point1', yaw: 180, pitch: -3 },
-      { id: 'sirindhorn-library-floor-4-point-2-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor4Point3', yaw: 90, pitch: -3 },
-      { id: 'sirindhorn-library-floor-4-point-2-to-point-4', type: 'scene', target: 'sirindhornLibraryFloor4Point4', yaw: -90, pitch: -3 }
+      { id: 'sirindhorn-library-floor-4-point-2-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor4Point1', yaw: 0, pitch: -8 },
+      { id: 'sirindhorn-library-floor-4-point-2-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor4Point3', yaw: 90, pitch: -4 },
+      { id: 'sirindhorn-library-floor-4-point-2-to-point-4', type: 'scene', target: 'sirindhornLibraryFloor4Point4', yaw: -90, pitch: -4 }
     ]
   },
   {
@@ -2284,7 +2285,7 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: 0, zoom: 24 },
     mapPosition: { x: 328, y: 416 },
     hotspots: [
-      { id: 'sirindhorn-library-floor-4-point-3-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 180, pitch: -3 }
+      { id: 'sirindhorn-library-floor-4-point-3-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: -90, pitch: -3 }
     ]
   },
   {
@@ -2296,7 +2297,7 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: 0, zoom: 24 },
     mapPosition: { x: 328, y: 416 },
     hotspots: [
-      { id: 'sirindhorn-library-floor-4-point-4-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 180, pitch: -3 }
+      { id: 'sirindhorn-library-floor-4-point-4-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 120, pitch: -3 }
     ]
   }
 ] as const satisfies readonly TourScene[];
@@ -2339,7 +2340,8 @@ export function getTourNavigationSignature(): string {
       id: hotspot.id,
       target: hotspot.target,
       yaw: hotspot.yaw,
-      pitch: hotspot.pitch
+      pitch: hotspot.pitch,
+      direction: hotspot.direction ?? 'standard'
     }))
   })));
 }

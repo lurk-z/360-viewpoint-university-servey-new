@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import {
   publishTourStructureAction,
   restoreTourRevisionAction,
@@ -25,6 +25,12 @@ import AdminPanoramaUploader from './AdminPanoramaUploader';
 const AdminPanoramaPlacement = dynamic(() => import('./AdminPanoramaPlacement'), { ssr: false });
 const initialState: AdminActionState = { status: 'idle', message: '' };
 
+export interface AdminTourInfoContentStatus {
+  readonly draft: boolean;
+  readonly published: boolean;
+  readonly archived: boolean;
+}
+
 function uniqueId(base: string, used: ReadonlySet<string>): string {
   const clean = base.replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'scene';
   if (!used.has(clean)) return clean;
@@ -46,6 +52,8 @@ function RestoreTourRevision({ revision }: { readonly revision: AdminTourRevisio
 
 export default function AdminTourEditor({
   initialData,
+  initialPublishedData,
+  infoContentStatuses,
   draftVersion,
   publishedVersion,
   role,
@@ -53,6 +61,8 @@ export default function AdminTourEditor({
   initialAssets
 }: {
   readonly initialData: TourStructureData;
+  readonly initialPublishedData: TourStructureData | null;
+  readonly infoContentStatuses: Readonly<Record<string, AdminTourInfoContentStatus>>;
   readonly draftVersion: number;
   readonly publishedVersion: number | null;
   readonly role: 'admin' | 'editor';
@@ -64,10 +74,16 @@ export default function AdminTourEditor({
   const [query, setQuery] = useState('');
   const [assets, setAssets] = useState<readonly AdminTourAsset[]>(initialAssets);
   const [assetStatus, setAssetStatus] = useState('');
+  const [selectedInfoHotspotId, setSelectedInfoHotspotId] = useState<string>();
+  const [dirtyInfoHotspotIds, setDirtyInfoHotspotIds] = useState<ReadonlySet<string>>(() => new Set());
   const [saveState, saveAction, saving] = useActionState(saveTourStructureAction, initialState);
   const [publishState, publishAction, publishing] = useActionState(publishTourStructureAction, initialState);
   useAdminActionRefresh(saveState, { scope: 'draft', kind: 'tour', id: 'main' });
   useAdminActionRefresh(publishState, { scope: 'public', kind: 'tour', id: 'main' });
+
+  useEffect(() => {
+    if (saveState.status === 'success') setDirtyInfoHotspotIds(new Set());
+  }, [saveState]);
 
   const parsed = useMemo(() => tourStructureDataSchema.safeParse(data), [data]);
   const issues = useMemo(() => parsed.success ? analyzeTourStructure(parsed.data) : parsed.error.issues.map((issue) => ({
@@ -77,6 +93,13 @@ export default function AdminTourEditor({
   })), [parsed]);
   const selectedIndex = data.scenes.findIndex((scene) => scene.id === selectedId);
   const scene = data.scenes[selectedIndex] ?? data.scenes[0]!;
+  const infoHotspots = scene.hotspots.filter((hotspot) => hotspot.type === 'info');
+  const savedDraftInfoIds = useMemo(() => new Set(initialData.scenes.flatMap((item) => (
+    item.hotspots.filter((hotspot) => hotspot.type === 'info').map((hotspot) => hotspot.id)
+  ))), [initialData]);
+  const publishedInfoIds = useMemo(() => new Set((initialPublishedData?.scenes ?? []).flatMap((item) => (
+    item.hotspots.filter((hotspot) => hotspot.type === 'info').map((hotspot) => hotspot.id)
+  ))), [initialPublishedData]);
   const filteredScenes = data.scenes.filter((item) => {
     const needle = query.trim().toLowerCase();
     return !needle || `${item.id} ${item.title.th} ${item.title.en}`.toLowerCase().includes(needle);
@@ -134,6 +157,8 @@ export default function AdminTourEditor({
       ...current,
       hotspots: [...current.hotspots, { id, type: 'info' as const, yaw, pitch }]
     }));
+    setSelectedInfoHotspotId(id);
+    setDirtyInfoHotspotIds((current) => new Set(current).add(id));
   };
   const updateInfoHotspot = (id: string, field: 'yaw' | 'pitch', value: number): void => {
     updateScene((current) => ({
@@ -142,6 +167,8 @@ export default function AdminTourEditor({
         hotspot.type === 'info' && hotspot.id === id ? { ...hotspot, [field]: value } : hotspot
       ))
     }));
+    setSelectedInfoHotspotId(id);
+    setDirtyInfoHotspotIds((current) => new Set(current).add(id));
   };
 
   return <div className="admin-tour-editor">
@@ -166,7 +193,7 @@ export default function AdminTourEditor({
 
     <section className="admin-tour-workspace">
       <header className="admin-tour-workspace__header">
-        <div><p>VISUAL TOUR EDITOR</p><h1>{scene.title.th}</h1><code>{scene.id}</code></div>
+        <div><p>VISUAL TOUR EDITOR</p><h1>{scene.title.th}</h1><code>{scene.id}</code><nav className="admin-tour-scene-links" aria-label="ตรวจฉากปัจจุบัน"><a href={`/tour-preview?scene=${encodeURIComponent(scene.id)}`} target="_blank" rel="noreferrer">ดูฉบับร่าง ↗</a><a href={`/?scene=${encodeURIComponent(scene.id)}`} target="_blank" rel="noreferrer">ดูหน้าเว็บจริง ↗</a></nav></div>
         <div><button type="button" onClick={duplicateScene}>คัดลอกฉาก</button><button type="button" onClick={toggleArchive} disabled={scene.id === data.startSceneId}>{scene.archived ? 'คืนจากคลัง' : 'เก็บเข้าคลัง'}</button></div>
       </header>
 
@@ -213,17 +240,31 @@ export default function AdminTourEditor({
             <strong>4. หมุนภาพแล้วคลิกเพื่อวางปุ่ม Info</strong>
             <p>ลูกศรนำทางแก้จาก <code>src/tour-data.ts</code> เท่านั้น ส่วนการคลิกบนภาพนี้จะสร้างปุ่ม Info และรายการ “รอกรอกข้อมูล” ในสถานที่สำคัญเมื่อบันทึก</p>
           </section>
-          <AdminPanoramaPlacement panorama={scene.panorama} onPosition={placeHotspot} />
+          <AdminPanoramaPlacement
+            panorama={scene.panorama}
+            hotspots={infoHotspots}
+            selectedHotspotId={selectedInfoHotspotId}
+            onPosition={placeHotspot}
+            onSelect={setSelectedInfoHotspotId}
+          />
           <section className="admin-tour-hotspots"><header><strong>ปุ่มในฉาก {scene.hotspots.length}</strong></header>
-            {scene.hotspots.map((hotspot) => <article className={hotspot.type === 'scene' ? 'is-navigation-readonly' : ''} key={hotspot.id}>
+            {scene.hotspots.map((hotspot) => <article className={hotspot.type === 'scene'
+              ? 'is-navigation-readonly'
+              : hotspot.id === selectedInfoHotspotId ? 'is-info-selected' : ''} key={hotspot.id}>
               <div><b>{hotspot.type === 'scene' ? 'ลูกศร' : 'Info'}</b><code>{hotspot.id}</code></div>
               {hotspot.type === 'scene' ? <>
-                <dl><div><dt>ปลายทาง</dt><dd><code>{hotspot.target}</code></dd></div><div><dt>ตำแหน่ง</dt><dd>yaw {hotspot.yaw} · pitch {hotspot.pitch}</dd></div></dl>
+                <dl><div><dt>ปลายทาง</dt><dd><code>{hotspot.target}</code></dd></div><div><dt>ตำแหน่ง</dt><dd>yaw {hotspot.yaw} · pitch {hotspot.pitch}</dd></div><div><dt>ประเภท</dt><dd>{hotspot.direction === 'down' ? 'ลงชั้น' : hotspot.direction === 'up' ? 'ขึ้นชั้น' : 'ทั่วไป'}</dd></div></dl>
                 <small>อ่านอย่างเดียว · แก้ลูกศรใน VS Code แล้วรัน npm run sync:arrows</small>
               </> : <>
+                <div className="admin-info-workflow-status" aria-label={`สถานะ ${hotspot.id}`}>
+                  <span className={dirtyInfoHotspotIds.has(hotspot.id) || !savedDraftInfoIds.has(hotspot.id) ? 'is-pending' : 'is-ready'}>{dirtyInfoHotspotIds.has(hotspot.id) || !savedDraftInfoIds.has(hotspot.id) ? 'ยังไม่บันทึก' : 'บันทึกฉบับร่างแล้ว'}</span>
+                  <span className={publishedInfoIds.has(hotspot.id) ? 'is-ready' : 'is-pending'}>{publishedInfoIds.has(hotspot.id) ? 'เผยแพร่โครงสร้างแล้ว' : 'รอเผยแพร่โครงสร้าง'}</span>
+                  <span className={infoContentStatuses[hotspot.id]?.published && !infoContentStatuses[hotspot.id]?.archived ? 'is-ready' : 'is-pending'}>{infoContentStatuses[hotspot.id]?.published && !infoContentStatuses[hotspot.id]?.archived ? 'เนื้อหาสถานที่เผยแพร่แล้ว' : infoContentStatuses[hotspot.id]?.draft ? 'เนื้อหาเป็นฉบับร่าง' : 'รอกรอกเนื้อหาสถานที่'}</span>
+                </div>
                 <label><span>yaw</span><input type="number" step="0.1" value={hotspot.yaw} onChange={(event) => updateInfoHotspot(hotspot.id, 'yaw', Number(event.target.value))} /></label>
                 <label><span>pitch</span><input type="number" step="0.1" value={hotspot.pitch} onChange={(event) => updateInfoHotspot(hotspot.id, 'pitch', Number(event.target.value))} /></label>
-                <button type="button" onClick={() => updateScene((current) => ({ ...current, hotspots: current.hotspots.filter((item) => item.id !== hotspot.id) }))}>ลบปุ่ม Info</button>
+                <a className="admin-info-content-link" href={`/admin/places?q=${encodeURIComponent(hotspot.id)}`}>เปิดข้อมูลสถานที่ →</a>
+                <button type="button" onClick={() => { updateScene((current) => ({ ...current, hotspots: current.hotspots.filter((item) => item.id !== hotspot.id) })); setSelectedInfoHotspotId(undefined); setDirtyInfoHotspotIds((current) => new Set(current).add(hotspot.id)); }}>ลบปุ่ม Info</button>
               </>}
             </article>)}
           </section>

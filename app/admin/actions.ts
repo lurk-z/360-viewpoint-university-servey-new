@@ -10,6 +10,7 @@ import {
   activityDataSchema,
   facultyDataSchema,
   hotspotDataSchema,
+  preserveLegacyInfoScenePresentation,
   programDataSchema,
   type ContentKind
 } from '../../src/content';
@@ -118,7 +119,11 @@ function imagesFromForm(formData: FormData) {
   }));
 }
 
-function parseDraftData(kind: ContentKind, formData: FormData): Record<string, unknown> {
+function parseDraftData(
+  kind: ContentKind,
+  formData: FormData,
+  existingDraftData: Record<string, unknown> = {}
+): Record<string, unknown> {
   if (kind === 'faculties') {
     return facultyDataSchema.parse({
       name: { th: text(formData, 'nameTh'), en: text(formData, 'nameEn') },
@@ -173,14 +178,12 @@ function parseDraftData(kind: ContentKind, formData: FormData): Record<string, u
     });
   }
 
-  return hotspotDataSchema.parse({
+  return hotspotDataSchema.parse(preserveLegacyInfoScenePresentation({
     title: { th: text(formData, 'nameTh'), en: text(formData, 'nameEn') },
     description: { th: text(formData, 'descriptionTh'), en: text(formData, 'descriptionEn') },
-    sceneTitle: { th: text(formData, 'sceneTitleTh'), en: text(formData, 'sceneTitleEn') },
-    sceneDescription: { th: text(formData, 'sceneDescriptionTh'), en: text(formData, 'sceneDescriptionEn') },
     reference: sourceFromForm(formData),
     images: imagesFromForm(formData)
-  });
+  }, existingDraftData));
 }
 
 function validatePublishData(kind: ContentKind, value: unknown): Record<string, unknown> {
@@ -239,8 +242,18 @@ export async function saveContentAction(
   try {
     const kind = contentKindSchema.parse(text(formData, 'kind'));
     const id = text(formData, 'id');
-    const draftData = parseDraftData(kind, formData);
     const supabase = await createServerSupabaseClient();
+    let existingDraftData: Record<string, unknown> = {};
+    if (kind === 'hotspot_contents') {
+      if (!id) throw new AdminActionError('ไม่สามารถเพิ่มตำแหน่งสถานที่สำคัญจาก Admin ได้');
+      const { data, error } = await supabase.from('hotspot_contents')
+        .select('draft_data')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      existingDraftData = data.draft_data as Record<string, unknown>;
+    }
+    const draftData = parseDraftData(kind, formData, existingDraftData);
 
     if (id) {
       const updatePayload = kind === 'programs'

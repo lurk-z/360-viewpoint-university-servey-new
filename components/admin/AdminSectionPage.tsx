@@ -27,7 +27,7 @@ const sections = {
   places: {
     kind: 'hotspot_contents',
     title: 'สถานที่สำคัญ',
-    description: 'แก้ข้อมูลบนการ์ดฉาก ปุ่ม Info รูป และอ้างอิง โดยตำแหน่ง yaw/pitch ยังคงอยู่ในโค้ด'
+    description: 'แก้ข้อมูลปุ่ม Info รูป อ้างอิง และสถานะเผยแพร่ ส่วนตำแหน่งปุ่มจัดการจากหน้าโครงสร้างทัวร์'
   }
 } as const satisfies Record<string, { kind: ContentKind; title: string; description: string }>;
 
@@ -37,6 +37,7 @@ interface AdminSectionPageProps {
   readonly section: AdminSection;
   readonly requestedFacultyId?: string;
   readonly requestedStatus?: string;
+  readonly requestedQuery?: string;
 }
 
 async function listMediaOptions(): Promise<AdminMediaOption[]> {
@@ -55,7 +56,8 @@ async function listMediaOptions(): Promise<AdminMediaOption[]> {
 export default async function AdminSectionPage({
   section,
   requestedFacultyId,
-  requestedStatus
+  requestedStatus,
+  requestedQuery
 }: AdminSectionPageProps) {
   const config = sections[section];
   const session = await requireStaff();
@@ -129,6 +131,7 @@ export default async function AdminSectionPage({
         media={media}
         placeStatuses={placeStatuses}
         initialStatusFilter={requestedStatus}
+        initialQuery={requestedQuery}
       />
     </>
   );
