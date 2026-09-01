@@ -26,6 +26,10 @@ import {
   writeAdminAuditLog
 } from '../../src/server/tour-structure-repository';
 import { analyzeTourStructure, tourStructureDataSchema } from '../../src/tour-structure';
+import {
+  NavigationPreservationError,
+  preserveCurrentNavigation
+} from '../../src/tour-navigation-sync';
 
 const contentKindSchema = z.enum(['faculties', 'programs', 'activities', 'hotspot_contents']);
 const slugSchema = z.string().trim().min(2).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -43,6 +47,12 @@ function actionSuccess(message: string): AdminActionState {
 
 function actionFailure(error: unknown, fallback: string): AdminActionState {
   if (error instanceof AdminActionError) return { status: 'error', message: error.message };
+  if (error instanceof NavigationPreservationError) {
+    return {
+      status: 'error',
+      message: `รักษาลูกศรจาก VS Code ไม่ได้ เพราะไม่พบฉาก: ${error.missingSceneIds.join(', ')}`
+    };
+  }
   if (error instanceof DuplicateTourPlaceIdError) return { status: 'error', message: error.message };
   if (error instanceof z.ZodError) {
     return { status: 'error', message: 'กรุณาตรวจสอบข้อมูลบังคับภาษาไทยและอังกฤษ รูปภาพ แหล่งอ้างอิง รูปแบบ URL และ Slug ให้ครบถ้วน' };
@@ -353,7 +363,7 @@ export async function bootstrapTourStructureAction(
     revalidatePath('/admin/tour');
     await writeAdminAuditLog({ actorId: session.userId, action: 'bootstrap-tour-structure', entityKind: 'tour', entityId: 'main' });
     return actionSuccess(result.created
-      ? 'นำ 93 ฉากเดิมเข้า Visual Tour Editor แล้ว โดยไม่เปลี่ยนหน้า Tour สาธารณะ'
+      ? 'นำ 123 ฉากเข้า Visual Tour Editor แล้ว โดยไม่เปลี่ยนหน้า Tour สาธารณะ'
       : 'โครงสร้างทัวร์ถูกนำเข้าไว้แล้ว ไม่มีข้อมูลถูกเขียนทับ');
   } catch (error) {
     return actionFailure(error, 'ยังนำเข้าโครงสร้างทัวร์ไม่ได้ กรุณารัน Migration 202608290001 ก่อน');
@@ -545,13 +555,14 @@ export async function saveTourStructureAction(
 ): Promise<AdminActionState> {
   const session = await requireStaff();
   try {
-    const structure = tourStructureDataSchema.parse(JSON.parse(text(formData, 'structure')));
+    const submittedStructure = tourStructureDataSchema.parse(JSON.parse(text(formData, 'structure')));
     const expectedVersion = z.coerce.number().int().positive().parse(text(formData, 'draftVersion'));
     const current = await getAdminTourProject();
     if (!current.installed) throw new AdminActionError('กรุณานำโครงสร้างเดิมเข้าระบบก่อน');
     if (current.draftVersion !== expectedVersion) {
       throw new AdminActionError('มีผู้ใช้อื่นบันทึกโครงสร้างหลังจากคุณเปิดหน้านี้ กรุณาโหลดข้อมูลล่าสุดแล้วตรวจอีกครั้ง');
     }
+    const structure = preserveCurrentNavigation(submittedStructure, current.draft);
     const nextVersion = current.draftVersion + 1;
     const admin = createAdminSupabaseClient();
     const { data, error } = await admin.from('tour_projects').update({
@@ -644,7 +655,8 @@ export async function restoreTourRevisionAction(
       getAdminTourProject()
     ]);
     if (error) throw error;
-    const structure = tourStructureDataSchema.parse(revision.snapshot);
+    const restoredStructure = tourStructureDataSchema.parse(revision.snapshot);
+    const structure = preserveCurrentNavigation(restoredStructure, current.draft);
     const nextVersion = current.draftVersion + 1;
     const { error: updateError } = await admin.from('tour_projects').update({
       draft_data: structure,

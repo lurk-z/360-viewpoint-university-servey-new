@@ -125,7 +125,37 @@ export const tourMedia = {
   fitmInterior16: mainPanorama('temp-faculty-16.jpg'),
   fitmInterior17: mainPanorama('temp-faculty-17.jpg'),
   puangKhramRoom1: mainPanorama('temp-puang-khram1.jpg'),
-  puangKhrangRoom2: mainPanorama('temp-puang-khram2.jpg')
+  puangKhrangRoom2: mainPanorama('temp-puang-khram2.jpg'),
+  fitmFloor2Point1: mainPanorama('temp-faculty-floor2-1.jpg'),
+  fitmFloor2Point2: mainPanorama('temp-faculty-floor2-2.jpg'),
+  fitmFloor2Point3: mainPanorama('temp-faculty-floor2-3.jpg'),
+  fitmFloor2Point4: mainPanorama('temp-faculty-floor2-4.jpg'),
+  fitmFloor2Point5: mainPanorama('temp-faculty-floor2-5.jpg'),
+  fitmFloor2Point6: mainPanorama('temp-faculty-floor2-6.jpg'),
+  fitmFloor3Point1: mainPanorama('temp-faculty-floor3-1.jpg'),
+  fitmFloor3Point2: mainPanorama('temp-faculty-floor3-2.jpg'),
+  fitmFloor3Point3: mainPanorama('temp-faculty-floor3-3.jpg'),
+  fitmFloor3Point4: mainPanorama('temp-faculty-floor3-4.jpg'),
+  fitmFloor3Point5: mainPanorama('temp-faculty-floor3-5.jpg'),
+  fitmFloor4Point1: mainPanorama('temp-faculty-floor4-1.jpg'),
+  fitmFloor4Point2: mainPanorama('temp-faculty-floor4-2.jpg'),
+  fitmFloor4Point3: mainPanorama('temp-faculty-floor4-3.jpg'),
+  fitmFloor4Point4: mainPanorama('temp-faculty-floor4-4.jpg'),
+  fitmFloor4Point5: mainPanorama('temp-faculty-floor4-5.jpg'),
+  fitmFloor4Point6: mainPanorama('temp-faculty-floor4-6.jpg'),
+  sirindhornLibraryFloor1Point1: mainPanorama('temp-library-floor1-1.jpg'),
+  sirindhornLibraryFloor1Point2: mainPanorama('temp-library-floor1-2.jpg'),
+  sirindhornLibraryFloor1Point3: mainPanorama('temp-library-floor1-3.jpg'),
+  sirindhornLibraryFloor2Point1: mainPanorama('temp-library-floor2-1.jpg'),
+  sirindhornLibraryFloor2Point2: mainPanorama('temp-library-floor2-2.jpg'),
+  sirindhornLibraryFloor2Point3: mainPanorama('temp-library-floor2-3.jpg'),
+  sirindhornLibraryFloor3Point1: mainPanorama('temp-library-floor3-1.jpg'),
+  sirindhornLibraryFloor3Point2: mainPanorama('temp-library-floor3-2.jpg'),
+  sirindhornLibraryFloor3Point3: mainPanorama('temp-library-floor3-3.jpg'),
+  sirindhornLibraryFloor4Point1: mainPanorama('temp-library-floor4-1.jpg'),
+  sirindhornLibraryFloor4Point2: mainPanorama('temp-library-floor4-2.jpg'),
+  sirindhornLibraryFloor4Point3: mainPanorama('temp-library-floor4-3.jpg'),
+  sirindhornLibraryFloor4Point4: mainPanorama('temp-library-floor4-4.jpg')
 } as const satisfies Record<string, SceneMedia>;
 
 export const locales = ['th', 'en'] as const;
@@ -776,12 +806,7 @@ export const fallbackTourScenes = [
     hotspots: [
       { id: 'campus-road-22-to-road-21', type: 'scene', target: 'campusRoad21', yaw: 180, pitch: -3 },
       { id: 'campus-road-22-to-road-26', type: 'scene', target: 'campusRoad26', yaw: 90, pitch: -3 },
-       {
-         id: 'Sirindhorn Building-info',
-         type: 'info',
-         yaw: 0,
-         pitch: 5
-       }
+      { id: 'campus-road-22-to-sirindhorn-library-floor-1-point-1', type: 'scene', target: 'sirindhornLibraryFloor1Point1', yaw: 0, pitch: -3 }
     ]
   },
   {
@@ -1690,7 +1715,7 @@ export const fallbackTourScenes = [
     hotspots: [
       { id: 'fitm-interior-8-to-interior-7', type: 'scene', target: 'fitmInterior7', yaw: 180, pitch: -3 },
       { id: 'fitm-interior-8-to-interior-9', type: 'scene', target: 'fitmInterior9', yaw: 0, pitch: -3 },
-      { id: 'fitm-stairs-1-to-second-floor-info', type: 'info', yaw: -95, pitch: 8 }
+      { id: 'fitm-interior-8-to-floor-2-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: -95, pitch: 8 }
     ]
   },
   {
@@ -1776,7 +1801,7 @@ export const fallbackTourScenes = [
       { id: 'fitm-interior-13-to-interior-11', type: 'scene', target: 'fitmInterior11', yaw: -40, pitch: -3 },
       { id: 'fitm-interior-13-to-interior-14', type: 'scene', target: 'fitmInterior14', yaw: 180, pitch: -3 },
       { id: 'fitm-nurse-room-info', type: 'info', yaw: 0, pitch: 1 },
-      { id: 'fitm-stairs-2-to-second-floor-info', type: 'info', yaw: -95, pitch: 8 }
+      { id: 'fitm-interior-13-to-floor-2-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: -95, pitch: 8 }
     ]
   },
   {
@@ -1871,6 +1896,408 @@ export const fallbackTourScenes = [
     hotspots: [
       { id: 'puang-khrang-room-2-to-interior-2', type: 'scene', target: 'fitmInterior2', yaw: 180, pitch: -3 }
     ]
+  },
+  {
+    id: 'fitmFloor2Point1',
+    ...tourMedia.fitmFloor2Point1,
+    title: { th: 'ภายในอาคาร FITM ชั้น 2 จุดที่ 1', en: 'Inside FITM, Floor 2, Point 1' },
+    description: { th: 'จุดบันไดและทางแยกภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม ชั้น 2', en: 'A stair landing and junction inside the Faculty of Industrial Technology and Management on the second floor.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 2'], en: ['Indoor', 'FITM', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-2-point-1-to-interior-8', type: 'scene', target: 'fitmInterior8', yaw: 180, pitch: -8 },
+      { id: 'fitm-floor-2-point-1-to-floor-3-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 0, pitch: 8 },
+      { id: 'fitm-floor-2-point-1-to-point-2', type: 'scene', target: 'fitmFloor2Point2', yaw: -90, pitch: -3 },
+      { id: 'fitm-floor-2-point-1-to-point-6', type: 'scene', target: 'fitmFloor2Point6', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor2Point2',
+    ...tourMedia.fitmFloor2Point2,
+    title: { th: 'ภายในอาคาร FITM ชั้น 2 จุดที่ 2', en: 'Inside FITM, Floor 2, Point 2' },
+    description: { th: 'จุดที่ 2 ของเส้นทางภายในอาคาร FITM ชั้น 2', en: 'Point 2 on the indoor route through FITM Floor 2.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 2'], en: ['Indoor', 'FITM', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-2-point-2-to-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-2-point-2-to-point-3', type: 'scene', target: 'fitmFloor2Point3', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor2Point3',
+    ...tourMedia.fitmFloor2Point3,
+    title: { th: 'ภายในอาคาร FITM ชั้น 2 จุดที่ 3', en: 'Inside FITM, Floor 2, Point 3' },
+    description: { th: 'จุดที่ 3 ของเส้นทางภายในอาคาร FITM ชั้น 2', en: 'Point 3 on the indoor route through FITM Floor 2.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 2'], en: ['Indoor', 'FITM', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-2-point-3-to-point-2', type: 'scene', target: 'fitmFloor2Point2', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-2-point-3-to-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor2Point4',
+    ...tourMedia.fitmFloor2Point4,
+    title: { th: 'ภายในอาคาร FITM ชั้น 2 จุดที่ 4', en: 'Inside FITM, Floor 2, Point 4' },
+    description: { th: 'จุดบันไดและทางแยกฝั่งที่สองภายในอาคาร FITM ชั้น 2', en: 'The second stair landing and junction inside FITM Floor 2.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 2'], en: ['Indoor', 'FITM', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-2-point-4-to-point-3', type: 'scene', target: 'fitmFloor2Point3', yaw: -90, pitch: -3 },
+      { id: 'fitm-floor-2-point-4-to-point-5', type: 'scene', target: 'fitmFloor2Point5', yaw: 90, pitch: -3 },
+      { id: 'fitm-floor-2-point-4-to-interior-13', type: 'scene', target: 'fitmInterior13', yaw: 180, pitch: -8 },
+      { id: 'fitm-floor-2-point-4-to-floor-3-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 0, pitch: 8 }
+    ]
+  },
+  {
+    id: 'fitmFloor2Point5',
+    ...tourMedia.fitmFloor2Point5,
+    title: { th: 'ภายในอาคาร FITM ชั้น 2 จุดที่ 5', en: 'Inside FITM, Floor 2, Point 5' },
+    description: { th: 'จุดที่ 5 ของเส้นทางภายในอาคาร FITM ชั้น 2', en: 'Point 5 on the indoor route through FITM Floor 2.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 2'], en: ['Indoor', 'FITM', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-2-point-5-to-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-2-point-5-to-point-6', type: 'scene', target: 'fitmFloor2Point6', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor2Point6',
+    ...tourMedia.fitmFloor2Point6,
+    title: { th: 'ภายในอาคาร FITM ชั้น 2 จุดที่ 6', en: 'Inside FITM, Floor 2, Point 6' },
+    description: { th: 'จุดที่ 6 ของเส้นทางภายในอาคาร FITM ชั้น 2', en: 'Point 6 on the indoor route through FITM Floor 2.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 2'], en: ['Indoor', 'FITM', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-2-point-6-to-point-5', type: 'scene', target: 'fitmFloor2Point5', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-2-point-6-to-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor3Point1',
+    ...tourMedia.fitmFloor3Point1,
+    title: { th: 'ภายในอาคาร FITM ชั้น 3 จุดที่ 1', en: 'Inside FITM, Floor 3, Point 1' },
+    description: { th: 'จุดบันไดและทางแยกสองทางภายในอาคาร FITM ชั้น 3', en: 'A stair landing and two-way junction inside FITM Floor 3.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 3'], en: ['Indoor', 'FITM', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-3-point-1-to-floor-2-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: 170, pitch: -8 },
+      { id: 'fitm-floor-3-point-1-to-floor-4-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: -170, pitch: 8 },
+      { id: 'fitm-floor-3-point-1-to-point-2', type: 'scene', target: 'fitmFloor3Point2', yaw: -90, pitch: -3 },
+      { id: 'fitm-floor-3-point-1-to-point-3', type: 'scene', target: 'fitmFloor3Point3', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor3Point2',
+    ...tourMedia.fitmFloor3Point2,
+    title: { th: 'ภายในอาคาร FITM ชั้น 3 จุดที่ 2', en: 'Inside FITM, Floor 3, Point 2' },
+    description: { th: 'จุดที่ 2 ของเส้นทางภายในอาคาร FITM ชั้น 3', en: 'Point 2 on the indoor route through FITM Floor 3.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 3'], en: ['Indoor', 'FITM', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-3-point-2-to-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 180, pitch: -3 },
+      { id: 'fitmFloor3Point2-info', type: 'info', yaw: 4.8 , pitch: -4.4}
+    ]
+  },
+  {
+    id: 'fitmFloor3Point3',
+    ...tourMedia.fitmFloor3Point3,
+    title: { th: 'ภายในอาคาร FITM ชั้น 3 จุดที่ 3', en: 'Inside FITM, Floor 3, Point 3' },
+    description: { th: 'จุดที่ 3 ของเส้นทางภายในอาคาร FITM ชั้น 3', en: 'Point 3 on the indoor route through FITM Floor 3.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 3'], en: ['Indoor', 'FITM', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-3-point-3-to-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-3-point-3-to-point-4', type: 'scene', target: 'fitmFloor3Point4', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor3Point4',
+    ...tourMedia.fitmFloor3Point4,
+    title: { th: 'ภายในอาคาร FITM ชั้น 3 จุดที่ 4', en: 'Inside FITM, Floor 3, Point 4' },
+    description: { th: 'จุดที่ 4 ของเส้นทางภายในอาคาร FITM ชั้น 3', en: 'Point 4 on the indoor route through FITM Floor 3.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 3'], en: ['Indoor', 'FITM', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-3-point-4-to-point-3', type: 'scene', target: 'fitmFloor3Point3', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-3-point-4-to-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor3Point5',
+    ...tourMedia.fitmFloor3Point5,
+    title: { th: 'ภายในอาคาร FITM ชั้น 3 จุดที่ 5', en: 'Inside FITM, Floor 3, Point 5' },
+    description: { th: 'จุดบันไดและทางแยกฝั่งที่สองภายในอาคาร FITM ชั้น 3', en: 'The second stair landing and junction inside FITM Floor 3.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 3'], en: ['Indoor', 'FITM', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-3-point-5-to-point-2', type: 'scene', target: 'fitmFloor3Point2', yaw: -90, pitch: -3 },
+      { id: 'fitm-floor-3-point-5-to-point-4', type: 'scene', target: 'fitmFloor3Point4', yaw: 90, pitch: -3 },
+      { id: 'fitm-floor-3-point-5-to-floor-2-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 170, pitch: -8 },
+      { id: 'fitm-floor-3-point-5-to-floor-4-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: -170, pitch: 8 }
+    ]
+  },
+  {
+    id: 'fitmFloor4Point1',
+    ...tourMedia.fitmFloor4Point1,
+    title: { th: 'ภายในอาคาร FITM ชั้น 4 จุดที่ 1', en: 'Inside FITM, Floor 4, Point 1' },
+    description: { th: 'จุดบันไดและทางแยกภายในอาคาร FITM ชั้น 4', en: 'A stair landing and junction inside FITM Floor 4.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 4'], en: ['Indoor', 'FITM', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-4-point-1-to-floor-3-point-1', type: 'scene', target: 'fitmFloor3Point1', yaw: 180, pitch: -8 },
+      { id: 'fitm-floor-4-point-1-to-point-2', type: 'scene', target: 'fitmFloor4Point2', yaw: -90, pitch: -3 },
+      { id: 'fitm-floor-4-point-1-to-point-6', type: 'scene', target: 'fitmFloor4Point6', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor4Point2',
+    ...tourMedia.fitmFloor4Point2,
+    title: { th: 'ภายในอาคาร FITM ชั้น 4 จุดที่ 2', en: 'Inside FITM, Floor 4, Point 2' },
+    description: { th: 'จุดที่ 2 ของเส้นทางภายในอาคาร FITM ชั้น 4', en: 'Point 2 on the indoor route through FITM Floor 4.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 4'], en: ['Indoor', 'FITM', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-4-point-2-to-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-4-point-2-to-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor4Point3',
+    ...tourMedia.fitmFloor4Point3,
+    title: { th: 'ภายในอาคาร FITM ชั้น 4 จุดที่ 3', en: 'Inside FITM, Floor 4, Point 3' },
+    description: { th: 'จุดบันไดและทางแยกฝั่งที่สองภายในอาคาร FITM ชั้น 4', en: 'The second stair landing and junction inside FITM Floor 4.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 4'], en: ['Indoor', 'FITM', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-4-point-3-to-point-2', type: 'scene', target: 'fitmFloor4Point2', yaw: -90, pitch: -3 },
+      { id: 'fitm-floor-4-point-3-to-point-4', type: 'scene', target: 'fitmFloor4Point4', yaw: 90, pitch: -3 },
+      { id: 'fitm-floor-4-point-3-to-floor-3-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 180, pitch: -8 }
+    ]
+  },
+  {
+    id: 'fitmFloor4Point4',
+    ...tourMedia.fitmFloor4Point4,
+    title: { th: 'ภายในอาคาร FITM ชั้น 4 จุดที่ 4', en: 'Inside FITM, Floor 4, Point 4' },
+    description: { th: 'จุดที่ 4 ของเส้นทางภายในอาคาร FITM ชั้น 4', en: 'Point 4 on the indoor route through FITM Floor 4.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 4'], en: ['Indoor', 'FITM', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-4-point-4-to-point-3', type: 'scene', target: 'fitmFloor4Point3', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-4-point-4-to-point-5', type: 'scene', target: 'fitmFloor4Point5', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor4Point5',
+    ...tourMedia.fitmFloor4Point5,
+    title: { th: 'ภายในอาคาร FITM ชั้น 4 จุดที่ 5', en: 'Inside FITM, Floor 4, Point 5' },
+    description: { th: 'จุดที่ 5 ของเส้นทางภายในอาคาร FITM ชั้น 4', en: 'Point 5 on the indoor route through FITM Floor 4.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 4'], en: ['Indoor', 'FITM', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-4-point-5-to-point-4', type: 'scene', target: 'fitmFloor4Point4', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-4-point-5-to-point-6', type: 'scene', target: 'fitmFloor4Point6', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor4Point6',
+    ...tourMedia.fitmFloor4Point6,
+    title: { th: 'ภายในอาคาร FITM ชั้น 4 จุดที่ 6', en: 'Inside FITM, Floor 4, Point 6' },
+    description: { th: 'จุดที่ 6 ของเส้นทางภายในอาคาร FITM ชั้น 4', en: 'Point 6 on the indoor route through FITM Floor 4.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 4'], en: ['Indoor', 'FITM', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-4-point-6-to-point-5', type: 'scene', target: 'fitmFloor4Point5', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-4-point-6-to-point-1', type: 'scene', target: 'fitmFloor4Point1', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor1Point1',
+    ...tourMedia.sirindhornLibraryFloor1Point1,
+    title: { th: 'อาคารสิรินธร ชั้น 1 จุดที่ 1', en: 'Sirindhorn Building, Floor 1, Point 1' },
+    description: { th: 'จุดชมภายในสำนักหอสมุดกลางบริเวณชั้น 1 ของอาคารสิรินธร', en: 'An interior viewpoint in the Central Library on the first floor of the Sirindhorn Building.' },
+    tags: { th: ['อาคารสิรินธร', 'หอสมุด', 'ชั้น 1'], en: ['Sirindhorn Building', 'Library', 'Floor 1'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-1-point-1-to-campus-road-22', type: 'scene', target: 'campusRoad22', yaw: 200, pitch: -3 },
+      { id: 'sirindhorn-library-floor-1-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor1Point2', yaw: 50, pitch: -3 },
+      { id: 'sirindhorn-library-floor-1-point-1-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor1Point3', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor1Point2',
+    ...tourMedia.sirindhornLibraryFloor1Point2,
+    title: { th: 'อาคารสิรินธร ชั้น 1 จุดที่ 2', en: 'Sirindhorn Building, Floor 1, Point 2' },
+    description: { th: 'พื้นที่บริการและพื้นที่ใช้งานส่วนกลางของสำนักหอสมุดกลาง ชั้น 1', en: 'A service and common-use area in the Central Library on the first floor.' },
+    tags: { th: ['อาคารสิรินธร', 'หอสมุด', 'ชั้น 1'], en: ['Sirindhorn Building', 'Library', 'Floor 1'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-1-point-2-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor1Point1', yaw: -90, pitch: -3 },
+      { id: 'sirindhorn-library-floor-1-point-2-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor1Point3', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor1Point3',
+    ...tourMedia.sirindhornLibraryFloor1Point3,
+    title: { th: 'บันไดอาคารสิรินธร ชั้น 1', en: 'Sirindhorn Building Stairs, Floor 1' },
+    description: { th: 'จุดบันไดสำหรับขึ้นไปยังพื้นที่อ่านหนังสือชั้น 2 ของอาคารสิรินธร', en: 'The stair landing leading to the second-floor reading areas in the Sirindhorn Building.' },
+    tags: { th: ['อาคารสิรินธร', 'บันได', 'ชั้น 1'], en: ['Sirindhorn Building', 'Stairs', 'Floor 1'] },
+    initialView: { yaw: -115, pitch: 2, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-1-point-3-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor1Point2', yaw: 90, pitch: -3 },
+      { id: 'sirindhorn-library-floor-1-point-3-to-floor-2-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: -115, pitch: 8 },
+      { id: 'sirindhorn-library-floor-1-point-3-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor1Point1', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor2Point1',
+    ...tourMedia.sirindhornLibraryFloor2Point1,
+    title: { th: 'บันไดและทางแยกอาคารสิรินธร ชั้น 2', en: 'Sirindhorn Building Stairs and Junction, Floor 2' },
+    description: { th: 'จุดบันไดและทางแยกไปยังพื้นที่อ่านหนังสือทั้งสองฝั่งของชั้น 2', en: 'The stair landing and junction leading to reading areas on both sides of the second floor.' },
+    tags: { th: ['อาคารสิรินธร', 'พื้นที่อ่านหนังสือ', 'ชั้น 2'], en: ['Sirindhorn Building', 'Reading Area', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-2-point-1-to-floor-1-point-3', type: 'scene', target: 'sirindhornLibraryFloor1Point3', yaw: 170, pitch: -8 },
+      { id: 'sirindhorn-library-floor-2-point-1-to-floor-3-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: -170, pitch: 8 },
+      { id: 'sirindhorn-library-floor-2-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor2Point2', yaw: 90, pitch: -3 },
+      { id: 'sirindhorn-library-floor-2-point-1-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor2Point3', yaw: -90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor2Point2',
+    ...tourMedia.sirindhornLibraryFloor2Point2,
+    title: { th: 'พื้นที่อ่านหนังสืออาคารสิรินธร ชั้น 2 ด้านขวา', en: 'Sirindhorn Building Reading Area, Floor 2 Right Wing' },
+    description: { th: 'พื้นที่อ่านหนังสือและค้นคว้าด้านขวาของบันไดชั้น 2', en: 'The reading and research area to the right of the second-floor stairs.' },
+    tags: { th: ['อาคารสิรินธร', 'พื้นที่อ่านหนังสือ', 'ชั้น 2'], en: ['Sirindhorn Building', 'Reading Area', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-2-point-2-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor2Point3',
+    ...tourMedia.sirindhornLibraryFloor2Point3,
+    title: { th: 'พื้นที่อ่านหนังสืออาคารสิรินธร ชั้น 2 ด้านซ้าย', en: 'Sirindhorn Building Reading Area, Floor 2 Left Wing' },
+    description: { th: 'พื้นที่อ่านหนังสือและค้นคว้าด้านซ้ายของบันไดชั้น 2', en: 'The reading and research area to the left of the second-floor stairs.' },
+    tags: { th: ['อาคารสิรินธร', 'พื้นที่อ่านหนังสือ', 'ชั้น 2'], en: ['Sirindhorn Building', 'Reading Area', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-2-point-3-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor3Point1',
+    ...tourMedia.sirindhornLibraryFloor3Point1,
+    title: { th: 'บันไดและทางแยกอาคารสิรินธร ชั้น 3', en: 'Sirindhorn Building Stairs and Junction, Floor 3' },
+    description: { th: 'จุดบันไดและทางแยกไปยังพื้นที่อ่านหนังสือทั้งสองฝั่งของชั้น 3', en: 'The stair landing and junction leading to reading areas on both sides of the third floor.' },
+    tags: { th: ['อาคารสิรินธร', 'พื้นที่อ่านหนังสือ', 'ชั้น 3'], en: ['Sirindhorn Building', 'Reading Area', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-3-point-1-to-floor-2-point-1', type: 'scene', target: 'sirindhornLibraryFloor2Point1', yaw: 170, pitch: -8 },
+      { id: 'sirindhorn-library-floor-3-point-1-to-floor-4-point-1', type: 'scene', target: 'sirindhornLibraryFloor4Point1', yaw: -170, pitch: 8 },
+      { id: 'sirindhorn-library-floor-3-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor3Point2', yaw: -90, pitch: -3 },
+      { id: 'sirindhorn-library-floor-3-point-1-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor3Point3', yaw: 90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor3Point2',
+    ...tourMedia.sirindhornLibraryFloor3Point2,
+    title: { th: 'พื้นที่อ่านหนังสืออาคารสิรินธร ชั้น 3 ด้านซ้าย', en: 'Sirindhorn Building Reading Area, Floor 3 Left Wing' },
+    description: { th: 'พื้นที่อ่านหนังสือและค้นคว้าด้านซ้ายของบันไดชั้น 3', en: 'The reading and research area to the left of the third-floor stairs.' },
+    tags: { th: ['อาคารสิรินธร', 'พื้นที่อ่านหนังสือ', 'ชั้น 3'], en: ['Sirindhorn Building', 'Reading Area', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-3-point-2-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor3Point3',
+    ...tourMedia.sirindhornLibraryFloor3Point3,
+    title: { th: 'พื้นที่อ่านหนังสืออาคารสิรินธร ชั้น 3 ด้านขวา', en: 'Sirindhorn Building Reading Area, Floor 3 Right Wing' },
+    description: { th: 'พื้นที่อ่านหนังสือและค้นคว้าด้านขวาของบันไดชั้น 3', en: 'The reading and research area to the right of the third-floor stairs.' },
+    tags: { th: ['อาคารสิรินธร', 'พื้นที่อ่านหนังสือ', 'ชั้น 3'], en: ['Sirindhorn Building', 'Reading Area', 'Floor 3'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-3-point-3-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor4Point1',
+    ...tourMedia.sirindhornLibraryFloor4Point1,
+    title: { th: 'บันไดอาคารสิรินธร ชั้น 4', en: 'Sirindhorn Building Stairs, Floor 4' },
+    description: { th: 'จุดบันไดชั้น 4 เชื่อมไปยังพื้นที่ห้องติวและแสดงข้อมูลพื้นที่ชั้น 5–6', en: 'The fourth-floor stair landing leading to tutoring rooms and information about Floors 5–6.' },
+    tags: { th: ['อาคารสิรินธร', 'ห้องติว', 'ชั้น 4'], en: ['Sirindhorn Building', 'Tutoring Rooms', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-4-point-1-to-floor-3-point-1', type: 'scene', target: 'sirindhornLibraryFloor3Point1', yaw: 170, pitch: -8 },
+      { id: 'sirindhorn-library-floor-4-point-1-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 0, pitch: -3 },
+      { id: 'sirindhorn-upper-floors-info', type: 'info', yaw: -150, pitch: 8 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor4Point2',
+    ...tourMedia.sirindhornLibraryFloor4Point2,
+    title: { th: 'ทางแยกห้องติวอาคารสิรินธร ชั้น 4', en: 'Sirindhorn Building Tutoring Room Junction, Floor 4' },
+    description: { th: 'ทางแยกไปยังพื้นที่ห้องติวด้านขวาและด้านซ้ายบนชั้น 4', en: 'The junction leading to tutoring rooms on the right and left sides of the fourth floor.' },
+    tags: { th: ['อาคารสิรินธร', 'ห้องติว', 'ชั้น 4'], en: ['Sirindhorn Building', 'Tutoring Rooms', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-4-point-2-to-point-1', type: 'scene', target: 'sirindhornLibraryFloor4Point1', yaw: 180, pitch: -3 },
+      { id: 'sirindhorn-library-floor-4-point-2-to-point-3', type: 'scene', target: 'sirindhornLibraryFloor4Point3', yaw: 90, pitch: -3 },
+      { id: 'sirindhorn-library-floor-4-point-2-to-point-4', type: 'scene', target: 'sirindhornLibraryFloor4Point4', yaw: -90, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor4Point3',
+    ...tourMedia.sirindhornLibraryFloor4Point3,
+    title: { th: 'ห้องติวอาคารสิรินธร ชั้น 4 ด้านขวา', en: 'Sirindhorn Building Tutoring Rooms, Floor 4 Right Wing' },
+    description: { th: 'พื้นที่ห้องติวด้านขวาของทางแยกชั้น 4', en: 'The tutoring room area to the right of the fourth-floor junction.' },
+    tags: { th: ['อาคารสิรินธร', 'ห้องติว', 'ชั้น 4'], en: ['Sirindhorn Building', 'Tutoring Rooms', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-4-point-3-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'sirindhornLibraryFloor4Point4',
+    ...tourMedia.sirindhornLibraryFloor4Point4,
+    title: { th: 'ห้องติวอาคารสิรินธร ชั้น 4 ด้านซ้าย', en: 'Sirindhorn Building Tutoring Rooms, Floor 4 Left Wing' },
+    description: { th: 'พื้นที่ห้องติวด้านซ้ายของทางแยกชั้น 4', en: 'The tutoring room area to the left of the fourth-floor junction.' },
+    tags: { th: ['อาคารสิรินธร', 'ห้องติว', 'ชั้น 4'], en: ['Sirindhorn Building', 'Tutoring Rooms', 'Floor 4'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 328, y: 416 },
+    hotspots: [
+      { id: 'sirindhorn-library-floor-4-point-4-to-point-2', type: 'scene', target: 'sirindhornLibraryFloor4Point2', yaw: 180, pitch: -3 }
+    ]
   }
 ] as const satisfies readonly TourScene[];
 
@@ -1897,6 +2324,51 @@ export function getTourStructureSignature(): string {
       ...(hotspot.type === 'scene' ? { target: hotspot.target } : {})
     }))
   })));
+}
+
+/** Rebuilds the viewer only when its scene inventory or panorama source changes. */
+export function getTourViewerInventorySignature(): string {
+  return JSON.stringify(tourScenes.map((scene) => ({ id: scene.id, panorama: scene.panorama })));
+}
+
+/** Updates Virtual Tour links in place when navigation geometry changes. */
+export function getTourNavigationSignature(): string {
+  return JSON.stringify(tourScenes.map((scene) => ({
+    id: scene.id,
+    hotspots: scene.hotspots.filter((hotspot) => hotspot.type === 'scene').map((hotspot) => ({
+      id: hotspot.id,
+      target: hotspot.target,
+      yaw: hotspot.yaw,
+      pitch: hotspot.pitch
+    }))
+  })));
+}
+
+/** Refreshes current Info markers without reloading the panorama. */
+export function getTourInfoGeometrySignature(): string {
+  return JSON.stringify(tourScenes.map((scene) => ({
+    id: scene.id,
+    hotspots: scene.hotspots.filter((hotspot) => hotspot.type === 'info').map((hotspot) => ({
+      id: hotspot.id,
+      yaw: hotspot.yaw,
+      pitch: hotspot.pitch
+    }))
+  })));
+}
+
+/** Rebuilds Leaflet only when its image, markers, positions, or route graph changes. */
+export function getTourMapStructureSignature(): string {
+  return JSON.stringify({
+    map: tourMap,
+    scenes: tourScenes.map((scene) => ({
+      id: scene.id,
+      mapPosition: scene.mapPosition,
+      mapLandmark: (scene as TourScene).mapLandmark,
+      targets: scene.hotspots
+        .filter((hotspot): hotspot is SceneHotspot => hotspot.type === 'scene')
+        .map((hotspot) => hotspot.target)
+    }))
+  });
 }
 
 let sceneById = new Map<SceneId, TourScene>(tourScenes.map((scene) => [scene.id, scene]));

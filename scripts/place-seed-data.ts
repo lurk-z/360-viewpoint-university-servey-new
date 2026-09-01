@@ -4,7 +4,7 @@
  * Tour runtime code never imports this file. The seed process inserts only
  * missing Hotspot IDs, so rerunning it cannot overwrite Admin edits.
  */
-export const placeContentBootstrap = {
+const legacyPlaceContentBootstrap = {
   "entrance-landmark-info": {
     "title": {
       "th": "ป้ายมหาวิทยาลัย",
@@ -855,4 +855,15 @@ export const placeContentBootstrap = {
       }
     ]
   },
+} as const;
+
+/** Retired geometry stays recoverable in Git history but must not be seeded again. */
+export const placeContentBootstrap = Object.fromEntries(
+  Object.entries(legacyPlaceContentBootstrap)
+    .filter(([id]) => id !== 'Sirindhorn Building-info')
+) as Omit<typeof legacyPlaceContentBootstrap, 'Sirindhorn Building-info'>;
+
+/** Exact retired value used only to decide whether a safe archive would overwrite Admin edits. */
+export const retiredPlaceContentBaselines = {
+  'Sirindhorn Building-info': legacyPlaceContentBootstrap['Sirindhorn Building-info']
 } as const;

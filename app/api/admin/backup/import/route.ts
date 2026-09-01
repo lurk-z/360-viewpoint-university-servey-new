@@ -7,6 +7,10 @@ import {
 import { requireAdmin } from '../../../../../src/server/auth';
 import { TOUR_STRUCTURE_CACHE_TAG, writeAdminAuditLog } from '../../../../../src/server/tour-structure-repository';
 import { tourStructureDataSchema } from '../../../../../src/tour-structure';
+import {
+  NavigationPreservationError,
+  preserveCurrentNavigation
+} from '../../../../../src/tour-navigation-sync';
 
 const rowSchema = z.object({
   id: z.string().min(1).max(150),
@@ -82,16 +86,34 @@ export async function POST(request: Request) {
   const parsedTour = tourStructureDataSchema.safeParse(tourDraft);
   let tourResult: 'none' | 'ready' | 'conflict' | 'imported' | 'invalid' = tourDraft === undefined ? 'none' : parsedTour.success ? 'ready' : 'invalid';
   if (parsedTour.success) {
-    const { data: current } = await admin.from('tour_projects').select('id,draft_version').eq('id', 'main').maybeSingle();
+    const { data: current } = await admin.from('tour_projects').select('id,draft_data,draft_version').eq('id', 'main').maybeSingle();
     if (current && !replaceTourDraft) tourResult = 'conflict';
     else if (commit && replaceTourDraft) {
+      if (!current) {
+        return Response.json({ error: 'กรุณานำโครงสร้างทัวร์เริ่มต้นเข้าระบบก่อน Import เพื่อรักษาลูกศรจาก VS Code' }, { status: 409 });
+      }
+      let importedDraft;
+      try {
+        importedDraft = preserveCurrentNavigation(
+          parsedTour.data,
+          tourStructureDataSchema.parse(current.draft_data)
+        );
+      } catch (error) {
+        if (error instanceof NavigationPreservationError) {
+          return Response.json({
+            error: `Import ไม่ได้ เพราะข้อมูลไม่มีฉากที่ลูกศรใช้งาน: ${error.missingSceneIds.join(', ')}`
+          }, { status: 409 });
+        }
+        throw error;
+      }
       const version = Number(current?.draft_version ?? 0) + 1;
-      const { error } = await admin.from('tour_projects').upsert({
-        id: 'main', draft_data: parsedTour.data, draft_version: version,
-        published_data: null, published_version: null,
-        created_by: session.userId, updated_by: session.userId
-      });
+      const { data: updated, error } = await admin.from('tour_projects').update({
+        draft_data: importedDraft,
+        draft_version: version,
+        updated_by: session.userId
+      }).eq('id', 'main').eq('draft_version', current.draft_version).select('id').maybeSingle();
       if (error) return Response.json({ error: 'นำเข้าโครงสร้างทัวร์ไม่สำเร็จ' }, { status: 500 });
+      if (!updated) return Response.json({ error: 'มีผู้ดูแลบันทึกโครงสร้างใหม่ระหว่าง Import กรุณาตรวจตัวอย่างอีกครั้ง' }, { status: 409 });
       tourResult = 'imported';
       updateTag(TOUR_STRUCTURE_CACHE_TAG);
     }

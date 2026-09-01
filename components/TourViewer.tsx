@@ -23,19 +23,23 @@ import {
 import {
   VirtualTourPlugin,
   events as virtualTourEvents,
+  type VirtualTourLink,
   type VirtualTourNode
 } from '@photo-sphere-viewer/virtual-tour-plugin';
 import {
+  getTourInfoGeometrySignature,
+  getTourNavigationSignature,
+  getTourViewerInventorySignature,
   getInfoHotspots,
   getNavigationHotspots,
   getScene,
-  getTourStructureSignature,
   localize,
   toDegrees,
   tourScenes,
   type InfoHotspot,
   type Locale,
-  type SceneId
+  type SceneId,
+  type TourScene
 } from '../src/tour-data';
 import { goToScene, message } from '../src/i18n';
 import {
@@ -55,6 +59,12 @@ export interface TourViewerHandle {
   focus: () => void;
 }
 
+export interface NavigationPositionPreview {
+  readonly hotspotId: string;
+  readonly yaw: number;
+  readonly pitch: number;
+}
+
 interface TourViewerProps {
   readonly locale: Locale;
   readonly content: PublicContentSnapshot;
@@ -65,6 +75,9 @@ interface TourViewerProps {
   readonly onError: () => void;
   readonly onAutorotate: (enabled: boolean) => void;
   readonly onViewYaw?: (yaw: number) => void;
+  readonly navigationPlacementHotspotId?: string;
+  readonly navigationPreview?: NavigationPositionPreview | null;
+  readonly onNavigationPositionPick?: (position: NavigationPositionPreview) => void;
 }
 
 interface ViewerCallbacks {
@@ -77,6 +90,8 @@ interface ViewerCallbacks {
   onError: () => void;
   onAutorotate: (enabled: boolean) => void;
   onViewYaw?: (yaw: number) => void;
+  navigationPlacementHotspotId?: string;
+  onNavigationPositionPick?: (position: NavigationPositionPreview) => void;
 }
 
 interface PreservedViewerState {
@@ -86,20 +101,50 @@ interface PreservedViewerState {
   readonly zoom: number;
 }
 
-const buildTourNodes = (): VirtualTourNode[] => tourScenes.map((scene) => ({
+function buildSceneLinks(
+  scene: TourScene,
+  preview?: NavigationPositionPreview | null
+): VirtualTourLink[] {
+  return getNavigationHotspots(scene).map((hotspot) => ({
+    nodeId: hotspot.target,
+    position: {
+      yaw: toDegrees(preview?.hotspotId === hotspot.id ? preview.yaw : hotspot.yaw),
+      pitch: toDegrees(preview?.hotspotId === hotspot.id ? preview.pitch : hotspot.pitch)
+    },
+    data: { hotspotId: hotspot.id }
+  }));
+}
+
+function getSceneNavigationSignature(
+  scene: TourScene,
+  preview?: NavigationPositionPreview | null
+): string {
+  return JSON.stringify(buildSceneLinks(scene, preview));
+}
+
+const buildTourNodes = (preview?: NavigationPositionPreview | null): VirtualTourNode[] => tourScenes.map((scene) => ({
   id: scene.id,
   panorama: scene.panorama,
   name: `${scene.title.th} · ${scene.title.en}`,
   data: { sceneId: scene.id },
-  links: getNavigationHotspots(scene).map((hotspot) => ({
-    nodeId: hotspot.target,
-    position: { yaw: toDegrees(hotspot.yaw), pitch: toDegrees(hotspot.pitch) },
-    data: { hotspotId: hotspot.id }
-  }))
+  links: buildSceneLinks(scene, preview)
 }));
 
 const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourViewer(
-  { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate, onViewYaw },
+  {
+    locale,
+    content,
+    onInfo,
+    onProgress,
+    onReady,
+    onSceneChange,
+    onError,
+    onAutorotate,
+    onViewYaw,
+    navigationPlacementHotspotId,
+    navigationPreview,
+    onNavigationPositionPick
+  },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,6 +156,9 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
   const viewerGenerationRef = useRef(0);
   const preservedViewerStateRef = useRef<PreservedViewerState | null>(null);
   const refreshMarkersRef = useRef<(() => void) | null>(null);
+  const sceneNavigationSignaturesRef = useRef(new Map<string, string>());
+  const navigationPreviewRef = useRef<NavigationPositionPreview | null>(navigationPreview ?? null);
+  navigationPreviewRef.current = navigationPreview ?? null;
   const callbacksRef = useRef<ViewerCallbacks>({
     locale,
     content,
@@ -120,10 +168,28 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     onSceneChange,
     onError,
     onAutorotate,
-    onViewYaw
+    onViewYaw,
+    navigationPlacementHotspotId,
+    onNavigationPositionPick
   });
-  callbacksRef.current = { locale, content, onInfo, onProgress, onReady, onSceneChange, onError, onAutorotate, onViewYaw };
-  const tourStructureSignature = getTourStructureSignature();
+  callbacksRef.current = {
+    locale,
+    content,
+    onInfo,
+    onProgress,
+    onReady,
+    onSceneChange,
+    onError,
+    onAutorotate,
+    onViewYaw,
+    navigationPlacementHotspotId,
+    onNavigationPositionPick
+  };
+  const viewerInventorySignature = getTourViewerInventorySignature();
+  const navigationSignature = `${getTourNavigationSignature()}|${navigationPreview
+    ? `${navigationPreview.hotspotId}:${navigationPreview.yaw}:${navigationPreview.pitch}`
+    : 'no-preview'}`;
+  const infoGeometrySignature = getTourInfoGeometrySignature();
 
   useImperativeHandle(ref, () => ({
     navigate: async (sceneId) => {
@@ -182,13 +248,20 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const initializeFrame = window.requestAnimationFrame(() => {
       if (disposed || viewerGenerationRef.current !== generation) return;
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const createArrowElement = (link: { nodeId: string }): HTMLElement => {
+    const createArrowElement = (link: VirtualTourLink): HTMLElement => {
       const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);
       const targetTitle = localize(target.title, callbacksRef.current.locale);
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'tour-arrow';
       button.dataset.target = target.id;
+      if (typeof link.data?.hotspotId === 'string') {
+        button.dataset.hotspotId = link.data.hotspotId;
+        button.classList.toggle(
+          'is-dev-selected',
+          callbacksRef.current.navigationPlacementHotspotId === link.data.hotspotId
+        );
+      }
       button.setAttribute('aria-label', goToScene(callbacksRef.current.locale, targetTitle));
 
       const icon = document.createElement('span');
@@ -229,7 +302,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           autorotatePitch: 0
         }),
         VirtualTourPlugin.withConfig({
-          nodes: buildTourNodes(),
+          nodes: buildTourNodes(navigationPreviewRef.current),
           startNodeId: startSceneId,
           positionMode: 'manual',
           renderMode: '2d',
@@ -260,6 +333,10 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     markersRef.current = markersPlugin;
     autorotateRef.current = autorotatePlugin;
     virtualTourRef.current = virtualTourPlugin;
+    sceneNavigationSignaturesRef.current = new Map(tourScenes.map((scene) => [
+      scene.id,
+      getSceneNavigationSignature(scene, navigationPreviewRef.current)
+    ]));
 
     const setInitialView = (sceneId: SceneId, animate = false, speed = 550): void => {
       const scene = getScene(sceneId);
@@ -359,6 +436,21 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     viewer.addEventListener(viewerEvents.PanoramaLoadedEvent.type, () => {
       if (!disposed) viewer.hideError();
     });
+    viewer.addEventListener(viewerEvents.ClickEvent.type, ({ data }) => {
+      const hotspotId = callbacksRef.current.navigationPlacementHotspotId;
+      const onPick = callbacksRef.current.onNavigationPositionPick;
+      if (!hotspotId || !onPick || data.rightclick) return;
+      const clickedElement = document.elementFromPoint(data.clientX, data.clientY);
+      if (clickedElement?.closest('.tour-arrow, .info-hotspot')) return;
+      const toOneDecimalDegree = (radians: number): number => (
+        Math.round((radians * 180 / Math.PI) * 10) / 10
+      );
+      onPick({
+        hotspotId,
+        yaw: toOneDecimalDegree(data.yaw),
+        pitch: toOneDecimalDegree(data.pitch)
+      });
+    });
     viewer.addEventListener(viewerEvents.PositionUpdatedEvent.type, ({ position }) => {
       pendingYaw = ((position.yaw * 180 / Math.PI + 180) % 360 + 360) % 360 - 180;
       if (yawFrame) return;
@@ -420,6 +512,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
         virtualTourRef.current = null;
         autorotateRef.current = null;
         refreshMarkersRef.current = null;
+        sceneNavigationSignaturesRef.current = new Map();
         void Promise.resolve(viewer.stopAnimation()).catch(() => undefined);
         viewer.destroy();
       };
@@ -434,7 +527,43 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
         disposed = true;
       }
     };
-  }, [tourStructureSignature]);
+  }, [viewerInventorySignature]);
+
+  useEffect(() => {
+    const plugin = virtualTourRef.current;
+    if (!plugin) return;
+    const previous = sceneNavigationSignaturesRef.current;
+    const applied = new Map(previous);
+    for (const scene of tourScenes) {
+      const nextSignature = getSceneNavigationSignature(scene, navigationPreview);
+      if (previous.get(scene.id) === nextSignature) continue;
+      try {
+        plugin.updateNode({ id: scene.id, links: buildSceneLinks(scene, navigationPreview) });
+        applied.set(scene.id, nextSignature);
+      } catch {
+        // Keep the last valid links visible while a development edit is incomplete.
+      }
+    }
+    sceneNavigationSignaturesRef.current = applied;
+  }, [navigationSignature, navigationPreview]);
+
+  useEffect(() => {
+    refreshMarkersRef.current?.();
+  }, [infoGeometrySignature]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      container.querySelectorAll<HTMLButtonElement>('.tour-arrow[data-hotspot-id]').forEach((button) => {
+        button.classList.toggle(
+          'is-dev-selected',
+          button.dataset.hotspotId === navigationPlacementHotspotId
+        );
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [navigationPlacementHotspotId, navigationSignature]);
 
   useEffect(() => {
     const container = containerRef.current;

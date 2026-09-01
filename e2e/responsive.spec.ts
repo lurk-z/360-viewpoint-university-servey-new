@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { PublicContentSnapshot } from '../src/content';
 import { getMapLandmarkScenes } from '../src/tour-data';
+import type { TourStructureSnapshot } from '../src/tour-structure';
 
 const academicsSnapshot = {
   version: 9_001,
@@ -97,6 +98,51 @@ test('public tour and AI chat remain available at the configured viewport', asyn
   await expect(page.locator('#tour-chat-input')).toBeVisible();
   await expect(page.locator('.persistent-tour-map')).toBeHidden();
   await expect(page.locator('.control-rail')).toBeHidden();
+});
+
+test('same-version structure signature refreshes arrows without losing the current scene', async ({ page }) => {
+  const structureResponse = await page.request.get('/api/tour-structure');
+  expect(structureResponse.ok()).toBe(true);
+  const changed = structuredClone(await structureResponse.json() as TourStructureSnapshot);
+  const startScene = changed.data.scenes.find((scene) => scene.id === changed.data.startSceneId)!;
+  const arrow = startScene.hotspots.find((hotspot) => hotspot.type === 'scene');
+  expect(arrow?.type).toBe('scene');
+  if (!arrow || arrow.type !== 'scene') return;
+  const replacementTarget = changed.data.scenes.find((scene) => (
+    !scene.archived && scene.id !== startScene.id && scene.id !== arrow.target
+  ))!.id;
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const startButton = page.locator('.intro .primary-button');
+  await expect(startButton).toBeEnabled({ timeout: 60_000 });
+  await startButton.click();
+  await expect(page.locator(`.tour-arrow[data-target="${arrow.target}"]`).first()).toBeVisible({ timeout: 15_000 });
+  const sceneTitle = await page.locator('#scene-title').textContent();
+  const viewerContainer = page.locator('#tour-viewer .psv-container');
+  await expect(viewerContainer).toBeVisible();
+  await viewerContainer.evaluate((element) => element.setAttribute('data-playwright-viewer-instance', 'preserve-me'));
+
+  arrow.target = replacementTarget;
+  await page.route('**/api/tour-structure', async (route) => {
+    if (route.request().method() === 'HEAD') {
+      await route.fulfill({
+        status: 200,
+        headers: {
+          'X-Tour-Structure-Version': String(changed.version),
+          'X-Tour-Structure-Source': changed.source,
+          'X-Tour-Structure-Signature': 'playwright-same-version-change'
+        }
+      });
+      return;
+    }
+    await route.fulfill({ status: 200, json: changed });
+  });
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+
+  await expect(page.locator(`.tour-arrow[data-target="${replacementTarget}"]`).first())
+    .toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('#scene-title')).toHaveText(sceneTitle ?? '');
+  await expect(page.locator('#tour-viewer .psv-container[data-playwright-viewer-instance="preserve-me"]')).toBeVisible();
 });
 
 test('compact tour UI keeps the panorama clear and opens one panel at a time', async ({ page }) => {

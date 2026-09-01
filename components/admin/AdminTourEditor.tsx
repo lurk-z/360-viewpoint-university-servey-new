@@ -62,9 +62,6 @@ export default function AdminTourEditor({
   const [data, setData] = useState<TourStructureData>(() => structuredClone(initialData));
   const [selectedId, setSelectedId] = useState(initialData.startSceneId);
   const [query, setQuery] = useState('');
-  const [placementType, setPlacementType] = useState<'scene' | 'info'>('scene');
-  const [placementTarget, setPlacementTarget] = useState(initialData.startSceneId);
-  const [createReverse, setCreateReverse] = useState(true);
   const [assets, setAssets] = useState<readonly AdminTourAsset[]>(initialAssets);
   const [assetStatus, setAssetStatus] = useState('');
   const [saveState, saveAction, saving] = useActionState(saveTourStructureAction, initialState);
@@ -131,28 +128,19 @@ export default function AdminTourEditor({
   };
   const placeHotspot = ({ yaw, pitch }: { yaw: number; pitch: number }): void => {
     const used = new Set(data.scenes.flatMap((item) => item.hotspots.map((hotspot) => hotspot.id)));
-    const base = placementType === 'info' ? `${scene.id}-info` : `${scene.id}-to-${placementTarget}`;
+    const base = `${scene.id}-info`;
     const id = uniqueId(base, used);
     updateScene((current) => ({
       ...current,
-      hotspots: [...current.hotspots, placementType === 'info'
-        ? { id, type: 'info' as const, yaw, pitch }
-        : { id, type: 'scene' as const, target: placementTarget, yaw, pitch }]
+      hotspots: [...current.hotspots, { id, type: 'info' as const, yaw, pitch }]
     }));
-    if (placementType === 'scene' && createReverse && placementTarget !== scene.id) {
-      const reverseId = uniqueId(`${placementTarget}-to-${scene.id}`, new Set([...used, id]));
-      setData((current) => ({
-        ...current,
-        scenes: current.scenes.map((item) => item.id === placementTarget
-          ? { ...item, hotspots: [...item.hotspots, { id: reverseId, type: 'scene' as const, target: scene.id, yaw: 180, pitch: -3 }] }
-          : item)
-      }));
-    }
   };
-  const updateHotspot = (id: string, field: string, value: string | number): void => {
+  const updateInfoHotspot = (id: string, field: 'yaw' | 'pitch', value: number): void => {
     updateScene((current) => ({
       ...current,
-      hotspots: current.hotspots.map((hotspot) => hotspot.id === id ? { ...hotspot, [field]: value } : hotspot)
+      hotspots: current.hotspots.map((hotspot) => (
+        hotspot.type === 'info' && hotspot.id === id ? { ...hotspot, [field]: value } : hotspot
+      ))
     }));
   };
 
@@ -222,18 +210,21 @@ export default function AdminTourEditor({
 
         <div className="admin-tour-placement">
           <section className="admin-tour-placement__tools">
-            <strong>4. หมุนภาพแล้วคลิกเพื่อวางปุ่ม</strong>
-            <label><span>ชนิดปุ่ม</span><select value={placementType} onChange={(event) => setPlacementType(event.target.value as 'scene' | 'info')}><option value="scene">ลูกศรไปฉากอื่น</option><option value="info">ปุ่ม Info</option></select></label>
-            {placementType === 'scene' ? <><label><span>ฉากปลายทาง</span><select value={placementTarget} onChange={(event) => setPlacementTarget(event.target.value)}>{data.scenes.filter((item) => !item.archived && item.id !== scene.id).map((item) => <option value={item.id} key={item.id}>{item.title.th} ({item.id})</option>)}</select></label><label className="admin-checkbox"><input type="checkbox" checked={createReverse} onChange={(event) => setCreateReverse(event.target.checked)} /> สร้างลูกศรย้อนกลับอัตโนมัติ</label></> : <p>ระบบจะสร้าง Hotspot ID และรายการ “รอกรอกข้อมูล” ในสถานที่สำคัญเมื่อบันทึก</p>}
+            <strong>4. หมุนภาพแล้วคลิกเพื่อวางปุ่ม Info</strong>
+            <p>ลูกศรนำทางแก้จาก <code>src/tour-data.ts</code> เท่านั้น ส่วนการคลิกบนภาพนี้จะสร้างปุ่ม Info และรายการ “รอกรอกข้อมูล” ในสถานที่สำคัญเมื่อบันทึก</p>
           </section>
           <AdminPanoramaPlacement panorama={scene.panorama} onPosition={placeHotspot} />
           <section className="admin-tour-hotspots"><header><strong>ปุ่มในฉาก {scene.hotspots.length}</strong></header>
-            {scene.hotspots.map((hotspot) => <article key={hotspot.id}>
+            {scene.hotspots.map((hotspot) => <article className={hotspot.type === 'scene' ? 'is-navigation-readonly' : ''} key={hotspot.id}>
               <div><b>{hotspot.type === 'scene' ? 'ลูกศร' : 'Info'}</b><code>{hotspot.id}</code></div>
-              {hotspot.type === 'scene' ? <label><span>ปลายทาง</span><select value={hotspot.target} onChange={(event) => updateHotspot(hotspot.id, 'target', event.target.value)}>{data.scenes.filter((item) => !item.archived).map((item) => <option value={item.id} key={item.id}>{item.id}</option>)}</select></label> : null}
-              <label><span>yaw</span><input type="number" step="0.1" value={hotspot.yaw} onChange={(event) => updateHotspot(hotspot.id, 'yaw', Number(event.target.value))} /></label>
-              <label><span>pitch</span><input type="number" step="0.1" value={hotspot.pitch} onChange={(event) => updateHotspot(hotspot.id, 'pitch', Number(event.target.value))} /></label>
-              <button type="button" onClick={() => updateScene((current) => ({ ...current, hotspots: current.hotspots.filter((item) => item.id !== hotspot.id) }))}>ลบปุ่ม</button>
+              {hotspot.type === 'scene' ? <>
+                <dl><div><dt>ปลายทาง</dt><dd><code>{hotspot.target}</code></dd></div><div><dt>ตำแหน่ง</dt><dd>yaw {hotspot.yaw} · pitch {hotspot.pitch}</dd></div></dl>
+                <small>อ่านอย่างเดียว · แก้ลูกศรใน VS Code แล้วรัน npm run sync:arrows</small>
+              </> : <>
+                <label><span>yaw</span><input type="number" step="0.1" value={hotspot.yaw} onChange={(event) => updateInfoHotspot(hotspot.id, 'yaw', Number(event.target.value))} /></label>
+                <label><span>pitch</span><input type="number" step="0.1" value={hotspot.pitch} onChange={(event) => updateInfoHotspot(hotspot.id, 'pitch', Number(event.target.value))} /></label>
+                <button type="button" onClick={() => updateScene((current) => ({ ...current, hotspots: current.hotspots.filter((item) => item.id !== hotspot.id) }))}>ลบปุ่ม Info</button>
+              </>}
             </article>)}
           </section>
         </div>

@@ -16,6 +16,8 @@
     "test:e2e": "playwright test",
     "seed:cms": "node --experimental-strip-types scripts/seed-cms.ts",
     "bootstrap:tour": "node --experimental-strip-types scripts/bootstrap-tour-structure.ts",
+    "sync:tour": "node --experimental-strip-types scripts/sync-tour.ts",
+    "sync:arrows": "node --experimental-strip-types scripts/sync-arrows.ts",
     "doctor": "node --experimental-strip-types scripts/doctor.ts",
     "tour:add-scene": "node --experimental-strip-types scripts/tour-add-scene.ts",
     "check:workers": "node --check public/sw.js",

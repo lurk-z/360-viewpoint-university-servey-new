@@ -6,7 +6,7 @@ import {
   getScene,
   getSceneEdges,
   getMapLandmarkScenes,
-  getTourStructureSignature,
+  getTourMapStructureSignature,
   localize,
   tourMap,
   type Locale,
@@ -82,7 +82,7 @@ export default function TourMap({
   contentRef.current = content;
   previewRef.current = preview;
   guidedRouteSceneIdsRef.current = guidedRouteSceneIds;
-  const tourStructureSignature = getTourStructureSignature();
+  const tourMapStructureSignature = getTourMapStructureSignature();
   const landmarkScenes = getMapLandmarkScenes();
 
   const setFollowMode = (value: boolean): void => {
@@ -224,14 +224,22 @@ export default function TourMap({
       userMarkerRef.current = null;
       guidedRouteLayerRef.current = null;
       coverMapRef.current = null;
-      if (mapRef.current) {
-        const center = mapRef.current.getCenter();
-        preservedMapViewRef.current = { lat: center.lat, lng: center.lng, zoom: mapRef.current.getZoom() };
-      }
-      mapRef.current?.remove();
+      const map = mapRef.current;
       mapRef.current = null;
+      if (map) {
+        try {
+          const zoom = map.getZoom();
+          if (Number.isFinite(zoom)) {
+            const center = map.getCenter();
+            preservedMapViewRef.current = { lat: center.lat, lng: center.lng, zoom };
+          }
+        } catch {
+          // Fast Refresh can dispose Leaflet before its first setView().
+        }
+        map.remove();
+      }
     };
-  }, [tourStructureSignature]);
+  }, [tourMapStructureSignature]);
 
   useEffect(() => {
     const currentPosition = getScene(currentSceneId).mapPosition;

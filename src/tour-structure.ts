@@ -132,6 +132,36 @@ export interface TourStructureIssue {
   readonly hotspotId?: string;
 }
 
+function normalizeSignatureValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(normalizeSignatureValue);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, item]) => [key, normalizeSignatureValue(item)])
+    );
+  }
+  return value;
+}
+
+function fnv1a(value: string, seed: number): string {
+  let hash = seed >>> 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+/**
+ * A deterministic, client-safe signature used to detect structure changes even
+ * when a CLI sync or development overlay keeps the published version unchanged.
+ */
+export function getTourStructureDataSignature(data: TourStructureData): string {
+  const normalized = JSON.stringify(normalizeSignatureValue(data));
+  return `tour-v1-${fnv1a(normalized, 0x811c9dc5)}${fnv1a(normalized, 0x9e3779b9)}`;
+}
+
 export function createBootstrapTourStructureData(): TourStructureData {
   return tourStructureDataSchema.parse({
     schemaVersion: 1,
@@ -145,7 +175,9 @@ export function createBootstrapTourStructureData(): TourStructureData {
       tags: { th: [...scene.tags.th], en: [...scene.tags.en] },
       initialView: { ...scene.initialView },
       mapPosition: { ...scene.mapPosition },
-      ...(scene.mapLandmark === undefined ? {} : { mapLandmark: scene.mapLandmark }),
+      ...((scene as TourScene).mapLandmark === undefined
+        ? {}
+        : { mapLandmark: (scene as TourScene).mapLandmark }),
       hotspots: scene.hotspots.map((hotspot) => ({ ...hotspot }))
     }))
   });

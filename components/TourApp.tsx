@@ -8,14 +8,20 @@ import {
   getScene,
   getSceneAssetUrls,
   localize,
+  activateTourStructure,
   tourScenes,
   type InfoHotspot,
   type InfoImage,
   type InfoReference,
   type SceneId
 } from '../src/tour-data';
-import { activateTourStructure } from '../src/tour-data';
-import { toRuntimeTourScenes, type TourStructureSnapshot } from '../src/tour-structure';
+import {
+  createBootstrapTourStructureData,
+  toRuntimeTourScenes,
+  type TourStructureData,
+  type TourStructureSnapshot
+} from '../src/tour-structure';
+import { overlayCodeNavigation } from '../src/tour-navigation-sync';
 import {
   goToScene,
   imageCounter,
@@ -31,7 +37,11 @@ import {
   resolveTourScene
 } from '../src/content';
 import { ModalDialog } from './ModalDialog';
-import TourViewer, { type TourViewerHandle } from './TourViewer';
+import TourViewer, {
+  type NavigationPositionPreview,
+  type TourViewerHandle
+} from './TourViewer';
+import DevelopmentArrowPositioner, { type DevelopmentArrowOption } from './DevelopmentArrowPositioner';
 import type { TourMapMode } from './TourMap';
 import { usePublicContent } from './usePublicContent';
 import { buildMultiStopTourPath, findShortestTourPath } from '../src/tour-routing';
@@ -41,6 +51,7 @@ type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | 
 type CompactOverlay = 'info' | 'map' | 'tools' | 'chat' | null;
 const FITM_LOGO_URL = '/mainimages/Logo_FitM/FITM_LOGO.png';
 const COMPACT_TOUR_QUERY = '(max-width: 1024px)';
+const DEVELOPMENT_ARROW_TOOL = process.env.NODE_ENV === 'development';
 const TourMap = dynamic(() => import('./TourMap'), { ssr: false });
 const TourChat = dynamic(() => import('./TourChat'), { ssr: false });
 const ActivitiesDialog = dynamic(() => import('./ActivitiesDialog'), { ssr: false });
@@ -108,9 +119,28 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
   readonly lockTourStructure?: boolean;
 }) {
   const tourStructure = useTourStructure(initialTourStructure, !lockTourStructure);
+  const lastValidCodeStructureRef = useRef<TourStructureData | null>(null);
+  let activeTourStructure = tourStructure.data;
+  let developmentNavigationError: string | undefined;
+  if (DEVELOPMENT_ARROW_TOOL) {
+    try {
+      const codeStructure = createBootstrapTourStructureData();
+      activeTourStructure = overlayCodeNavigation(tourStructure.data, codeStructure);
+      lastValidCodeStructureRef.current = codeStructure;
+    } catch (error) {
+      developmentNavigationError = error instanceof Error ? error.message : 'Navigation validation failed';
+      if (lastValidCodeStructureRef.current) {
+        try {
+          activeTourStructure = overlayCodeNavigation(tourStructure.data, lastValidCodeStructureRef.current);
+        } catch {
+          activeTourStructure = tourStructure.data;
+        }
+      }
+    }
+  }
   activateTourStructure(
-    toRuntimeTourScenes(tourStructure.data),
-    tourStructure.data.map
+    toRuntimeTourScenes(activeTourStructure),
+    activeTourStructure.map
   );
   const compactTourUi = useCompactTourUi();
   const locale = useTourStore((state) => state.locale);
@@ -145,6 +175,9 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
   const [selectedActivityId, setSelectedActivityId] = useState<string>();
   const [mapExpanded, setMapExpanded] = useState(false);
   const [guidedTour, setGuidedTour] = useState<GuidedTourState | null>(null);
+  const [developmentArrowToolOpen, setDevelopmentArrowToolOpen] = useState(false);
+  const [selectedDevelopmentArrowId, setSelectedDevelopmentArrowId] = useState<string>();
+  const [developmentArrowPreview, setDevelopmentArrowPreview] = useState<NavigationPositionPreview | null>(null);
   const headerMenuRef = useRef<HTMLDivElement>(null);
   const headerMenuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -153,6 +186,20 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
     : tourScenes[0]?.id ?? 'entrance';
   const scene = resolveTourScene(getScene(activeSceneId), content);
   const sceneIndex = tourScenes.findIndex((item) => item.id === scene.id) + 1;
+  const sceneNavigationHotspots = getNavigationHotspots(scene);
+  const sceneNavigationSignature = JSON.stringify(sceneNavigationHotspots.map((hotspot) => ({
+    id: hotspot.id,
+    target: hotspot.target,
+    yaw: hotspot.yaw,
+    pitch: hotspot.pitch
+  })));
+  const developmentArrowOptions: readonly DevelopmentArrowOption[] = sceneNavigationHotspots.map((hotspot) => ({
+    id: hotspot.id,
+    target: hotspot.target,
+    targetLabel: localize(resolveTourScene(getScene(hotspot.target), content).title, locale),
+    yaw: hotspot.yaw,
+    pitch: hotspot.pitch
+  }));
   const sceneInfoHotspots = getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content));
   const sceneFaculty = content.faculties.find((faculty) => faculty.sceneId === scene.id);
   const selectedInfoScene = selectedInfoSelection
@@ -183,7 +230,8 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
     : undefined;
   const chatOpen = compactTourUi ? compactOverlay === 'chat' : desktopChatOpen;
   const scenePanelOpen = compactTourUi ? compactOverlay === 'info' : sceneInfoVisible;
-  const compactMapHidden = compactTourUi && compactOverlay !== null && compactOverlay !== 'map';
+  const compactMapHidden = compactTourUi
+    && (developmentArrowToolOpen || (compactOverlay !== null && compactOverlay !== 'map'));
   const mapMode: TourMapMode = mapExpanded
     ? 'fullscreen'
     : compactTourUi
@@ -197,6 +245,16 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
   useEffect(() => {
     if (currentSceneId !== activeSceneId) setCurrentScene(activeSceneId);
   }, [activeSceneId, currentSceneId, setCurrentScene]);
+
+  useEffect(() => {
+    const arrows = getNavigationHotspots(getScene(activeSceneId));
+    setDevelopmentArrowPreview(null);
+    setSelectedDevelopmentArrowId((current) => (
+      current && arrows.some((hotspot) => hotspot.id === current)
+        ? current
+        : arrows[0]?.id
+    ));
+  }, [activeSceneId, sceneNavigationSignature]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -327,10 +385,24 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
 
   const toggleCompactOverlay = (overlay: Exclude<CompactOverlay, null>): void => {
     setMapExpanded(false);
+    setDevelopmentArrowToolOpen(false);
+    setDevelopmentArrowPreview(null);
     setCompactOverlay((current) => current === overlay ? null : overlay);
   };
 
+  const openDevelopmentArrowTool = (): void => {
+    setMapExpanded(false);
+    setCompactOverlay(null);
+    setDevelopmentArrowToolOpen(true);
+  };
+
+  const closeDevelopmentArrowTool = (): void => {
+    setDevelopmentArrowToolOpen(false);
+    setDevelopmentArrowPreview(null);
+  };
+
   const setChatOpen = (open: boolean): void => {
+    if (open) closeDevelopmentArrowTool();
     if (compactTourUi) {
       setMapExpanded(false);
       setCompactOverlay(open ? 'chat' : null);
@@ -498,6 +570,12 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
             onError={() => setError(message(locale, 'loadErrorDescription'))}
             onAutorotate={setAutorotate}
             onViewYaw={(yaw) => { viewYawRef.current = yaw; }}
+            navigationPlacementHotspotId={developmentArrowToolOpen ? selectedDevelopmentArrowId : undefined}
+            navigationPreview={developmentArrowToolOpen ? developmentArrowPreview : null}
+            onNavigationPositionPick={(position) => {
+              if (!developmentArrowToolOpen || position.hotspotId !== selectedDevelopmentArrowId) return;
+              setDevelopmentArrowPreview(position);
+            }}
           />
           <div className="viewer-vignette" aria-hidden="true" />
 
@@ -650,7 +728,49 @@ export default function TourApp({ initialTourStructure, lockTourStructure = fals
             <button type="button" aria-label={message(locale, 'enterFullscreen')} onClick={() => viewerRef.current?.toggleFullscreen()}>
               <Icon><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5" /></Icon>
             </button>
+            {DEVELOPMENT_ARROW_TOOL ? (
+              <button type="button" aria-label={locale === 'th' ? 'จัดตำแหน่งลูกศร' : 'Position arrows'} onClick={openDevelopmentArrowTool}>
+                <Icon><path d="M12 3v18M3 12h18" /><circle cx="12" cy="12" r="5" /></Icon>
+              </button>
+            ) : null}
           </div>
+
+          {DEVELOPMENT_ARROW_TOOL && !developmentNavigationError && !introOpen && !developmentArrowToolOpen && !compactTourUi ? (
+            <button
+              type="button"
+              className="development-arrow-positioner-toggle"
+              onClick={openDevelopmentArrowTool}
+            >
+              <Icon><path d="M12 3v18M3 12h18" /><circle cx="12" cy="12" r="5" /></Icon>
+              <span>{locale === 'th' ? 'จัดตำแหน่งลูกศร' : 'Position arrows'}</span>
+            </button>
+          ) : null}
+
+          {DEVELOPMENT_ARROW_TOOL && developmentNavigationError && !introOpen && !developmentArrowToolOpen ? (
+            <div className="development-navigation-error" role="alert">
+              <strong>{locale === 'th' ? 'โค้ดลูกศรยังไม่ผ่านการตรวจ' : 'Arrow code is not valid yet'}</strong>
+              <span>{developmentNavigationError}</span>
+              <button type="button" onClick={openDevelopmentArrowTool}>{locale === 'th' ? 'เปิดเครื่องมือ' : 'Open tool'}</button>
+            </div>
+          ) : null}
+
+          {DEVELOPMENT_ARROW_TOOL && developmentArrowToolOpen && !introOpen ? (
+            <DevelopmentArrowPositioner
+              locale={locale}
+              compact={compactTourUi}
+              sceneLabel={localize(scene.title, locale)}
+              options={developmentArrowOptions}
+              selectedHotspotId={selectedDevelopmentArrowId}
+              preview={developmentArrowPreview}
+              validationError={developmentNavigationError}
+              onSelect={(hotspotId) => {
+                setSelectedDevelopmentArrowId(hotspotId);
+                setDevelopmentArrowPreview(null);
+              }}
+              onReset={() => setDevelopmentArrowPreview(null)}
+              onClose={closeDevelopmentArrowTool}
+            />
+          ) : null}
 
           <nav className="compact-tour-dock" aria-label={message(locale, 'tourToolbar')} hidden={introOpen}>
             <button

@@ -8,6 +8,7 @@ import {
   type TourStructureData,
   type TourStructureSnapshot
 } from '../tour-structure';
+import { overlayCodeNavigation } from '../tour-navigation-sync';
 
 export const TOUR_STRUCTURE_CACHE_TAG = 'tour-structure';
 export const TOUR_PROJECT_ID = 'main';
@@ -58,11 +59,22 @@ async function readPublishedTourStructure(): Promise<TourStructureSnapshot> {
     if (error || !data?.published_data) return createFallbackTourStructureSnapshot();
     const parsed = tourStructureDataSchema.safeParse(data.published_data);
     if (!parsed.success) return createFallbackTourStructureSnapshot();
+    let structure = parsed.data;
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        structure = overlayCodeNavigation(structure, createBootstrapTourStructureData());
+      } catch (error) {
+        console.warn(
+          '[tour-navigation-dev-overlay] Navigation from tour-data.ts could not be applied:',
+          error instanceof Error ? error.message : 'unknown validation error'
+        );
+      }
+    }
     return {
       version: Number(data.published_version ?? 1),
       generatedAt: String(data.updated_at ?? new Date().toISOString()),
       source: 'database',
-      data: parsed.data
+      data: structure
     };
   } catch {
     return createFallbackTourStructureSnapshot();
@@ -76,9 +88,14 @@ const readCachedPublishedTourStructure = unstable_cache(
 );
 
 export async function getPublishedTourStructureSnapshot(): Promise<TourStructureSnapshot> {
-  return process.env.NODE_ENV === 'test'
-    ? readPublishedTourStructure()
-    : readCachedPublishedTourStructure();
+  return process.env.NODE_ENV === 'production'
+    ? readCachedPublishedTourStructure()
+    : readPublishedTourStructure();
+}
+
+/** Bypasses the page cache for lightweight signature checks and live updates. */
+export async function getFreshPublishedTourStructureSnapshot(): Promise<TourStructureSnapshot> {
+  return readPublishedTourStructure();
 }
 
 export async function getAdminTourProject(): Promise<AdminTourProject> {

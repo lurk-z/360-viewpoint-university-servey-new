@@ -851,6 +851,154 @@ svg {
   transform: perspective(110px) rotateX(16deg) translateY(-2px) scale(1.08);
 }
 
+.tour-arrow.is-dev-selected {
+  outline: 4px solid #facc15;
+  outline-offset: 3px;
+  background: rgb(14 116 144 / 30%);
+}
+
+.tour-arrow.is-dev-selected .tour-arrow__icon {
+  filter: drop-shadow(0 0 5px #facc15) drop-shadow(0 9px 9px rgb(2 20 34 / 72%));
+  transform: perspective(110px) rotateX(16deg) translateY(-3px) scale(1.1);
+}
+
+.development-arrow-positioner-toggle {
+  position: absolute;
+  z-index: 66;
+  top: 18px;
+  left: 50%;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 999px;
+  background: rgb(8 47 73 / 92%);
+  box-shadow: 0 10px 28px rgb(2 20 34 / 42%);
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 850;
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.development-arrow-positioner-toggle svg {
+  width: 19px;
+  height: 19px;
+}
+
+.development-navigation-error {
+  position: absolute;
+  z-index: 68;
+  top: 16px;
+  left: 50%;
+  display: grid;
+  width: min(520px, calc(100% - 32px));
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid #fca5a5;
+  border-radius: 14px;
+  background: rgb(255 241 242 / 97%);
+  box-shadow: 0 14px 40px rgb(69 10 10 / 32%);
+  color: #881337;
+  font-size: .74rem;
+  transform: translateX(-50%);
+}
+
+.development-navigation-error span { max-height: 44px; overflow: auto; overflow-wrap: anywhere; }
+.development-navigation-error button { justify-self: start; min-height: 36px; padding: 7px 11px; border: 1px solid #be123c; border-radius: 9px; background: #be123c; color: #fff; font-weight: 800; }
+
+.development-arrow-positioner {
+  position: absolute;
+  z-index: 67;
+  top: 16px;
+  left: 50%;
+  display: grid;
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  gap: 10px;
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid rgb(186 230 253 / 90%);
+  border-radius: 18px;
+  background: rgb(248 252 255 / 96%);
+  box-shadow: 0 18px 54px rgb(2 20 34 / 48%);
+  color: #082f49;
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px);
+}
+
+.development-arrow-positioner > header {
+  display: flex;
+  min-width: 0;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.development-arrow-positioner header span {
+  color: #0284c7;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.development-arrow-positioner h2,
+.development-arrow-positioner p {
+  margin: 0;
+}
+
+.development-arrow-positioner h2 {
+  margin-top: 2px;
+  font-size: 1rem;
+}
+
+.development-arrow-positioner__close {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 11px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.development-arrow-positioner label {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.development-arrow-positioner select,
+.development-arrow-positioner textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #7dd3fc;
+  border-radius: 10px;
+  background: #fff;
+  color: #082f49;
+}
+
+.development-arrow-positioner select { min-height: 42px; padding: 8px 10px; }
+.development-arrow-positioner textarea { padding: 9px 10px; resize: vertical; font: 600 .72rem/1.45 Consolas, monospace; }
+.development-arrow-positioner__scene { overflow: hidden; color: #475569; font-size: .76rem; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.development-arrow-positioner__hint { color: #334155; font-size: .76rem; line-height: 1.5; }
+.development-arrow-positioner__error { padding: 9px 10px; border: 1px solid #fca5a5; border-radius: 10px; background: #fff1f2; color: #991b1b; font-size: .74rem; overflow-wrap: anywhere; }
+.development-arrow-positioner dl { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(64px, .5fr)); gap: 7px; margin: 0; }
+.development-arrow-positioner dl div { min-width: 0; padding: 8px 9px; border-radius: 10px; background: #e0f2fe; }
+.development-arrow-positioner dt { color: #64748b; font-size: .62rem; font-weight: 800; }
+.development-arrow-positioner dd { margin: 2px 0 0; overflow: hidden; font-size: .77rem; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
+.development-arrow-positioner__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.development-arrow-positioner__actions button { min-height: 42px; padding: 8px 10px; border: 1px solid #0369a1; border-radius: 11px; background: #0369a1; color: #fff; font-size: .76rem; font-weight: 850; }
+.development-arrow-positioner__actions button.is-secondary { background: #fff; color: #075985; }
+.development-arrow-positioner__actions button:disabled { cursor: not-allowed; opacity: .48; }
+.development-arrow-positioner__status, .development-arrow-positioner__empty { min-height: 18px; color: #075985; font-size: .72rem; line-height: 1.45; }
+
 .psv-virtual-tour-link {
   filter: none;
 }
@@ -3049,7 +3197,7 @@ svg {
     right: max(8px, env(safe-area-inset-right));
     bottom: calc(var(--compact-dock-height) + max(16px, env(safe-area-inset-bottom)));
     display: grid;
-    grid-template-columns: repeat(5, 44px);
+    grid-template-columns: repeat(6, 44px);
     gap: 5px;
     padding: 7px;
     border: 1px solid rgb(255 255 255 / 66%);
@@ -3079,6 +3227,20 @@ svg {
   .compact-tool-popover svg {
     width: 20px;
     height: 20px;
+  }
+
+  .development-arrow-positioner.is-compact {
+    position: absolute;
+    z-index: 64;
+    top: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(var(--compact-dock-height) + max(8px, env(safe-area-inset-bottom)));
+    left: max(8px, env(safe-area-inset-left));
+    width: auto;
+    max-height: min(46dvh, 390px);
+    padding: 13px;
+    border-radius: 16px;
+    transform: none;
   }
 
   .persistent-tour-map {
@@ -3267,7 +3429,7 @@ svg {
   }
 
   .compact-tool-popover {
-    grid-template-columns: repeat(5, 42px);
+    grid-template-columns: repeat(6, 42px);
   }
 
   .compact-tool-popover button {

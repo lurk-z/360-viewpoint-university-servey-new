@@ -28,13 +28,58 @@ describe('live update integration', () => {
     expect(hook).toContain("document.addEventListener('visibilitychange'");
   });
 
-  it('rebuilds the imperative viewer from the tour signature while preserving its view', () => {
+  it('updates navigation in place and rebuilds only when scene media inventory changes', () => {
     const viewer = source('components/TourViewer.tsx');
-    expect(viewer).toContain('getTourStructureSignature()');
+    expect(viewer).toContain('getTourViewerInventorySignature()');
+    expect(viewer).toContain('getTourNavigationSignature()');
+    expect(viewer).toContain('plugin.updateNode({ id: scene.id, links: buildSceneLinks(scene, navigationPreview) })');
     expect(viewer).toContain('preservedViewerStateRef');
     expect(viewer).toContain('viewer.getPosition()');
     expect(viewer).toContain('viewer.getZoomLevel()');
-    expect(viewer).toContain('}, [tourStructureSignature]);');
+    expect(viewer).toContain('}, [viewerInventorySignature]);');
+  });
+
+  it('does not rebuild Leaflet for yaw/pitch edits and safely preserves only initialized map views', () => {
+    const map = source('components/TourMap.tsx');
+    expect(map).toContain('getTourMapStructureSignature()');
+    expect(map).toContain('if (Number.isFinite(zoom))');
+    expect(map).toContain('Fast Refresh can dispose Leaflet before its first setView()');
+    expect(map).toContain('}, [tourMapStructureSignature]);');
+    expect(map).not.toContain('getTourStructureSignature()');
+  });
+
+  it('provides a development click-preview-copy tool and locks Admin navigation editing', () => {
+    const app = source('components/TourApp.tsx');
+    const viewer = source('components/TourViewer.tsx');
+    const positioner = source('components/DevelopmentArrowPositioner.tsx');
+    const editor = source('components/admin/AdminTourEditor.tsx');
+    const actions = source('app/admin/actions.ts');
+    const importRoute = source('app/api/admin/backup/import/route.ts');
+    expect(app).toContain("process.env.NODE_ENV === 'development'");
+    expect(app).toContain('overlayCodeNavigation(tourStructure.data, codeStructure)');
+    expect(viewer).toContain('viewerEvents.ClickEvent.type');
+    expect(viewer).toContain('onNavigationPositionPick');
+    expect(positioner).toContain("navigator.clipboard.writeText(snippet)");
+    expect(positioner).toContain("type: 'scene'");
+    expect(editor).toContain('is-navigation-readonly');
+    expect(editor).not.toContain("setPlacementType");
+    expect(actions).toContain('preserveCurrentNavigation(submittedStructure, current.draft)');
+    expect(actions).toContain('preserveCurrentNavigation(restoredStructure, current.draft)');
+    expect(importRoute).toContain('preserveCurrentNavigation');
+  });
+
+  it('uses code arrows in development and detects same-version tour changes by signature', () => {
+    const repository = source('src/server/tour-structure-repository.ts');
+    const hook = source('components/useTourStructure.ts');
+    const route = source('app/api/tour-structure/route.ts');
+    expect(repository).toContain("process.env.NODE_ENV === 'development'");
+    expect(repository).toContain('overlayCodeNavigation');
+    expect(repository).toContain("process.env.NODE_ENV === 'production'");
+    expect(route).toContain("'X-Tour-Structure-Signature'");
+    expect(route).toContain('getFreshPublishedTourStructureSnapshot');
+    expect(hook).toContain("response.headers.get('X-Tour-Structure-Signature')");
+    expect(hook).toContain('window.setInterval(check, 15_000)');
+    expect(hook).toContain('getTourStructureDataSignature');
   });
 
   it('keeps draft changes inside Admin and broadcasts public actions to the tour', () => {

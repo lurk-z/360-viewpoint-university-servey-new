@@ -71,7 +71,7 @@ describe('tour configuration', () => {
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(93);
+    expect(tourScenes).toHaveLength(123);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
@@ -242,7 +242,7 @@ describe('tour configuration', () => {
 
   it('derives the route map from the scene graph without invented edges', () => {
     const edges = getSceneEdges().map(({ from, to }) => [from, to].sort().join(':')).sort();
-    expect(edges).toEqual([
+    const baselineEdges = [
       'campusRoad1:memorialPlaza',
       'campusRoad1:vallayaHotel',
       'campusRoad1:campusRoad2',
@@ -347,10 +347,55 @@ describe('tour configuration', () => {
       'fitmInterior14:fitmInterior15',
       'fitmInterior15:fitmInterior16',
       'fitmInterior16:fitmInterior17',
+      'fitmFloor2Point1:fitmFloor2Point2',
+      'fitmFloor2Point1:fitmFloor2Point6',
+      'fitmFloor2Point1:fitmFloor3Point1',
+      'fitmFloor2Point1:fitmInterior8',
+      'fitmFloor2Point2:fitmFloor2Point3',
+      'fitmFloor2Point3:fitmFloor2Point4',
+      'fitmFloor2Point4:fitmFloor2Point5',
+      'fitmFloor2Point4:fitmFloor3Point5',
+      'fitmFloor2Point4:fitmInterior13',
+      'fitmFloor2Point5:fitmFloor2Point6',
+      'fitmFloor3Point1:fitmFloor3Point2',
+      'fitmFloor3Point1:fitmFloor3Point3',
+      'fitmFloor3Point1:fitmFloor4Point1',
+      'fitmFloor3Point2:fitmFloor3Point5',
+      'fitmFloor3Point3:fitmFloor3Point4',
+      'fitmFloor3Point4:fitmFloor3Point5',
+      'fitmFloor3Point5:fitmFloor4Point3',
+      'fitmFloor4Point1:fitmFloor4Point2',
+      'fitmFloor4Point1:fitmFloor4Point6',
+      'fitmFloor4Point2:fitmFloor4Point3',
+      'fitmFloor4Point3:fitmFloor4Point4',
+      'fitmFloor4Point4:fitmFloor4Point5',
+      'fitmFloor4Point5:fitmFloor4Point6',
+      'campusRoad22:sirindhornLibraryFloor1Point1',
+      'sirindhornLibraryFloor1Point1:sirindhornLibraryFloor1Point2',
+      'sirindhornLibraryFloor1Point1:sirindhornLibraryFloor1Point3',
+      'sirindhornLibraryFloor1Point2:sirindhornLibraryFloor1Point3',
+      'sirindhornLibraryFloor1Point3:sirindhornLibraryFloor2Point1',
+      'sirindhornLibraryFloor2Point1:sirindhornLibraryFloor2Point2',
+      'sirindhornLibraryFloor2Point1:sirindhornLibraryFloor2Point3',
+      'sirindhornLibraryFloor2Point1:sirindhornLibraryFloor3Point1',
+      'sirindhornLibraryFloor3Point1:sirindhornLibraryFloor3Point2',
+      'sirindhornLibraryFloor3Point1:sirindhornLibraryFloor3Point3',
+      'sirindhornLibraryFloor3Point1:sirindhornLibraryFloor4Point1',
+      'sirindhornLibraryFloor4Point1:sirindhornLibraryFloor4Point2',
+      'sirindhornLibraryFloor4Point2:sirindhornLibraryFloor4Point3',
+      'sirindhornLibraryFloor4Point2:sirindhornLibraryFloor4Point4',
       'entrance:entranceRoad',
       'entranceRoad:memorialPlaza',
       'memorial:memorialPlaza'
-    ].sort());
+    ].sort();
+    expect(new Set(edges).size).toBe(edges.length);
+    expect(edges).toEqual(expect.arrayContaining(baselineEdges));
+    for (const edge of edges) {
+      const [left, right] = edge.split(':');
+      const configured = getNavigationHotspots(getScene(left!)).some((hotspot) => hotspot.target === right)
+        || getNavigationHotspots(getScene(right!)).some((hotspot) => hotspot.target === left);
+      expect(configured, `${edge} must come from a configured navigation hotspot`).toBe(true);
+    }
   });
 
   it('references one existing source panorama per scene from mainimages', () => {
@@ -635,13 +680,124 @@ describe('tour configuration', () => {
       'fitm-student-club-info',
       'fitm-coworking-space-info',
       'fitm-nurse-room-info',
-      'fitm-stairs-1-to-second-floor-info',
-      'fitm-stairs-2-to-second-floor-info'
     ]);
     const infoIds = tourScenes.flatMap((scene) => getInfoHotspots(scene).map((info) => info.id));
-    expect(infoIds.filter((id) => newInfoIds.has(id))).toHaveLength(14);
+    expect(infoIds.filter((id) => newInfoIds.has(id))).toHaveLength(12);
     expect(infoIds).not.toContain('orange-blossom-room-info');
+    expect(infoIds).not.toContain('fitm-stairs-1-to-second-floor-info');
+    expect(infoIds).not.toContain('fitm-stairs-2-to-second-floor-info');
 
+    for (const file of files) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
+  it('adds the reciprocal FITM floor 2–4 routes and replaces both staircase Info points', () => {
+    const floorIds = [
+      ...Array.from({ length: 6 }, (_, index) => `fitmFloor2Point${index + 1}`),
+      ...Array.from({ length: 5 }, (_, index) => `fitmFloor3Point${index + 1}`),
+      ...Array.from({ length: 6 }, (_, index) => `fitmFloor4Point${index + 1}`)
+    ];
+    const files = [
+      ...Array.from({ length: 6 }, (_, index) => `temp-faculty-floor2-${index + 1}.jpg`),
+      ...Array.from({ length: 5 }, (_, index) => `temp-faculty-floor3-${index + 1}.jpg`),
+      ...Array.from({ length: 6 }, (_, index) => `temp-faculty-floor4-${index + 1}.jpg`)
+    ];
+    const pairs = [
+      ['fitmInterior8', 'fitmFloor2Point1'],
+      ['fitmFloor2Point1', 'fitmFloor3Point1'],
+      ['fitmFloor3Point1', 'fitmFloor4Point1'],
+      ['fitmInterior13', 'fitmFloor2Point4'],
+      ['fitmFloor2Point4', 'fitmFloor3Point5'],
+      ['fitmFloor3Point5', 'fitmFloor4Point3'],
+      ['fitmFloor2Point1', 'fitmFloor2Point2'],
+      ['fitmFloor2Point2', 'fitmFloor2Point3'],
+      ['fitmFloor2Point3', 'fitmFloor2Point4'],
+      ['fitmFloor2Point1', 'fitmFloor2Point6'],
+      ['fitmFloor2Point6', 'fitmFloor2Point5'],
+      ['fitmFloor2Point5', 'fitmFloor2Point4'],
+      ['fitmFloor3Point1', 'fitmFloor3Point2'],
+      ['fitmFloor3Point2', 'fitmFloor3Point5'],
+      ['fitmFloor3Point1', 'fitmFloor3Point3'],
+      ['fitmFloor3Point3', 'fitmFloor3Point4'],
+      ['fitmFloor3Point4', 'fitmFloor3Point5'],
+      ['fitmFloor4Point1', 'fitmFloor4Point2'],
+      ['fitmFloor4Point2', 'fitmFloor4Point3'],
+      ['fitmFloor4Point1', 'fitmFloor4Point6'],
+      ['fitmFloor4Point6', 'fitmFloor4Point5'],
+      ['fitmFloor4Point5', 'fitmFloor4Point4'],
+      ['fitmFloor4Point4', 'fitmFloor4Point3']
+    ] as const;
+
+    expect(floorIds.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
+      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(floorIds.every((id) => {
+      const position = getScene(id).mapPosition;
+      return position.x === 311 && position.y === 358;
+    })).toBe(true);
+    for (const [from, to] of pairs) {
+      expect(getNavigationHotspots(getScene(from)).map((hotspot) => hotspot.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((hotspot) => hotspot.target)).toContain(from);
+    }
+    for (const file of files) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+
+    const infoIds = tourScenes.flatMap((scene) => getInfoHotspots(scene).map((hotspot) => hotspot.id));
+    expect(infoIds).not.toContain('fitm-stairs-1-to-second-floor-info');
+    expect(infoIds).not.toContain('fitm-stairs-2-to-second-floor-info');
+  });
+
+  it('adds the Sirindhorn Building floors without crossing into the FITM floor graph', () => {
+    const libraryIds = [
+      ...Array.from({ length: 3 }, (_, index) => `sirindhornLibraryFloor1Point${index + 1}`),
+      ...Array.from({ length: 3 }, (_, index) => `sirindhornLibraryFloor2Point${index + 1}`),
+      ...Array.from({ length: 3 }, (_, index) => `sirindhornLibraryFloor3Point${index + 1}`),
+      ...Array.from({ length: 4 }, (_, index) => `sirindhornLibraryFloor4Point${index + 1}`)
+    ];
+    const files = [
+      ...Array.from({ length: 3 }, (_, index) => `temp-library-floor1-${index + 1}.jpg`),
+      ...Array.from({ length: 3 }, (_, index) => `temp-library-floor2-${index + 1}.jpg`),
+      ...Array.from({ length: 3 }, (_, index) => `temp-library-floor3-${index + 1}.jpg`),
+      ...Array.from({ length: 4 }, (_, index) => `temp-library-floor4-${index + 1}.jpg`)
+    ];
+    const pairs = [
+      ['campusRoad22', 'sirindhornLibraryFloor1Point1'],
+      ['sirindhornLibraryFloor1Point1', 'sirindhornLibraryFloor1Point2'],
+      ['sirindhornLibraryFloor1Point2', 'sirindhornLibraryFloor1Point3'],
+      ['sirindhornLibraryFloor1Point3', 'sirindhornLibraryFloor2Point1'],
+      ['sirindhornLibraryFloor2Point1', 'sirindhornLibraryFloor3Point1'],
+      ['sirindhornLibraryFloor3Point1', 'sirindhornLibraryFloor4Point1'],
+      ['sirindhornLibraryFloor2Point1', 'sirindhornLibraryFloor2Point2'],
+      ['sirindhornLibraryFloor2Point1', 'sirindhornLibraryFloor2Point3'],
+      ['sirindhornLibraryFloor3Point1', 'sirindhornLibraryFloor3Point2'],
+      ['sirindhornLibraryFloor3Point1', 'sirindhornLibraryFloor3Point3'],
+      ['sirindhornLibraryFloor4Point1', 'sirindhornLibraryFloor4Point2'],
+      ['sirindhornLibraryFloor4Point2', 'sirindhornLibraryFloor4Point3'],
+      ['sirindhornLibraryFloor4Point2', 'sirindhornLibraryFloor4Point4']
+    ] as const;
+
+    expect(libraryIds.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
+      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(libraryIds.every((id) => {
+      const position = getScene(id).mapPosition;
+      return position.x === 328 && position.y === 416;
+    })).toBe(true);
+    for (const [from, to] of pairs) {
+      expect(getNavigationHotspots(getScene(from)).map((hotspot) => hotspot.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((hotspot) => hotspot.target)).toContain(from);
+    }
+    expect(getInfoHotspots(getScene('sirindhornLibraryFloor4Point1'))).toEqual([
+      expect.objectContaining({ id: 'sirindhorn-upper-floors-info', yaw: -150, pitch: 8 })
+    ]);
+    expect(getInfoHotspots(getScene('campusRoad22')).map((hotspot) => hotspot.id))
+      .not.toContain('Sirindhorn Building-info');
+    for (const sceneId of libraryIds) {
+      expect(getNavigationHotspots(getScene(sceneId)).some((hotspot) => hotspot.target.startsWith('fitmFloor')))
+        .toBe(false);
+    }
     for (const file of files) {
       expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
         .toEqual({ width: 7680, height: 3840 });
@@ -687,8 +843,8 @@ describe('tour configuration', () => {
 
   it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    expect(infoHotspots).toHaveLength(38);
-    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(38);
+    expect(infoHotspots).toHaveLength(36);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(36);
 
     for (const hotspot of infoHotspots) {
       expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);
@@ -697,6 +853,7 @@ describe('tour configuration', () => {
     const infoIds = new Set(infoHotspots.map((hotspot) => hotspot.id));
     expect(placeContentBootstrap).not.toHaveProperty('multipurpose-gym-info');
     expect(placeContentBootstrap).not.toHaveProperty('outdoor-football-field-info');
+    expect(placeContentBootstrap).not.toHaveProperty('Sirindhorn Building-info');
     for (const [id, bootstrap] of Object.entries(placeContentBootstrap)) {
       expect(infoIds.has(id), `${id} is no longer linked to an Info hotspot`).toBe(true);
       const parsed = hotspotDataSchema.parse(bootstrap);
@@ -716,11 +873,11 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 93 versioned source panoramas from the tour assets API', async () => {
+  it('returns only the 123 versioned source panoramas from the tour assets API', async () => {
     const response = await getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(93);
+    expect(new Set(body.assets).size).toBe(123);
     expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });
