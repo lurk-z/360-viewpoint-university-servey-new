@@ -21,6 +21,11 @@ import {
   validateTour
 } from './tour-data';
 import {
+  getDefaultSupplementalMediaItemId,
+  getTourSupplementalMediaGroups,
+  tourSupplementalMediaGroups
+} from './tour-supplemental-media';
+import {
   ARROW_SETTLE_DURATION,
   ARROW_TRANSITION_ZOOM,
   SCENE_TRANSITION_DURATION,
@@ -71,12 +76,12 @@ describe('tour configuration', () => {
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(123);
+    expect(tourScenes).toHaveLength(130);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
 
-  it('marks exactly the nine existing downstairs routes without duplicating arrows', () => {
+  it('marks exactly the ten existing downstairs routes without duplicating arrows', () => {
     const expected = [
       ['fitmFloor2Point1', 'fitmInterior8'],
       ['fitmFloor3Point1', 'fitmFloor2Point1'],
@@ -84,6 +89,7 @@ describe('tour configuration', () => {
       ['fitmFloor2Point4', 'fitmInterior13'],
       ['fitmFloor3Point5', 'fitmFloor2Point4'],
       ['fitmFloor4Point3', 'fitmFloor3Point5'],
+      ['fitmFloor3Point4', 'fitmFloor2Point2A'],
       ['sirindhornLibraryFloor2Point1', 'sirindhornLibraryFloor1Point3'],
       ['sirindhornLibraryFloor3Point1', 'sirindhornLibraryFloor2Point1'],
       ['sirindhornLibraryFloor4Point1', 'sirindhornLibraryFloor3Point1']
@@ -368,13 +374,21 @@ describe('tour configuration', () => {
       'fitmInterior11:fitmInterior9',
       'fitmInterior13:fitmInterior14',
       'fitmInterior14:fitmInterior15',
+      'fitmInterior15:itiElectricalLab1',
       'fitmInterior15:fitmInterior16',
       'fitmInterior16:fitmInterior17',
+      'fitmInterior17:mechanicalLab1',
+      'itiElectricalLab1:itiElectricalLab2',
+      'itiElectricalLab2:itiElectricalLab3',
+      'mechanicalLab1:mechanicalLab2',
+      'mechanicalLab2:mechanicalLab3',
       'fitmFloor2Point1:fitmFloor2Point2',
       'fitmFloor2Point1:fitmFloor2Point6',
       'fitmFloor2Point1:fitmFloor3Point1',
       'fitmFloor2Point1:fitmInterior8',
-      'fitmFloor2Point2:fitmFloor2Point3',
+      'fitmFloor2Point2:fitmFloor2Point2A',
+      'fitmFloor2Point2A:fitmFloor2Point3',
+      'fitmFloor2Point2A:fitmFloor3Point4',
       'fitmFloor2Point3:fitmFloor2Point4',
       'fitmFloor2Point4:fitmFloor2Point5',
       'fitmFloor2Point4:fitmFloor3Point5',
@@ -734,7 +748,9 @@ describe('tour configuration', () => {
       ['fitmFloor2Point4', 'fitmFloor3Point5'],
       ['fitmFloor3Point5', 'fitmFloor4Point3'],
       ['fitmFloor2Point1', 'fitmFloor2Point2'],
-      ['fitmFloor2Point2', 'fitmFloor2Point3'],
+      ['fitmFloor2Point2', 'fitmFloor2Point2A'],
+      ['fitmFloor2Point2A', 'fitmFloor2Point3'],
+      ['fitmFloor2Point2A', 'fitmFloor3Point4'],
       ['fitmFloor2Point3', 'fitmFloor2Point4'],
       ['fitmFloor2Point1', 'fitmFloor2Point6'],
       ['fitmFloor2Point6', 'fitmFloor2Point5'],
@@ -769,6 +785,102 @@ describe('tour configuration', () => {
     const infoIds = tourScenes.flatMap((scene) => getInfoHotspots(scene).map((hotspot) => hotspot.id));
     expect(infoIds).not.toContain('fitm-stairs-1-to-second-floor-info');
     expect(infoIds).not.toContain('fitm-stairs-2-to-second-floor-info');
+  });
+
+  it('adds the floor 2 connector and both reciprocal laboratory routes', () => {
+    const ids = [
+      'fitmFloor2Point2A',
+      'itiElectricalLab1',
+      'itiElectricalLab2',
+      'itiElectricalLab3',
+      'mechanicalLab1',
+      'mechanicalLab2',
+      'mechanicalLab3'
+    ] as const;
+    const files = [
+      'temp-faculty-floor2-2_1.jpg',
+      'temp-shop-iti-1.jpg',
+      'temp-shop-iti-2.jpg',
+      'temp-shop-iti-3.jpg',
+      'temp-shop-1.jpg',
+      'temp-shop-2.jpg',
+      'temp-shop-3.jpg'
+    ];
+    const pairs = [
+      ['fitmFloor2Point2', 'fitmFloor2Point2A'],
+      ['fitmFloor2Point2A', 'fitmFloor2Point3'],
+      ['fitmFloor2Point2A', 'fitmFloor3Point4'],
+      ['fitmInterior15', 'itiElectricalLab1'],
+      ['itiElectricalLab1', 'itiElectricalLab2'],
+      ['itiElectricalLab2', 'itiElectricalLab3'],
+      ['fitmInterior17', 'mechanicalLab1'],
+      ['mechanicalLab1', 'mechanicalLab2'],
+      ['mechanicalLab2', 'mechanicalLab3']
+    ] as const;
+
+    expect(ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
+      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(ids.every((id) => getScene(id).mapPosition.x === 311 && getScene(id).mapPosition.y === 358))
+      .toBe(true);
+    expect(getNavigationHotspots(getScene('fitmFloor2Point2')).map((hotspot) => hotspot.target))
+      .not.toContain('fitmFloor2Point3');
+    expect(getNavigationHotspots(getScene('fitmFloor2Point3')).map((hotspot) => hotspot.target))
+      .not.toContain('fitmFloor2Point2');
+    for (const [from, to] of pairs) {
+      expect(getNavigationHotspots(getScene(from)).map((hotspot) => hotspot.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((hotspot) => hotspot.target)).toContain(from);
+    }
+    expect(getNavigationHotspots(getScene('fitmFloor2Point2A')))
+      .toContainEqual(expect.objectContaining({ target: 'fitmFloor3Point4', direction: 'up' }));
+    expect(getNavigationHotspots(getScene('fitmFloor3Point4')))
+      .toContainEqual(expect.objectContaining({ target: 'fitmFloor2Point2A', direction: 'down' }));
+    expect(getNavigationHotspots(getScene('itiElectricalLab3')).map((hotspot) => hotspot.target))
+      .toEqual(['itiElectricalLab2']);
+    expect(getNavigationHotspots(getScene('mechanicalLab3')).map((hotspot) => hotspot.target))
+      .toEqual(['mechanicalLab2']);
+
+    for (const file of files) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
+  it('keeps sample panoramas and available dormitory plans in contextual media menus only', () => {
+    const items = tourSupplementalMediaGroups.flatMap((group) => group.items);
+    const panoramas = items.filter((item) => item.kind === 'panorama');
+    const floorPlans = items.filter((item) => item.kind === 'floor-plan');
+
+    expect(panoramas).toHaveLength(6);
+    expect(floorPlans).toHaveLength(13);
+    expect(getTourSupplementalMediaGroups('fitmFloor3Point2').map((group) => group.id))
+      .toEqual(['fitm-sample-classrooms']);
+    expect(getDefaultSupplementalMediaItemId(
+      'fitmFloor3Point2',
+      getTourSupplementalMediaGroups('fitmFloor3Point2')[0]!
+    )).toBe('fitm-floor-3-sample-classroom-1');
+    expect(getTourSupplementalMediaGroups('femaleDormitory2').map((group) => group.id))
+      .toEqual(['female-dormitory-2-sample-rooms', 'female-dormitory-2-floor-plans']);
+    expect(getTourSupplementalMediaGroups('maleDormitory')[0]!.items.map((item) => item.floor))
+      .toEqual([2, 3, 5]);
+    expect(getTourSupplementalMediaGroups('femaleDormitory1')[0]!.items.map((item) => item.floor))
+      .toEqual([1, 2, 3, 4, 5]);
+    expect(getTourSupplementalMediaGroups('campusRoad1')).toEqual([]);
+
+    const walkableAssets = new Set(tourScenes.flatMap((scene) => getSceneAssetUrls(scene)));
+    for (const item of items) {
+      expect(existsSync(publicAssetPath(item.src)), item.src).toBe(true);
+      expect(walkableAssets.has(item.src)).toBe(false);
+    }
+    for (const panorama of panoramas) {
+      expect(readJpegDimensions(publicAssetPath(panorama.src)), panorama.src)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+    for (const plan of floorPlans) {
+      const filePath = publicAssetPath(plan.src);
+      const dimensions = filePath.endsWith('.png') ? readPngDimensions(filePath) : readJpegDimensions(filePath);
+      expect(dimensions.width).toBeGreaterThan(1700);
+      expect(dimensions.height).toBeGreaterThanOrEqual(1200);
+    }
   });
 
   it('adds the Sirindhorn Building floors without crossing into the FITM floor graph', () => {
@@ -894,11 +1006,11 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 123 versioned source panoramas from the tour assets API', async () => {
+  it('returns only the 130 versioned walkable panoramas from the tour assets API', async () => {
     const response = await getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(123);
+    expect(new Set(body.assets).size).toBe(130);
     expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });

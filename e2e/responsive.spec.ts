@@ -276,6 +276,39 @@ test('executive office Info and downstairs arrow work from their exact FITM scen
   await expect(downstairs).toHaveAttribute('aria-label', /ลงไปยัง|Go down to/);
 });
 
+test('contextual building media opens sample panoramas and dormitory floor plans', async ({ page }) => {
+  const startAndOpenSceneInfo = async (sceneId: string): Promise<void> => {
+    await page.goto(`/?scene=${sceneId}`, { waitUntil: 'domcontentloaded' });
+    const startButton = page.locator('.intro .primary-button');
+    await expect(startButton).toBeEnabled({ timeout: 60_000 });
+    await startButton.click();
+    if ((page.viewportSize()?.width ?? 0) <= 1024) {
+      await page.locator('.compact-tour-dock button').first().click();
+    }
+    await expect(page.locator('.scene-panel')).toBeVisible();
+  };
+
+  await startAndOpenSceneInfo('fitmFloor3Point2');
+  const classroomButton = page.getByRole('button', { name: /ห้องเรียนตัวอย่าง|Sample classrooms/ });
+  await expect(classroomButton).toBeVisible();
+  await classroomButton.click();
+  const classroomDialog = page.locator('dialog.app-dialog[open]');
+  await expect(classroomDialog).toContainText(/ห้องเรียนตัวอย่าง|Sample classrooms/);
+  await expect(classroomDialog.locator('.supplemental-media__items button')).toHaveCount(4);
+  await expect(classroomDialog.locator('.supplemental-panorama__viewer')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await startAndOpenSceneInfo('femaleDormitory2');
+  await expect(page.getByRole('button', { name: /ห้องพักตัวอย่าง|Sample dormitory rooms/ })).toBeVisible();
+  const floorPlanButton = page.getByRole('button', { name: /ผังอาคารหอพักหญิงหลังที่ 2|Female Dormitory 2 floor plans/ });
+  await floorPlanButton.click();
+  const floorPlanDialog = page.locator('dialog.app-dialog[open]');
+  await expect(floorPlanDialog.locator('.supplemental-media__items button')).toHaveCount(5);
+  await expect(floorPlanDialog.locator('.supplemental-floor-plan__viewport img')).toBeVisible();
+  await floorPlanDialog.getByRole('button', { name: /ซูมเข้า|Zoom in/ }).click();
+  await expect(floorPlanDialog.locator('output')).toHaveText('125%');
+});
+
 test('AI route card starts a guided tour and highlights the real scene path', async ({ page }) => {
   await page.route('**/api/chat', async (route) => {
     await route.fulfill({

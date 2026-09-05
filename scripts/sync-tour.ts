@@ -1,7 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { hotspotDataSchema, type HotspotData } from '../src/content.ts';
-import { mergeTourExpansion, RETIRED_TOUR_INFO_IDS } from '../src/tour-expansion.ts';
+import {
+  getTourExpansionNavigationIds,
+  mergeTourExpansion,
+  RETIRED_TOUR_INFO_IDS
+} from '../src/tour-expansion.ts';
 import { createBootstrapTourStructureData, tourStructureDataSchema } from '../src/tour-structure.ts';
+import {
+  extractNavigationSnapshot,
+  getNavigationSnapshotSignature,
+  navigationSnapshotSchema,
+  navigationSnapshotsEqual
+} from '../src/tour-navigation-sync.ts';
 import { retiredPlaceContentBaselines } from './place-seed-data.ts';
 
 try {
@@ -256,21 +266,89 @@ for (const row of retiredResult.data ?? []) {
   archived.push(String(row.id));
 }
 
-await supabase.from('admin_audit_logs').insert({
-  actor_id: null,
-  action: 'sync-tour-expansion',
-  entity_kind: 'tour_projects',
-  entity_id: 'main',
-  summary: {
-    draftChanged: draftMerge.changed,
-    publishedChanged: publishedMerge.changed,
-    draftVersion: nextDraftVersion,
-    publishedVersion: nextPublishedVersion,
-    newInfoStatus,
-    archivedInfoIds: archived,
-    preservedEditedInfoIds: preserved
+const codeNavigation = extractNavigationSnapshot(target);
+const mergedDraftNavigation = extractNavigationSnapshot(draftMerge.data);
+const mergedPublishedNavigation = extractNavigationSnapshot(publishedMerge.data);
+let navigationBaselineAdvanced = false;
+const baselineResult = await supabase.from('admin_audit_logs')
+  .select('summary')
+  .eq('action', 'sync-navigation-from-code')
+  .eq('entity_kind', 'tour_projects')
+  .eq('entity_id', 'main')
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .maybeSingle();
+if (baselineResult.error) throw baselineResult.error;
+const baselineValue = (baselineResult.data?.summary as Record<string, unknown> | null)?.navigationBaseline;
+const baselineParse = navigationSnapshotSchema.safeParse(baselineValue);
+let nextNavigationBaseline = navigationSnapshotsEqual(codeNavigation, mergedDraftNavigation)
+  && navigationSnapshotsEqual(codeNavigation, mergedPublishedNavigation)
+  ? codeNavigation
+  : undefined;
+
+if (!nextNavigationBaseline && baselineParse.success) {
+  const controlledIds = getTourExpansionNavigationIds(target);
+  const baselineById = new Map(baselineParse.data.map((entry) => [entry.id, entry]));
+  const codeById = new Map(codeNavigation.map((entry) => [entry.id, entry]));
+  const draftById = new Map(mergedDraftNavigation.map((entry) => [entry.id, entry]));
+  const publishedById = new Map(mergedPublishedNavigation.map((entry) => [entry.id, entry]));
+  for (const id of controlledIds) {
+    const codeEntry = codeById.get(id);
+    if (JSON.stringify(draftById.get(id)) !== JSON.stringify(codeEntry)
+      || JSON.stringify(publishedById.get(id)) !== JSON.stringify(codeEntry)) {
+      throw new Error(`Navigation baseline was not advanced because expansion hotspot ${id} is inconsistent.`);
+    }
+    if (codeEntry) baselineById.set(id, codeEntry);
+    else baselineById.delete(id);
   }
-});
+  nextNavigationBaseline = navigationSnapshotSchema.parse(
+    [...baselineById.values()].sort((left, right) => left.id.localeCompare(right.id))
+  );
+}
+
+if (nextNavigationBaseline) {
+  const previousNavigationBaseline = baselineParse.success ? baselineParse.data : undefined;
+  if (!previousNavigationBaseline
+    || !navigationSnapshotsEqual(previousNavigationBaseline, nextNavigationBaseline)) {
+    const navigationSignature = getNavigationSnapshotSignature(nextNavigationBaseline);
+    const baselineWrite = await supabase.from('admin_audit_logs').insert({
+      actor_id: null,
+      action: 'sync-navigation-from-code',
+      entity_kind: 'tour_projects',
+      entity_id: 'main',
+      summary: {
+        navigationBaseline: nextNavigationBaseline,
+        navigationSignature,
+        draftVersion: nextDraftVersion,
+        publishedVersion: nextPublishedVersion,
+        reason: 'sync-tour-expansion',
+        draftChanged: draftMerge.changed,
+        publishedChanged: publishedMerge.changed
+      }
+    });
+    if (baselineWrite.error) throw baselineWrite.error;
+    navigationBaselineAdvanced = true;
+  }
+}
+
+if (draftMerge.changed || publishedMerge.changed || newInfoStatus !== 'preserved' || archived.length > 0) {
+  const expansionAuditWrite = await supabase.from('admin_audit_logs').insert({
+    actor_id: null,
+    action: 'sync-tour-expansion',
+    entity_kind: 'tour_projects',
+    entity_id: 'main',
+    summary: {
+      draftChanged: draftMerge.changed,
+      publishedChanged: publishedMerge.changed,
+      draftVersion: nextDraftVersion,
+      publishedVersion: nextPublishedVersion,
+      newInfoStatus,
+      archivedInfoIds: archived,
+      preservedEditedInfoIds: preserved
+    }
+  });
+  if (expansionAuditWrite.error) throw expansionAuditWrite.error;
+}
 
 const navigationCount = publishedMerge.data.scenes.reduce(
   (count, scene) => count + scene.hotspots.filter((hotspot) => hotspot.type === 'scene').length,
@@ -287,6 +365,7 @@ console.log(JSON.stringify({
   draftVersion: nextDraftVersion,
   publishedVersion: nextPublishedVersion,
   structureChanged: draftMerge.changed || publishedMerge.changed,
+  navigationBaselineAdvanced,
   newInfoStatus,
   archivedInfoIds: archived,
   preservedEditedInfoIds: preserved

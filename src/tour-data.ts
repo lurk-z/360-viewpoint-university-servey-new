@@ -124,10 +124,17 @@ export const tourMedia = {
   fitmInterior15: mainPanorama('temp-faculty-15.jpg'),
   fitmInterior16: mainPanorama('temp-faculty-16.jpg'),
   fitmInterior17: mainPanorama('temp-faculty-17.jpg'),
+  itiElectricalLab1: mainPanorama('temp-shop-iti-1.jpg'),
+  itiElectricalLab2: mainPanorama('temp-shop-iti-2.jpg'),
+  itiElectricalLab3: mainPanorama('temp-shop-iti-3.jpg'),
+  mechanicalLab1: mainPanorama('temp-shop-1.jpg'),
+  mechanicalLab2: mainPanorama('temp-shop-2.jpg'),
+  mechanicalLab3: mainPanorama('temp-shop-3.jpg'),
   puangKhramRoom1: mainPanorama('temp-puang-khram1.jpg'),
   puangKhrangRoom2: mainPanorama('temp-puang-khram2.jpg'),
   fitmFloor2Point1: mainPanorama('temp-faculty-floor2-1.jpg'),
   fitmFloor2Point2: mainPanorama('temp-faculty-floor2-2.jpg'),
+  fitmFloor2Point2A: mainPanorama('temp-faculty-floor2-2_1.jpg'),
   fitmFloor2Point3: mainPanorama('temp-faculty-floor2-3.jpg'),
   fitmFloor2Point4: mainPanorama('temp-faculty-floor2-4.jpg'),
   fitmFloor2Point5: mainPanorama('temp-faculty-floor2-5.jpg'),
@@ -1835,7 +1842,8 @@ export const fallbackTourScenes = [
     mapPosition: { x: 311, y: 358 },
     hotspots: [
       { id: 'fitm-interior-15-to-interior-14', type: 'scene', target: 'fitmInterior14', yaw: 180, pitch: -3 },
-      { id: 'fitm-interior-15-to-interior-16', type: 'scene', target: 'fitmInterior16', yaw: 0, pitch: -3 }
+      { id: 'fitm-interior-15-to-interior-16', type: 'scene', target: 'fitmInterior16', yaw: 0, pitch: -3 },
+      { id: 'fitm-interior-15-to-iti-electrical-lab-1', type: 'scene', target: 'itiElectricalLab1', yaw: 92, pitch: -3 }
     ]
   },
   {
@@ -1866,7 +1874,84 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-interior-17-to-interior-16', type: 'scene', target: 'fitmInterior16', yaw: 180, pitch: -3 }
+      { id: 'fitm-interior-17-to-interior-16', type: 'scene', target: 'fitmInterior16', yaw: 180, pitch: -3 },
+      { id: 'fitm-interior-17-to-mechanical-lab-1', type: 'scene', target: 'mechanicalLab1', yaw: 92, pitch: -3 }
+    ]
+  },
+  {
+    id: 'itiElectricalLab1',
+    ...tourMedia.itiElectricalLab1,
+    title: { th: 'ช็อป ITI ห้องปฏิบัติการไฟฟ้า จุดที่ 1', en: 'ITI Electrical Laboratory Point 1' },
+    description: { th: 'จุดที่ 1 ภายในช็อป ITI และห้องปฏิบัติการไฟฟ้าของคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Point 1 inside the ITI electrical laboratory of the Faculty of Industrial Technology and Management.' },
+    tags: { th: ['ช็อป ITI', 'ห้องปฏิบัติการไฟฟ้า', 'FITM'], en: ['ITI Shop', 'Electrical Laboratory', 'FITM'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'iti-electrical-lab-1-to-interior-15', type: 'scene', target: 'fitmInterior15', yaw: 180, pitch: -3 },
+      { id: 'iti-electrical-lab-1-to-lab-2', type: 'scene', target: 'itiElectricalLab2', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'itiElectricalLab2',
+    ...tourMedia.itiElectricalLab2,
+    title: { th: 'ช็อป ITI ห้องปฏิบัติการไฟฟ้า จุดที่ 2', en: 'ITI Electrical Laboratory Point 2' },
+    description: { th: 'จุดที่ 2 ภายในช็อป ITI และห้องปฏิบัติการไฟฟ้าของคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Point 2 inside the ITI electrical laboratory of the Faculty of Industrial Technology and Management.' },
+    tags: { th: ['ช็อป ITI', 'ห้องปฏิบัติการไฟฟ้า', 'FITM'], en: ['ITI Shop', 'Electrical Laboratory', 'FITM'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'iti-electrical-lab-2-to-lab-1', type: 'scene', target: 'itiElectricalLab1', yaw: 180, pitch: -3 },
+      { id: 'iti-electrical-lab-2-to-lab-3', type: 'scene', target: 'itiElectricalLab3', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'itiElectricalLab3',
+    ...tourMedia.itiElectricalLab3,
+    title: { th: 'ช็อป ITI ห้องปฏิบัติการไฟฟ้า จุดที่ 3', en: 'ITI Electrical Laboratory Point 3' },
+    description: { th: 'จุดที่ 3 ภายในช็อป ITI และห้องปฏิบัติการไฟฟ้าของคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Point 3 inside the ITI electrical laboratory of the Faculty of Industrial Technology and Management.' },
+    tags: { th: ['ช็อป ITI', 'ห้องปฏิบัติการไฟฟ้า', 'FITM'], en: ['ITI Shop', 'Electrical Laboratory', 'FITM'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'iti-electrical-lab-3-to-lab-2', type: 'scene', target: 'itiElectricalLab2', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'mechanicalLab1',
+    ...tourMedia.mechanicalLab1,
+    title: { th: 'ห้องปฏิบัติการเครื่องกล จุดที่ 1', en: 'Mechanical Laboratory Point 1' },
+    description: { th: 'จุดที่ 1 ภายในห้องปฏิบัติการเครื่องกลของคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Point 1 inside the mechanical laboratory of the Faculty of Industrial Technology and Management.' },
+    tags: { th: ['ห้องปฏิบัติการเครื่องกล', 'ช็อป', 'FITM'], en: ['Mechanical Laboratory', 'Workshop', 'FITM'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'mechanical-lab-1-to-interior-17', type: 'scene', target: 'fitmInterior17', yaw: 180, pitch: -3 },
+      { id: 'mechanical-lab-1-to-lab-2', type: 'scene', target: 'mechanicalLab2', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'mechanicalLab2',
+    ...tourMedia.mechanicalLab2,
+    title: { th: 'ห้องปฏิบัติการเครื่องกล จุดที่ 2', en: 'Mechanical Laboratory Point 2' },
+    description: { th: 'จุดที่ 2 ภายในห้องปฏิบัติการเครื่องกลของคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Point 2 inside the mechanical laboratory of the Faculty of Industrial Technology and Management.' },
+    tags: { th: ['ห้องปฏิบัติการเครื่องกล', 'ช็อป', 'FITM'], en: ['Mechanical Laboratory', 'Workshop', 'FITM'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'mechanical-lab-2-to-lab-1', type: 'scene', target: 'mechanicalLab1', yaw: 180, pitch: -3 },
+      { id: 'mechanical-lab-2-to-lab-3', type: 'scene', target: 'mechanicalLab3', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'mechanicalLab3',
+    ...tourMedia.mechanicalLab3,
+    title: { th: 'ห้องปฏิบัติการเครื่องกล จุดที่ 3', en: 'Mechanical Laboratory Point 3' },
+    description: { th: 'จุดที่ 3 ภายในห้องปฏิบัติการเครื่องกลของคณะเทคโนโลยีและการจัดการอุตสาหกรรม', en: 'Point 3 inside the mechanical laboratory of the Faculty of Industrial Technology and Management.' },
+    tags: { th: ['ห้องปฏิบัติการเครื่องกล', 'ช็อป', 'FITM'], en: ['Mechanical Laboratory', 'Workshop', 'FITM'] },
+    initialView: { yaw: 0, pitch: -2, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'mechanical-lab-3-to-lab-2', type: 'scene', target: 'mechanicalLab2', yaw: 180, pitch: -3 }
     ]
   },
   {
@@ -1924,7 +2009,21 @@ export const fallbackTourScenes = [
     mapPosition: { x: 311, y: 358 },
     hotspots: [
       { id: 'fitm-floor-2-point-2-to-point-1', type: 'scene', target: 'fitmFloor2Point1', yaw: 180, pitch: -3 },
-      { id: 'fitm-floor-2-point-2-to-point-3', type: 'scene', target: 'fitmFloor2Point3', yaw: 0, pitch: -3 }
+      { id: 'fitm-floor-2-point-2-to-point-2a', type: 'scene', target: 'fitmFloor2Point2A', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmFloor2Point2A',
+    ...tourMedia.fitmFloor2Point2A,
+    title: { th: 'ภายในอาคาร FITM ชั้น 2 จุดที่ 2A', en: 'Inside FITM, Floor 2, Point 2A' },
+    description: { th: 'จุดทางเดินระหว่างจุดที่ 2 และจุดที่ 3 พร้อมบันไดเชื่อมไปยังชั้น 3 ของอาคาร FITM', en: 'A corridor point between Points 2 and 3 with stairs connecting to the third floor of the FITM building.' },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'ชั้น 2'], en: ['Indoor', 'FITM', 'Floor 2'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-floor-2-point-2a-to-point-2', type: 'scene', target: 'fitmFloor2Point2', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-2-point-2a-to-point-3', type: 'scene', target: 'fitmFloor2Point3', yaw: 0, pitch: -3 },
+      { id: 'fitm-floor-2-point-2a-to-floor-3-point-4', type: 'scene', target: 'fitmFloor3Point4', yaw: 15, pitch: 8, direction: 'up' }
     ]
   },
   {
@@ -1936,7 +2035,7 @@ export const fallbackTourScenes = [
     initialView: { yaw: 0, pitch: -1, zoom: 24 },
     mapPosition: { x: 311, y: 358 },
     hotspots: [
-      { id: 'fitm-floor-2-point-3-to-point-2', type: 'scene', target: 'fitmFloor2Point2', yaw: 180, pitch: -3 },
+      { id: 'fitm-floor-2-point-3-to-point-2a', type: 'scene', target: 'fitmFloor2Point2A', yaw: 180, pitch: -3 },
       { id: 'fitm-floor-2-point-3-to-point-4', type: 'scene', target: 'fitmFloor2Point4', yaw: 90, pitch: -3 }
     ]
   },
@@ -2032,7 +2131,8 @@ export const fallbackTourScenes = [
     mapPosition: { x: 311, y: 358 },
     hotspots: [
       { id: 'fitm-floor-3-point-4-to-point-3', type: 'scene', target: 'fitmFloor3Point3', yaw: 90, pitch: -5 },
-      { id: 'fitm-floor-3-point-4-to-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 0, pitch: -7 }
+      { id: 'fitm-floor-3-point-4-to-point-5', type: 'scene', target: 'fitmFloor3Point5', yaw: 0, pitch: -7 },
+      { id: 'fitm-floor-3-point-4-to-floor-2-point-2a', type: 'scene', target: 'fitmFloor2Point2A', yaw: 180, pitch: -8, direction: 'down' }
     ]
   },
   {

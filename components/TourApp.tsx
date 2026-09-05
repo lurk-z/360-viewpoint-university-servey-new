@@ -46,6 +46,11 @@ import type { TourMapMode } from './TourMap';
 import { usePublicContent } from './usePublicContent';
 import { buildMultiStopTourPath, findShortestTourPath } from '../src/tour-routing';
 import { useTourStructure } from './useTourStructure';
+import {
+  getDefaultSupplementalMediaItemId,
+  getTourSupplementalMediaGroups,
+  type TourSupplementalMediaGroup
+} from '../src/tour-supplemental-media';
 
 type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | null;
 type CompactOverlay = 'info' | 'map' | 'tools' | 'chat' | null;
@@ -56,6 +61,7 @@ const TourMap = dynamic(() => import('./TourMap'), { ssr: false });
 const TourChat = dynamic(() => import('./TourChat'), { ssr: false });
 const ActivitiesDialog = dynamic(() => import('./ActivitiesDialog'), { ssr: false });
 const FacultyProgramsDialog = dynamic(() => import('./FacultyProgramsDialog'), { ssr: false });
+const TourSupplementalMediaDialog = dynamic(() => import('./TourSupplementalMediaDialog'), { ssr: false });
 
 function subscribeCompactTourUi(callback: () => void): () => void {
   const media = window.matchMedia(COMPACT_TOUR_QUERY);
@@ -96,6 +102,11 @@ interface AcademicSelection {
 
 interface GuidedTourState extends TourPlan {
   readonly currentIndex: number;
+}
+
+interface SupplementalMediaSelection {
+  readonly group: TourSupplementalMediaGroup;
+  readonly initialItemId?: string;
 }
 
 function Icon({ children }: { readonly children: ReactNode }) {
@@ -188,6 +199,7 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
   const [developmentArrowToolOpen, setDevelopmentArrowToolOpen] = useState(false);
   const [selectedDevelopmentArrowId, setSelectedDevelopmentArrowId] = useState<string>();
   const [developmentArrowPreview, setDevelopmentArrowPreview] = useState<NavigationPositionPreview | null>(null);
+  const [supplementalMediaSelection, setSupplementalMediaSelection] = useState<SupplementalMediaSelection | null>(null);
   const headerMenuRef = useRef<HTMLDivElement>(null);
   const headerMenuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -218,6 +230,7 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
     direction: hotspot.direction
   }));
   const sceneInfoHotspots = getInfoHotspots(scene).map((hotspot) => resolveInfoHotspot(hotspot, content));
+  const sceneSupplementalMediaGroups = getTourSupplementalMediaGroups(scene.id);
   const sceneFaculty = content.faculties.find((faculty) => faculty.sceneId === scene.id);
   const selectedInfoScene = selectedInfoSelection
     ? tourScenes.find((item) => item.id === selectedInfoSelection.sceneId)
@@ -462,6 +475,13 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
     setImageViewer({ images, index });
   };
 
+  const openSupplementalMedia = (group: TourSupplementalMediaGroup): void => {
+    setSupplementalMediaSelection({
+      group,
+      initialItemId: getDefaultSupplementalMediaItemId(activeSceneId, group)
+    });
+  };
+
   const moveImage = (direction: -1 | 1): void => {
     setImageViewer((current) => {
       if (!current || current.images.length < 2) return current;
@@ -685,6 +705,24 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
                   ))}
                 </div>
               </div>
+              {sceneSupplementalMediaGroups.length ? (
+                <div>
+                  <h2>{locale === 'th' ? 'สื่อภายในอาคาร' : 'Building media'}</h2>
+                  <div className="compact-actions">
+                    {sceneSupplementalMediaGroups.map((group) => (
+                      <button
+                        className="compact-action"
+                        type="button"
+                        key={group.id}
+                        aria-haspopup="dialog"
+                        onClick={() => openSupplementalMedia(group)}
+                      >
+                        {localize(group.title, locale)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               {sceneFaculty ? (
                 <div>
                   <h2>{message(locale, 'academicsEyebrow')}</h2>
@@ -1020,6 +1058,15 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
               caption: activityImage?.caption ?? activity.title
             }], 0);
           }}
+        />
+      ) : null}
+
+      {supplementalMediaSelection ? (
+        <TourSupplementalMediaDialog
+          locale={locale}
+          group={supplementalMediaSelection.group}
+          initialItemId={supplementalMediaSelection.initialItemId}
+          onClose={() => setSupplementalMediaSelection(null)}
         />
       ) : null}
 
