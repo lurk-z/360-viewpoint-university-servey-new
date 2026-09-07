@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { requireStaff } from '../../../src/server/auth';
-import { logoutAction } from '../actions';
+import { logoutAction } from '../actions/auth';
 import AdminLiveRefresh from '../../../components/admin/AdminLiveRefresh';
 import AdminNavigation from '../../../components/admin/AdminNavigation';
 import AdminToastRegion from '../../../components/admin/AdminToastRegion';

@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { changeUserRoleAction, inviteUserAction, type AdminActionState } from '../../app/admin/actions';
+import { changeUserRoleAction, inviteUserAction } from '../../app/admin/actions/users';
+import type { AdminActionState } from '../../src/server/admin-action-shared';
 import { useAdminActionRefresh } from './useAdminActionRefresh';
 
 const initialState: AdminActionState = { status: 'idle', message: '' };

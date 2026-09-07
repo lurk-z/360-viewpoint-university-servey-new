@@ -6,9 +6,11 @@ const FITM_LOGO_URL = '/mainimages/Logo_FitM/FITM_LOGO.png';
 
 describe('FITM branding', () => {
   it('uses the FITM logo in both visible brand marks', () => {
-    const source = readFileSync(resolve(process.cwd(), 'components/TourApp.tsx'), 'utf8');
-    expect(source).toContain(`const FITM_LOGO_URL = '${FITM_LOGO_URL}'`);
-    expect(source.match(/brand__mark--fitm/g)).toHaveLength(2);
+    const header = readFileSync(resolve(process.cwd(), 'components/tour/TourHeader.tsx'), 'utf8');
+    const intro = readFileSync(resolve(process.cwd(), 'components/tour/TourIntro.tsx'), 'utf8');
+    expect(header).toContain(`const FITM_LOGO_URL = '${FITM_LOGO_URL}'`);
+    expect(intro).toContain(`const FITM_LOGO_URL = '${FITM_LOGO_URL}'`);
+    expect(`${header}\n${intro}`.match(/brand__mark--fitm/g)).toHaveLength(2);
   });
 
   it('keeps the source logo dimensions and precaches it for offline use', () => {

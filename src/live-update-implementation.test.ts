@@ -29,7 +29,11 @@ describe('live update integration', () => {
   });
 
   it('updates navigation in place and rebuilds only when scene media inventory changes', () => {
-    const viewer = source('components/TourViewer.tsx');
+    const viewer = [
+      source('components/TourViewer.tsx'),
+      source('components/tour/viewer/useNavigationHotReload.ts'),
+      source('components/tour/viewer/viewer-nodes.ts')
+    ].join('\n');
     expect(viewer).toContain('getTourViewerInventorySignature()');
     expect(viewer).toContain('getTourNavigationSignature()');
     expect(viewer).toContain('plugin.updateNode({ id: scene.id, links: buildSceneLinks(scene, navigationPreview) })');
@@ -52,8 +56,8 @@ describe('live update integration', () => {
     const app = source('components/TourApp.tsx');
     const viewer = source('components/TourViewer.tsx');
     const positioner = source('components/DevelopmentArrowPositioner.tsx');
-    const editor = source('components/admin/AdminTourEditor.tsx');
-    const actions = source('app/admin/actions.ts');
+    const editor = [source('components/admin/AdminTourEditor.tsx'), source('components/admin/AdminTourHotspotPanel.tsx')].join('\n');
+    const actions = [source('app/admin/actions/content.ts'), source('app/admin/actions/tour.ts')].join('\n');
     const importRoute = source('app/api/admin/backup/import/route.ts');
     expect(app).toContain("process.env.NODE_ENV === 'development'");
     expect(app).toContain('overlayCodeNavigation(tourStructure.data, codeStructure)');
@@ -69,7 +73,7 @@ describe('live update integration', () => {
   });
 
   it('keeps development tools off the panorama until opened from the control rail', () => {
-    const app = source('components/TourApp.tsx');
+    const app = [source('components/TourApp.tsx'), source('components/tour/TourControls.tsx')].join('\n');
     const styles = source('src/styles.css');
     expect(app).not.toContain('development-arrow-positioner-toggle');
     expect(app).not.toContain('development-info-source-warning');
@@ -82,8 +86,8 @@ describe('live update integration', () => {
   });
 
   it('separates Visual Tour scene presentation from Info fields in Admin', () => {
-    const editor = source('components/admin/AdminContentEditor.tsx');
-    const actions = source('app/admin/actions.ts');
+    const editor = [source('components/admin/AdminContentEditor.tsx'), source('components/admin/AdminContentFields.tsx')].join('\n');
+    const actions = [source('app/admin/actions/content.ts'), source('src/server/admin-action-shared.ts')].join('\n');
     expect(editor).toContain('Visual Tour Editor ↗');
     expect(editor).not.toContain('name="sceneTitleTh"');
     expect(editor).not.toContain('name="sceneDescriptionTh"');
@@ -108,7 +112,7 @@ describe('live update integration', () => {
   });
 
   it('keeps draft changes inside Admin and broadcasts public actions to the tour', () => {
-    const editor = source('components/admin/AdminContentEditor.tsx');
+    const editor = [source('components/admin/AdminContentEditor.tsx'), source('components/admin/AdminContentForms.tsx')].join('\n');
     const refreshHook = source('components/admin/useAdminActionRefresh.ts');
     expect(editor).toContain("scope: 'draft', kind, id");
     expect(editor).toContain('scope="draft"');
@@ -125,7 +129,7 @@ describe('live update integration', () => {
   });
 
   it('keeps live updates hidden and orders Admin login before academics', () => {
-    const tourApp = source('components/TourApp.tsx');
+    const tourApp = [source('components/TourApp.tsx'), source('components/tour/TourHeader.tsx')].join('\n');
     const styles = source('src/styles.css');
     expect(tourApp).not.toContain('live-preview-badge');
     expect(styles).not.toContain('.live-preview-badge');
@@ -137,7 +141,7 @@ describe('live update integration', () => {
   it('caches public content and invalidates it only for public Admin actions', () => {
     const repository = source('src/server/content-repository.ts');
     const contentRoute = source('app/api/content/route.ts');
-    const actions = source('app/admin/actions.ts');
+    const actions = [source('app/admin/actions/content.ts'), source('src/server/admin-action-shared.ts')].join('\n');
     expect(repository).toContain('unstable_cache');
     expect(repository).toContain("PUBLIC_CONTENT_CACHE_TAG = 'public-content'");
     expect(repository).toContain('revalidate: 15');
@@ -148,10 +152,11 @@ describe('live update integration', () => {
 
   it('loads secondary tour interfaces on demand and preserves chat after its first mount', () => {
     const tourApp = source('components/TourApp.tsx');
+    const overlayController = source('components/tour/useTourOverlayController.ts');
     for (const component of ['TourMap', 'TourChat', 'ActivitiesDialog', 'FacultyProgramsDialog']) {
       expect(tourApp).toContain(`const ${component} = dynamic(`);
     }
-    expect(tourApp).toContain('if (chatOpen) setChatMounted(true)');
+    expect(overlayController).toContain("if (chatOpen) dispatch({ type: 'mount-chat' })");
     expect(tourApp).toContain('{chatMounted ? (');
   });
 

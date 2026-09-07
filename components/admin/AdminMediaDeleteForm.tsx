@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { deleteMediaAction } from '../../app/admin/actions';
+import { deleteMediaAction } from '../../app/admin/actions/media';
 import { broadcastContentUpdate } from '../../src/content-updates';
 import { ADMIN_ACTION_SETTLED_EVENT } from './useAdminActionRefresh';
 

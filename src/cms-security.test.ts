@@ -11,8 +11,18 @@ const linkedContentMigration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/202608070002_linked_faculty_content.sql'),
   'utf8'
 );
-const adminActions = readFileSync(resolve(process.cwd(), 'app/admin/actions.ts'), 'utf8');
-const adminEditor = readFileSync(resolve(process.cwd(), 'components/admin/AdminContentEditor.tsx'), 'utf8');
+const adminActions = [
+  'app/admin/actions/content.ts',
+  'app/admin/actions/tour.ts',
+  'app/admin/actions/users.ts',
+  'app/admin/actions/media.ts',
+  'src/server/admin-action-shared.ts'
+].map((path) => readFileSync(resolve(process.cwd(), path), 'utf8')).join('\n');
+const adminEditor = [
+  'components/admin/AdminContentEditor.tsx',
+  'components/admin/AdminContentForms.tsx',
+  'components/admin/AdminContentFields.tsx'
+].map((path) => readFileSync(resolve(process.cwd(), path), 'utf8')).join('\n');
 const adminSectionPage = readFileSync(resolve(process.cwd(), 'components/admin/AdminSectionPage.tsx'), 'utf8');
 const publicContentRepository = readFileSync(resolve(process.cwd(), 'src/server/content-repository.ts'), 'utf8');
 const adminRepository = readFileSync(resolve(process.cwd(), 'src/server/admin-repository.ts'), 'utf8');

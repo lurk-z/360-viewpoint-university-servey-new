@@ -17,29 +17,22 @@ import {
 } from '@photo-sphere-viewer/autorotate-plugin';
 import {
   MarkersPlugin,
-  type MarkerConfig,
-  type MarkerElement
 } from '@photo-sphere-viewer/markers-plugin';
 import {
   VirtualTourPlugin,
-  events as virtualTourEvents,
-  type VirtualTourLink,
-  type VirtualTourNode
+  events as virtualTourEvents
 } from '@photo-sphere-viewer/virtual-tour-plugin';
 import {
   getTourInfoGeometrySignature,
   getTourNavigationSignature,
   getTourViewerInventorySignature,
-  getInfoHotspots,
-  getNavigationHotspots,
   getScene,
   localize,
   toDegrees,
   tourScenes,
   type InfoHotspot,
   type Locale,
-  type SceneId,
-  type TourScene
+  type SceneId
 } from '../src/tour-data';
 import { goDownToScene, goToScene, message } from '../src/i18n';
 import {
@@ -47,23 +40,13 @@ import {
   getSceneTransitionOptions
 } from '../src/viewer-transition';
 import { installPanoramaEnhancement } from '../src/panorama-enhancement';
-import { resolveInfoHotspot, resolveTourScene, type PublicContentSnapshot } from '../src/content';
+import { resolveTourScene, type PublicContentSnapshot } from '../src/content';
+import { buildInfoMarkers, createNavigationArrowElement } from './tour/viewer/viewer-elements';
+import { buildTourNodes, getSceneNavigationSignature } from './tour/viewer/viewer-nodes';
+import useNavigationHotReload from './tour/viewer/useNavigationHotReload';
+import type { NavigationPositionPreview, TourViewerHandle, ViewerCallbacks } from './tour/viewer/types';
 
-export interface TourViewerHandle {
-  navigate: (sceneId: SceneId) => Promise<void>;
-  reset: (sceneId: SceneId, animate?: boolean) => void;
-  zoomIn: () => void;
-  zoomOut: () => void;
-  toggleAutorotate: () => void;
-  toggleFullscreen: () => void;
-  focus: () => void;
-}
-
-export interface NavigationPositionPreview {
-  readonly hotspotId: string;
-  readonly yaw: number;
-  readonly pitch: number;
-}
+export type { NavigationPositionPreview, TourViewerHandle } from './tour/viewer/types';
 
 interface TourViewerProps {
   readonly initialSceneId?: SceneId;
@@ -81,55 +64,12 @@ interface TourViewerProps {
   readonly onNavigationPositionPick?: (position: NavigationPositionPreview) => void;
 }
 
-interface ViewerCallbacks {
-  locale: Locale;
-  content: PublicContentSnapshot;
-  onInfo: (hotspot: InfoHotspot) => void;
-  onProgress: (progress: number) => void;
-  onReady: (sceneId: SceneId) => void;
-  onSceneChange: (sceneId: SceneId) => void;
-  onError: () => void;
-  onAutorotate: (enabled: boolean) => void;
-  onViewYaw?: (yaw: number) => void;
-  navigationPlacementHotspotId?: string;
-  onNavigationPositionPick?: (position: NavigationPositionPreview) => void;
-}
-
 interface PreservedViewerState {
   readonly sceneId: SceneId;
   readonly yaw: number;
   readonly pitch: number;
   readonly zoom: number;
 }
-
-function buildSceneLinks(
-  scene: TourScene,
-  preview?: NavigationPositionPreview | null
-): VirtualTourLink[] {
-  return getNavigationHotspots(scene).map((hotspot) => ({
-    nodeId: hotspot.target,
-    position: {
-      yaw: toDegrees(preview?.hotspotId === hotspot.id ? preview.yaw : hotspot.yaw),
-      pitch: toDegrees(preview?.hotspotId === hotspot.id ? preview.pitch : hotspot.pitch)
-    },
-    data: { hotspotId: hotspot.id, direction: hotspot.direction ?? 'standard' }
-  }));
-}
-
-function getSceneNavigationSignature(
-  scene: TourScene,
-  preview?: NavigationPositionPreview | null
-): string {
-  return JSON.stringify(buildSceneLinks(scene, preview));
-}
-
-const buildTourNodes = (preview?: NavigationPositionPreview | null): VirtualTourNode[] => tourScenes.map((scene) => ({
-  id: scene.id,
-  panorama: scene.panorama,
-  name: `${scene.title.th} · ${scene.title.en}`,
-  data: { sceneId: scene.id },
-  links: buildSceneLinks(scene, preview)
-}));
 
 const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourViewer(
   {
@@ -252,48 +192,6 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     const initializeFrame = window.requestAnimationFrame(() => {
       if (disposed || viewerGenerationRef.current !== generation) return;
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const createArrowElement = (link: VirtualTourLink): HTMLElement => {
-      const target = resolveTourScene(getScene(link.nodeId as SceneId), callbacksRef.current.content);
-      const targetTitle = localize(target.title, callbacksRef.current.locale);
-      const direction = link.data?.direction === 'down' ? 'down' : 'standard';
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = `tour-arrow${direction === 'down' ? ' is-stairs-down' : ''}`;
-      button.dataset.target = target.id;
-      if (typeof link.data?.hotspotId === 'string') {
-        button.dataset.hotspotId = link.data.hotspotId;
-        button.classList.toggle(
-          'is-dev-selected',
-          callbacksRef.current.navigationPlacementHotspotId === link.data.hotspotId
-        );
-      }
-      button.setAttribute(
-        'aria-label',
-        direction === 'down'
-          ? goDownToScene(callbacksRef.current.locale, targetTitle)
-          : goToScene(callbacksRef.current.locale, targetTitle)
-      );
-
-      const icon = document.createElement('span');
-      icon.className = 'tour-arrow__icon';
-      icon.setAttribute('aria-hidden', 'true');
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 72 42');
-      svg.setAttribute('focusable', 'false');
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('class', 'tour-arrow__chevron');
-      path.setAttribute(
-        'd',
-        direction === 'down'
-          ? 'M10 11 36 30 62 11 69 20 36 40 3 20Z'
-          : 'M6 27 36 7 66 27 58 37 36 22 14 37Z'
-      );
-      svg.append(path);
-      icon.append(svg);
-      button.append(icon);
-      return button;
-    };
-
     const viewer = new Viewer({
       container,
       navbar: false,
@@ -328,7 +226,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
             return getSceneTransitionOptions(Boolean(fromLink), reducedMotion);
           },
           arrowStyle: {
-            element: createArrowElement,
+            element: (link) => createNavigationArrowElement(link, callbacksRef.current),
             className: 'tour-arrow-marker',
             size: { width: 80, height: 60 }
           },
@@ -374,58 +272,6 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       }
     };
 
-    const buildInfoMarkers = (sceneId: SceneId): MarkerConfig[] => getInfoHotspots(getScene(sceneId)).map((baseHotspot) => {
-      const hotspot = resolveInfoHotspot(baseHotspot, callbacksRef.current.content);
-      const element = document.createElement('button') as HTMLButtonElement & MarkerElement;
-      const title = localize(hotspot.title, callbacksRef.current.locale);
-      const tapMovementThreshold = 10;
-      let touchPointer: { pointerId: number; x: number; y: number } | null = null;
-      let suppressClickUntil = 0;
-      const openHotspot = (): void => callbacksRef.current.onInfo(hotspot);
-      element.type = 'button';
-      element.className = 'info-hotspot';
-      element.textContent = 'i';
-      element.setAttribute('aria-label', `${message(callbacksRef.current.locale, 'infoPoint')}: ${title}`);
-      element.addEventListener('pointerdown', (event) => {
-        if (event.pointerType === 'mouse' || !event.isPrimary) return;
-        touchPointer = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
-      });
-      element.addEventListener('pointermove', (event) => {
-        if (!touchPointer || event.pointerId !== touchPointer.pointerId) return;
-        if (Math.hypot(event.clientX - touchPointer.x, event.clientY - touchPointer.y) > tapMovementThreshold) {
-          touchPointer = null;
-        }
-      });
-      element.addEventListener('pointercancel', () => {
-        touchPointer = null;
-      });
-      element.addEventListener('pointerup', (event) => {
-        if (!touchPointer || event.pointerId !== touchPointer.pointerId) return;
-        const moved = Math.hypot(event.clientX - touchPointer.x, event.clientY - touchPointer.y);
-        touchPointer = null;
-        if (moved > tapMovementThreshold) return;
-        event.preventDefault();
-        event.stopPropagation();
-        suppressClickUntil = performance.now() + 750;
-        openHotspot();
-      });
-      element.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (performance.now() < suppressClickUntil) return;
-        openHotspot();
-      });
-      return {
-        id: hotspot.id,
-        element,
-        position: { yaw: toDegrees(hotspot.yaw), pitch: toDegrees(hotspot.pitch) },
-        size: { width: 48, height: 48 },
-        anchor: 'center center',
-        tooltip: title,
-        hideList: true,
-        data: { type: 'info', hotspotId: hotspot.id }
-      };
-    });
-
     viewer.addEventListener(viewerEvents.LoadProgressEvent.type, ({ progress }) => {
       if (disposed) return;
       callbacksRef.current.onProgress(Math.max(0, Math.min(100, Math.round(progress))));
@@ -438,7 +284,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       const node = virtualTourPlugin.getCurrentNode();
       const sceneId = (node?.id as SceneId | undefined) ?? startSceneId;
       callbacksRef.current.onReady(sceneId);
-      markersPlugin.setMarkers(buildInfoMarkers(sceneId));
+      markersPlugin.setMarkers(buildInfoMarkers(sceneId, callbacksRef.current));
       if (preservedState && sceneId === preservedState.sceneId) {
         viewer.rotate({ yaw: preservedState.yaw, pitch: preservedState.pitch });
         viewer.zoom(preservedState.zoom);
@@ -481,7 +327,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
       if (disposed) return;
       const sceneId = node.id as SceneId;
       callbacksRef.current.onSceneChange(sceneId);
-      markersPlugin.setMarkers(buildInfoMarkers(sceneId));
+      markersPlugin.setMarkers(buildInfoMarkers(sceneId, callbacksRef.current));
       if (restoringInitialView && sceneId === startSceneId) return;
       const animationId = ++viewAnimationIdRef.current;
       const settleAfterArrow = Boolean(data.fromLink) && !reducedMotion;
@@ -497,7 +343,7 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     });
     refreshMarkersRef.current = () => {
       const sceneId = virtualTourPlugin.getCurrentNode()?.id as SceneId | undefined;
-      if (sceneId) markersPlugin.setMarkers(buildInfoMarkers(sceneId));
+      if (sceneId) markersPlugin.setMarkers(buildInfoMarkers(sceneId, callbacksRef.current));
     };
     autorotatePlugin.addEventListener(autorotateEvents.AutorotateEvent.type, ({ autorotateEnabled }) => {
       callbacksRef.current.onAutorotate(autorotateEnabled);
@@ -547,23 +393,12 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
     };
   }, [initialSceneId, viewerInventorySignature]);
 
-  useEffect(() => {
-    const plugin = virtualTourRef.current;
-    if (!plugin) return;
-    const previous = sceneNavigationSignaturesRef.current;
-    const applied = new Map(previous);
-    for (const scene of tourScenes) {
-      const nextSignature = getSceneNavigationSignature(scene, navigationPreview);
-      if (previous.get(scene.id) === nextSignature) continue;
-      try {
-        plugin.updateNode({ id: scene.id, links: buildSceneLinks(scene, navigationPreview) });
-        applied.set(scene.id, nextSignature);
-      } catch {
-        // Keep the last valid links visible while a development edit is incomplete.
-      }
-    }
-    sceneNavigationSignaturesRef.current = applied;
-  }, [navigationSignature, navigationPreview]);
+  useNavigationHotReload({
+    pluginRef: virtualTourRef,
+    sceneSignaturesRef: sceneNavigationSignaturesRef,
+    navigationSignature,
+    navigationPreview
+  });
 
   useEffect(() => {
     refreshMarkersRef.current?.();

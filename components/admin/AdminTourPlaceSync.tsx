@@ -1,10 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import {
-  syncTourPlacesAction,
-  type AdminActionState
-} from '../../app/admin/actions';
+import { syncTourPlacesAction } from '../../app/admin/actions/content';
+import type { AdminActionState } from '../../src/server/admin-action-shared';
 import type { AdminRole } from '../../src/content';
 import type { TourPlaceSyncStatus } from '../../src/tour-places';
 import { useAdminActionRefresh } from './useAdminActionRefresh';

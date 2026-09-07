@@ -3,7 +3,10 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { getNavigationHotspots, getScene, tourScenes } from './tour-data';
 
-const viewerSource = readFileSync(resolve(process.cwd(), 'components/TourViewer.tsx'), 'utf8');
+const viewerSource = [
+  'components/TourViewer.tsx',
+  'components/tour/viewer/viewer-elements.ts'
+].map((path) => readFileSync(resolve(process.cwd(), path), 'utf8')).join('\n');
 const styles = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf8');
 
 describe('ground navigation arrows', () => {
@@ -13,14 +16,14 @@ describe('ground navigation arrows', () => {
     expect(viewerSource).toContain("'M6 27 36 7 66 27 58 37 36 22 14 37Z'");
     expect(viewerSource).toContain("size: { width: 80, height: 60 }");
     expect(viewerSource).not.toContain('M12 20V5m0 0-6 6m6-6 6 6');
-    expect(viewerSource).toContain('goToScene(callbacksRef.current.locale, targetTitle)');
+    expect(viewerSource).toContain('goToScene(callbacks.locale, targetTitle)');
     expect(viewerSource).toContain('getLinkTooltip:');
   });
 
   it('renders downstairs routes with a distinct SVG and accessible label', () => {
     expect(viewerSource).toContain("link.data?.direction === 'down'");
     expect(viewerSource).toContain("'M10 11 36 30 62 11 69 20 36 40 3 20Z'");
-    expect(viewerSource).toContain('goDownToScene(callbacksRef.current.locale, targetTitle)');
+    expect(viewerSource).toContain('goDownToScene(callbacks.locale, targetTitle)');
     expect(styles).toContain('.tour-arrow.is-stairs-down');
   });
 

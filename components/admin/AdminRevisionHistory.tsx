@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import { restoreContentRevisionAction, type AdminActionState } from '../../app/admin/actions';
+import { restoreContentRevisionAction } from '../../app/admin/actions/content';
+import type { AdminActionState } from '../../src/server/admin-action-shared';
 import type { ContentKind } from '../../src/content';
 import type { AdminContentRevision } from '../../src/server/admin-repository';
 import { useAdminActionRefresh } from './useAdminActionRefresh';
@@ -67,4 +68,3 @@ export default function AdminRevisionHistory({ kind, id, currentDraft }: {
     })}
   </div>;
 }
-

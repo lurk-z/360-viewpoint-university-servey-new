@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { AdminActionState } from '../../app/admin/actions';
+import type { AdminActionState } from '../../src/server/admin-action-shared';
 import { ADMIN_ACTION_SETTLED_EVENT } from './useAdminActionRefresh';
 
 interface Toast extends AdminActionState { readonly id: number }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { AdminActionState } from '../../app/admin/actions';
+import type { AdminActionState } from '../../src/server/admin-action-shared';
 
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1_000;
 
@@ -72,4 +72,3 @@ export default function AdminDraftRecovery({ storageKey, state }: {
 
   return <span ref={markerRef} className="admin-draft-recovery" role="status">{message}</span>;
 }
-

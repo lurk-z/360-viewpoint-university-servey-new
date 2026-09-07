@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import type { AdminActionState } from '../../app/admin/actions';
+import type { AdminActionState } from '../../src/server/admin-action-shared';
 import {
   broadcastContentUpdate,
   type ContentUpdateKind,

@@ -1,5 +1,5 @@
 import { isSupabaseConfigured } from '../../../../lib/supabase/env';
-import { loginAction } from '../../actions';
+import { loginAction } from '../../actions/auth';
 
 export const dynamic = 'force-dynamic';
 

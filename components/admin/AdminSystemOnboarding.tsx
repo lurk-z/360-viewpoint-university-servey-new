@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { bootstrapTourStructureAction, type AdminActionState } from '../../app/admin/actions';
+import { bootstrapTourStructureAction } from '../../app/admin/actions/tour';
+import type { AdminActionState } from '../../src/server/admin-action-shared';
 import type { AdminRole } from '../../src/content';
 import type { AdminSystemStatus, AdminTaskSummary } from '../../src/server/admin-repository';
 import { useAdminActionRefresh } from './useAdminActionRefresh';
