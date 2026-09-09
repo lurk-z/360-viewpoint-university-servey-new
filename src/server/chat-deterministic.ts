@@ -21,7 +21,8 @@ import {
   isTourIntent
 } from './chat-intents';
 import { buildKnowledgeDocuments, findRelatedProgramIds, selectKnowledge } from './chat-knowledge';
-import { INTEREST_ALIASES, rankProgramsForProfile } from './chat-program-ranking';
+import { INTEREST_ALIASES, matchesInterestTerm, rankProgramsForProfile } from './chat-program-ranking';
+import { academicFacultyIds } from './chat-guidance';
 
 const EMPTY_RESPONSE_EXTENSIONS = {
   relatedActivityIds: [] as readonly string[],
@@ -103,7 +104,8 @@ export function createFacultyOverviewResponse(request: ChatRequest, content: Pub
   return {
     intent: 'faculty-overview', answered: faculties.length > 0, answer, relatedSceneIds: [], relatedProgramIds: [],
     relatedActivityIds: [], relatedFacultyIds: faculties.map((faculty) => faculty.id), comparisonProgramIds: [],
-    programRecommendations: [], needsRecommendationProfile: faculties.length > 0, needsTourPreference: false, fallback: false
+    programRecommendations: [], needsRecommendationProfile: faculties.length > 0, needsTourPreference: false, fallback: false,
+    suggestedReplies: [{ label: request.locale === 'th' ? 'อยากรู้แนวทางอาชีพ' : 'Explore career directions', message: request.locale === 'th' ? 'ช่วยแนะนำอาชีพในอนาคต' : 'Help me explore future careers' }]
   };
 }
 
@@ -114,7 +116,6 @@ export function findTourPreferenceCandidates(request: ChatRequest, content: Publ
     ...content.activities.flatMap((activity) => activity.sceneId ? [activity.sceneId] : []),
     ...tourScenes.filter((scene) => 'mapLandmark' in scene && scene.mapLandmark === true).map((scene) => scene.id)
   ]);
-  const normalizedMessage = compactChatLookup(request.message);
   const directCandidates = findTourDestinationCandidates(request.message, content, request.locale, tourScenes.length)
     .filter((candidate) => meaningfulSceneIds.has(candidate.sceneId));
   const directLeader = directCandidates[0];
@@ -133,7 +134,7 @@ export function findTourPreferenceCandidates(request: ChatRequest, content: Publ
   }
   const expandedQueries = [request.message, ...TOUR_INTEREST_ALIASES.flatMap((group) => group.some((term) => {
     const normalizedTerm = compactChatLookup(term);
-    return normalizedTerm.length >= 3 && normalizedMessage.includes(normalizedTerm);
+    return normalizedTerm.length >= 2 && matchesInterestTerm(request.message, term);
   }) ? group : [])];
   const candidateByScene = new Map<SceneId, TourDestinationCandidate>();
   for (const query of expandedQueries) {
@@ -151,23 +152,40 @@ export function findTourPreferenceCandidates(request: ChatRequest, content: Publ
 }
 
 export function createTourPreferenceResponse(request: ChatRequest, content: PublicContentSnapshot, suppliedCandidates?: readonly TourDestinationCandidate[]): ChatResponse {
-  const candidates = suppliedCandidates ?? (isGenericTourIntent(request.message) && !request.conversationContext?.awaitingTourPreference ? [] : findTourPreferenceCandidates(request, content));
+  const candidates = suppliedCandidates ?? (isGenericTourIntent(request.message) ? [] : findTourPreferenceCandidates(request, content));
   const candidateNames = candidates.map((candidate) => candidate.label);
   const answer = request.locale === 'th'
     ? candidateNames.length > 1
-      ? `พบสถานที่ที่อาจตรงกับความสนใจหลายแห่ง: ${candidateNames.join(', ')} กรุณาพิมพ์ชื่อสถานที่ที่ต้องการไปให้ชัดเจนอีกครั้ง`
+      ? `พบสถานที่ที่ตรงกับความสนใจ ${candidateNames.length} แห่ง: ${candidateNames.join(', ')} คุณอยากไปที่ไหน? เลือกด้านล่างหรือพิมพ์ชื่อสถานที่ได้เลย`
       : candidateNames.length === 1
-        ? `คุณหมายถึง ${candidateNames[0]} ใช่หรือไม่ กรุณาพิมพ์ชื่อสถานที่นี้อีกครั้งเพื่อยืนยันปลายทาง`
-        : 'ต้องการไปที่ไหน หรือสนใจชมเรื่องใด กรุณาพิมพ์ชื่อสถานที่หรือความสนใจ เช่น กีฬา อาหาร หอพัก หรือด้านการเรียน แล้วฉันจะหาเส้นทางที่ตรงกับคุณ'
+        ? `ต้องการไป ${candidateNames[0]} ใช่ไหม? เลือกด้านล่างเพื่อเตรียมเส้นทาง หรือพิมพ์สถานที่อื่นได้เลย`
+        : 'อยากไปที่ไหน หรือสนใจชมเรื่องใด? เลือกหมวดด้านล่าง หรือพิมพ์ชื่อสถานที่และความสนใจ แล้วฉันจะช่วยหาเส้นทางให้'
     : candidateNames.length > 1
-      ? `Several places may match your interest: ${candidateNames.join(', ')}. Please type the exact place you want to visit.`
+      ? `Several places match your interest: ${candidateNames.join(', ')}. Where would you like to go? Choose below or type a place name.`
       : candidateNames.length === 1
-        ? `Did you mean ${candidateNames[0]}? Please type that place name again to confirm the destination.`
-        : 'Where would you like to go, or what are you interested in? Type a place or interest such as sports, food, dormitories, or study, and I will find a suitable route.';
+        ? `Would you like to visit ${candidateNames[0]}? Choose below to prepare the route, or type another place.`
+        : 'Where would you like to go, or what interests you? Choose a category below or type a place or interest, and I will help find a route.';
   return {
     intent: 'tour', answered: false, answer, relatedSceneIds: [], relatedProgramIds: [], relatedActivityIds: [],
     relatedFacultyIds: [], comparisonProgramIds: [], programRecommendations: [], needsRecommendationProfile: false,
-    needsTourPreference: true, fallback: false
+    needsTourPreference: true, fallback: false,
+    suggestedReplies: candidates.length ? candidates.map((candidate) => ({
+      label: candidate.label,
+      message: request.locale === 'th' ? `พาไป ${candidate.label}` : `Take me to ${candidate.label}`,
+      sceneId: candidate.sceneId
+    })) : (request.locale === 'th' ? [
+      { label: 'คณะและอาคารเรียน', message: 'อยากชมคณะและอาคารเรียน' },
+      { label: 'หอพัก', message: 'หอพัก' },
+      { label: 'โรงอาหาร', message: 'โรงอาหารมหาวิทยาลัย' },
+      { label: 'กีฬาและกิจกรรม', message: 'สนใจกีฬา' },
+      { label: 'ห้องสมุด', message: 'ห้องสมุด' }
+    ] : [
+      { label: 'Faculties and learning', message: 'academic buildings' },
+      { label: 'Dormitories', message: 'dormitories' },
+      { label: 'Cafeteria', message: 'university cafeteria' },
+      { label: 'Sports', message: 'sports' },
+      { label: 'Library', message: 'library' }
+    ])
   };
 }
 
@@ -196,10 +214,10 @@ export function deterministicTourPlan(request: ChatRequest, content: PublicConte
   const multiStopWording = /(และ|แล้วไป|ต่อด้วย|จาก.+ไป|,|;|\band\b|then|after)/iu.test(request.message);
   let destinations = multiStopWording && mentions.length > 1 ? mentions
     : multiStopWording && strong.length > 1 ? strong.slice(0, 5)
-      : candidates[0] && (candidates[0].score >= 300 || candidates[0].score >= (candidates[1]?.score ?? 0) + 20) ? [candidates[0]] : [];
+      : candidates[0] && candidates[0].score >= 300 && candidates[0].score >= (candidates[1]?.score ?? 0) + 50 ? [candidates[0]] : [];
   if (destinations.length === 0 && request.conversationContext && isContextReferenceIntent(request.message)) {
     const contextualSceneIds = [
-      ...request.conversationContext.lastFacultyIds.flatMap((facultyId) => {
+      ...academicFacultyIds(request, content).flatMap((facultyId) => {
         const sceneId = content.faculties.find((faculty) => faculty.id === facultyId)?.sceneId;
         return sceneId ? [sceneId] : [];
       }),

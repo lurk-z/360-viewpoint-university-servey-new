@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import type { ChatConversationContext, ChatResponse, RecommendationProfile } from '../../../src/chat';
+import type { ChatConversationContext, ChatResponse, ChatSuggestedReply, RecommendationProfile } from '../../../src/chat';
 import { detectPersonalData } from '../../../src/chat-privacy';
 import { resolveInfoHotspot, resolveTourScene, type PublicContentSnapshot } from '../../../src/content';
 import { message } from '../../../src/i18n';
@@ -11,6 +11,8 @@ import type { DisplayMessage } from './types';
 interface LastRequest {
   readonly question: string;
   readonly profile?: RecommendationProfile;
+  readonly selectedSceneId?: SceneId;
+  readonly context?: ChatConversationContext;
 }
 
 export default function useTourChatController({ locale, sceneId, content, getViewYaw }: {
@@ -24,11 +26,12 @@ export default function useTourChatController({ locale, sceneId, content, getVie
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [recommendationProfile, setRecommendationProfile] = useState<RecommendationProfile>({
     interests: '',
-    currentQualification: 'm6-pvoc',
-    desiredLevel: 'bachelor'
+    currentQualification: 'other',
+    desiredLevel: 'unsure'
   });
   const nextMessageId = useRef(1);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const sendingRef = useRef(false);
   const lastSentAtRef = useRef(0);
   const [lastRequest, setLastRequest] = useState<LastRequest | null>(null);
   const scene = resolveTourScene(getScene(sceneId), content);
@@ -48,14 +51,16 @@ export default function useTourChatController({ locale, sceneId, content, getVie
         : message(locale, 'aiQuestionCourses'),
       message(locale, 'aiQuestionActivities'),
       message(locale, 'aiQuestionRecommend'),
-      message(locale, 'aiQuestionTour')
+      message(locale, 'aiQuestionTour'),
+      locale === 'th' ? 'มีคณะอะไรบ้าง' : 'What faculties are available?',
+      locale === 'th' ? 'ช่วยแนะนำอาชีพในอนาคต' : 'Help me explore future careers'
     ];
   }, [locale, scene.title, sceneHotspots]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
 
   const buildConversationContext = (): ChatConversationContext | undefined => {
-    const assistant = [...messages].reverse().find((item) => item.role === 'assistant');
+    const assistant = [...messages].reverse().find((item) => item.role === 'assistant' && item.intent);
     if (!assistant) return undefined;
     const programIds = [
       ...(assistant.comparisonProgramIds ?? []),
@@ -72,8 +77,10 @@ export default function useTourChatController({ locale, sceneId, content, getVie
       ...(assistant.relatedSceneIds ?? [])
     ].filter((id, index, items) => items.indexOf(id) === index).slice(0, 5);
     const awaitingTourPreference = assistant.needsTourPreference === true;
-    return programIds.length || facultyIds.length || sceneIds.length || awaitingTourPreference
-      ? { lastProgramIds: programIds, lastFacultyIds: facultyIds, lastSceneIds: sceneIds, awaitingTourPreference }
+    const awaitingRecommendationProfile = assistant.needsRecommendationProfile === true;
+    return programIds.length || facultyIds.length || sceneIds.length || awaitingTourPreference || awaitingRecommendationProfile
+      ? { lastProgramIds: programIds, lastFacultyIds: facultyIds, lastSceneIds: sceneIds, awaitingTourPreference,
+        awaitingRecommendationProfile, guidanceGoal: assistant.intent === 'career-guidance' ? 'career' : 'program' }
       : undefined;
   };
 
@@ -94,23 +101,25 @@ export default function useTourChatController({ locale, sceneId, content, getVie
     id: nextMessageId.current++, role: 'assistant', text, fallback: true
   }]);
 
-  const sendQuestion = async (question: string, profile?: RecommendationProfile, retry = false): Promise<void> => {
+  const sendQuestion = async (question: string, profile?: RecommendationProfile, retry = false, selectedSceneId?: SceneId, fromSuggestion = false): Promise<void> => {
     const value = question.trim();
-    if (!value || loading) return;
-    if (detectPersonalData(value)) {
+    if (!value || sendingRef.current) return;
+    if (detectPersonalData(`${value}\n${profile?.interests ?? ''}`)) {
       addAssistantError(localError('personal-data'));
       return;
     }
-    if (!retry && !profile && Date.now() - lastSentAtRef.current < 800) {
+    if (!retry && !profile && !fromSuggestion && Date.now() - lastSentAtRef.current < 800) {
       addAssistantError(localError('cooldown'));
       return;
     }
     lastSentAtRef.current = Date.now();
+    sendingRef.current = true;
     const userMessage: DisplayMessage = { id: nextMessageId.current++, role: 'user', text: value };
-    const history = messages.slice(-6).map(({ role, text }) => ({ role, text }));
+    const history = messages.slice(-6).map(({ role, text }) => ({ role, text: text.slice(0, 1000) }));
+    const context = retry ? lastRequest?.context : buildConversationContext();
     if (!retry) setMessages((current) => [...current, userMessage]);
     setInput('');
-    setLastRequest({ question: value, profile });
+    setLastRequest({ question: value, profile, selectedSceneId, context });
     setLoading(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -125,8 +134,9 @@ export default function useTourChatController({ locale, sceneId, content, getVie
           sceneId,
           history,
           viewYaw: getViewYaw?.(),
-          conversationContext: buildConversationContext(),
-          recommendationProfile: profile
+          conversationContext: context,
+          recommendationProfile: profile,
+          selectedTourSceneId: selectedSceneId
         })
       });
       if (!response.ok) {
@@ -153,13 +163,17 @@ export default function useTourChatController({ locale, sceneId, content, getVie
         needsRecommendationProfile: result.needsRecommendationProfile,
         needsTourPreference: result.needsTourPreference,
         fallback: result.fallback,
-        fallbackReason: result.fallbackReason
+        fallbackReason: result.fallbackReason,
+        suggestedReplies: result.suggestedReplies,
+        careerGuidance: result.careerGuidance
       }]);
+      if (result.suggestedInterests) setRecommendationProfile((current) => ({ ...current, interests: result.suggestedInterests! }));
     } catch (error) {
       addAssistantError(localError(error instanceof DOMException && error.name === 'AbortError' ? 'cancelled' : 'network'));
     } finally {
       if (abortControllerRef.current === controller) abortControllerRef.current = null;
       setLoading(false);
+      sendingRef.current = false;
     }
   };
 
@@ -172,7 +186,9 @@ export default function useTourChatController({ locale, sceneId, content, getVie
     event.preventDefault();
     if (!recommendationProfile.interests.trim() || loading) return;
     void sendQuestion(
-      locale === 'th'
+      [...messages].reverse().find((item) => item.intent)?.intent === 'career-guidance'
+        ? (locale === 'th' ? `ช่วยแนะนำอาชีพและหลักสูตรตามความสนใจ ${recommendationProfile.interests}` : `Recommend careers and programs for ${recommendationProfile.interests}`)
+        : locale === 'th'
         ? `ช่วยแนะนำหลักสูตรตามความสนใจ ${recommendationProfile.interests}`
         : `Recommend programs for my interest in ${recommendationProfile.interests}`,
       recommendationProfile
@@ -192,6 +208,7 @@ export default function useTourChatController({ locale, sceneId, content, getVie
     sendQuestion,
     handleSubmit,
     submitRecommendation,
-    cancelRequest: () => abortControllerRef.current?.abort()
+    cancelRequest: () => abortControllerRef.current?.abort(),
+    sendSuggestedReply: (reply: ChatSuggestedReply) => void sendQuestion(reply.message, undefined, false, reply.sceneId, true)
   };
 }

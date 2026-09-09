@@ -1450,6 +1450,7 @@ svg {
   font-weight: 700;
 }
 
+.tour-chat__careers,
 .tour-chat__comparison {
   display: grid;
   gap: 9px;
@@ -1463,6 +1464,7 @@ svg {
   gap: 8px;
 }
 
+.tour-chat__careers article,
 .tour-chat__comparison article {
   display: grid;
   gap: 5px;
@@ -1500,6 +1502,7 @@ svg {
   font-weight: 750;
 }
 
+.tour-chat__careers button,
 .tour-chat__comparison button,
 .tour-chat__retry,
 .tour-chat__thinking button {
@@ -1522,6 +1525,29 @@ svg {
 
 .tour-chat__retry {
   align-self: flex-start;
+}
+
+.tour-chat__message > .tour-chat__suggestions {
+  margin-block: 10px;
+}
+
+.tour-chat__suggestions button,
+.tour-chat__careers button {
+  min-height: 44px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.tour-chat__suggestions button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.tour-chat__suggestions button:focus-visible,
+.tour-chat__careers button:focus-visible {
+  outline: 3px solid var(--fitm-sky);
+  outline-offset: 2px;
 }
 
 .guided-tour {

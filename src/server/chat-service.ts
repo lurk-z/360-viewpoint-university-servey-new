@@ -16,9 +16,11 @@ import { consumeAiQuota } from './ai-usage';
 import { classifyGeminiError, logGeminiFailure } from './chat-errors';
 import {
   isActivityListIntent,
+  isCareerIntent,
   isCurrentViewIntent,
   isFacultyOverviewIntent,
   isGenericTourIntent,
+  isProgramListIntent,
   isRecommendationIntent,
   isTourIntent
 } from './chat-intents';
@@ -40,6 +42,7 @@ import {
   deterministicTourPlan,
   findTourPreferenceCandidates
 } from './chat-deterministic';
+import { createAcademicGuidanceResponse, createDormitoryResponse, createProgramFacultyResponse, createProgramListResponse, mentionedFacultyIds } from './chat-guidance';
 
 export { classifyGeminiError } from './chat-errors';
 export { buildKnowledgeDocuments, findRelatedProgramIds } from './chat-knowledge';
@@ -121,12 +124,35 @@ function recommendationProfilePrompt(profile?: RecommendationProfile): string {
 }
 
 export async function answerGroundedQuestion(request: ChatRequest, content: PublicContentSnapshot): Promise<ChatResponse> {
+  if (request.selectedTourSceneId) {
+    const plan = createTourPlan(request.sceneId, [request.selectedTourSceneId]);
+    return plan
+      ? createPreparedTourResponse(request, plan, localize(getScene(request.selectedTourSceneId).title, request.locale))
+      : createTourPreferenceResponse(request, content, []);
+  }
   if (isCurrentViewIntent(request.message)) return createCurrentViewResponse(request, content);
   if (isActivityListIntent(request.message)) return createActivityListResponse(request, content);
-  if (isFacultyOverviewIntent(request.message)) return createFacultyOverviewResponse(request, content);
+  if (isGenericTourIntent(request.message)) return createTourPreferenceResponse({ ...request, conversationContext: undefined }, content);
+  const explicitTour = isTourIntent(request.message);
+  if (!explicitTour && isFacultyOverviewIntent(request.message)) {
+    return mentionedFacultyIds(request.message, content).length
+      ? createProgramListResponse(request, content)
+      : createFacultyOverviewResponse(request, content);
+  }
 
   const comparison = deterministicComparisonResponse(request, content);
   if (comparison) return comparison;
+
+  if (!explicitTour && (isCareerIntent(request.message) || isRecommendationIntent(request.message) || request.recommendationProfile)) {
+    return createAcademicGuidanceResponse(request, content);
+  }
+  const programFacultyResponse = !explicitTour ? createProgramFacultyResponse(request, content) : undefined;
+  if (programFacultyResponse) return programFacultyResponse;
+  if (!explicitTour && isProgramListIntent(request.message)) return createProgramListResponse(request, content);
+  if (!explicitTour && request.conversationContext?.awaitingRecommendationProfile
+    && /สนใจ|อยาก|ชอบ|ม\.?\s*[36]|ปวช|ปวส|ปริญญา|interest|study|qualification/iu.test(request.message)) {
+    return createAcademicGuidanceResponse(request, content);
+  }
 
   const recommendationIntent = Boolean(request.recommendationProfile) || isRecommendationIntent(request.message);
   if (recommendationIntent && !request.recommendationProfile) return createFallbackChatResponse(request, content);
@@ -164,6 +190,9 @@ export async function answerGroundedQuestion(request: ChatRequest, content: Publ
     }
     return createTourPreferenceResponse(request, content);
   }
+
+  const dormitoryResponse = createDormitoryResponse(request, content);
+  if (dormitoryResponse) return dormitoryResponse;
 
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey || apiKey === 'your-gemini-api-key') return createFallbackChatResponse(request, content, 'not-configured');
@@ -206,6 +235,8 @@ export async function answerGroundedQuestion(request: ChatRequest, content: Publ
 ${languageInstruction}. The visitor is viewing scene "${sceneTitle}" (${request.sceneId}).
 Classify the request as answer, tour, program-recommendation, or program-comparison.
 Answer ONLY from the supplied documents and scene catalog. Never use outside knowledge and never invent facts.
+Scope recommendations to Prachinburi Campus. University-wide admission or career pages may include other campuses; never infer that those programs are taught here.
+Career directions describe possibilities, not guaranteed employment, salary, professional licences or admission. Use published career tags and program descriptions only.
 For a tour request, choose one to five destinationSceneIds from the scene catalog in the order requested. Do not invent or calculate the route.
 For a program recommendation, use only PROGRAM documents, return at most three program IDs, and explain the match without claiming guaranteed admission. Give INTEREST TAGS and CAREER TAGS more weight than names, descriptions, and admission prose, while respecting the selected qualification and desired level.
 For a comparison, return two or three comparisonProgramIds from PROGRAM documents. For a normal answer, return empty destinationSceneIds, comparisonProgramIds, and programRecommendations arrays.

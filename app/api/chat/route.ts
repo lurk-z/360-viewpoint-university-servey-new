@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     }
     const personalData = detectPersonalData([
       parsed.data.message,
+      parsed.data.recommendationProfile?.interests ?? '',
       ...parsed.data.history.map((turn) => turn.text)
     ].join('\n'));
     if (personalData) {

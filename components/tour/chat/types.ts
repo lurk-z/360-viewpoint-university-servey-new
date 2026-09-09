@@ -2,6 +2,8 @@ import type { FormEvent } from 'react';
 import type {
   ChatFallbackReason,
   ChatIntent,
+  ChatSuggestedReply,
+  CareerGuidance,
   ChatTurn,
   ProgramRecommendation,
   RecommendationProfile,
@@ -24,6 +26,8 @@ export interface DisplayMessage extends ChatTurn {
   readonly needsTourPreference?: boolean;
   readonly fallback?: boolean;
   readonly fallbackReason?: ChatFallbackReason;
+  readonly suggestedReplies?: readonly ChatSuggestedReply[];
+  readonly careerGuidance?: readonly CareerGuidance[];
 }
 
 export interface TourChatActions {
@@ -46,4 +50,6 @@ export interface TourChatMessageProps extends TourChatActions {
   readonly loading: boolean;
   readonly onRecommendationProfileChange: (profile: RecommendationProfile) => void;
   readonly onSubmitRecommendation: (event: FormEvent<HTMLFormElement>) => void;
+  readonly onSuggestedReply: (reply: ChatSuggestedReply) => void;
+  readonly active: boolean;
 }

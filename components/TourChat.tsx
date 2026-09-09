@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import type { TourPlan } from '../src/chat';
 import type { PublicContentSnapshot } from '../src/content';
 import { localize, type Locale, type SceneId } from '../src/tour-data';
@@ -52,8 +53,17 @@ export default function TourChat({
     sendQuestion,
     handleSubmit,
     submitRecommendation,
-    cancelRequest
+    cancelRequest,
+    sendSuggestedReply
   } = useTourChatController({ locale, sceneId, content, getViewYaw });
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const latestAssistantId = [...messages].reverse().find((item) => item.role === 'assistant' && item.intent)?.id;
+  useEffect(() => {
+    if (!open) return;
+    const body = bodyRef.current;
+    const last = body?.querySelector<HTMLElement>('.tour-chat__message:last-of-type');
+    if (body && last) body.scrollTop += last.getBoundingClientRect().top - body.getBoundingClientRect().top;
+  }, [open, messages.length]);
 
   return (
     <div className={`tour-chat${open ? ' is-open' : ''}`}>
@@ -76,7 +86,7 @@ export default function TourChat({
           <div><strong>{message(locale, 'aiAssistant')}</strong><span>{localize(scene.title, locale)}</span></div>
           <button type="button" aria-label={message(locale, 'aiClose')} onClick={() => onOpenChange(false)}>×</button>
         </header>
-        <div className="tour-chat__body" aria-live="polite">
+        <div ref={bodyRef} className="tour-chat__body" aria-live="polite">
           {messages.length === 0 ? (
             <div className="tour-chat__welcome">
               <p>{message(locale, 'aiIntro')}</p>
@@ -106,6 +116,8 @@ export default function TourChat({
               onStartTour={onStartTour}
               onStartTourTo={onStartTourTo}
               onClose={() => onOpenChange(false)}
+              active={item.id === latestAssistantId}
+              onSuggestedReply={sendSuggestedReply}
             />
           ))}
           {loading ? (
@@ -119,7 +131,7 @@ export default function TourChat({
             <button
               className="tour-chat__retry"
               type="button"
-              onClick={() => void sendQuestion(lastRequest.question, lastRequest.profile, true)}
+              onClick={() => void sendQuestion(lastRequest.question, lastRequest.profile, true, lastRequest.selectedSceneId)}
             >
               {locale === 'th' ? 'ลองใหม่' : 'Try again'}
             </button>

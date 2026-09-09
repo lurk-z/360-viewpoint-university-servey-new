@@ -4,7 +4,7 @@ import type { Locale } from '../tour-data';
 import { chatTokens, compactChatLookup } from './chat-intents';
 
 export const INTEREST_ALIASES: readonly (readonly string[])[] = [
-  ['คอมพิวเตอร์', 'เขียนโปรแกรม', 'ซอฟต์แวร์', 'ข้อมูล', 'ไอที', 'computer', 'programming', 'software', 'data', 'it'],
+  ['คอมพิวเตอร์', 'เขียนโปรแกรม', 'โปรแกรมเมอร์', 'ซอฟต์แวร์', 'วิเคราะห์ข้อมูล', 'ไอที', 'computer', 'programming', 'programmer', 'software', 'data science', 'it'],
   ['อาหาร', 'โภชนาการ', 'แปรรูป', 'food', 'nutrition', 'processing'],
   ['ธุรกิจ', 'บริหาร', 'การค้า', 'ผู้ประกอบการ', 'business', 'management', 'trade', 'entrepreneur'],
   ['ท่องเที่ยว', 'โรงแรม', 'บริการ', 'tourism', 'hotel', 'hospitality', 'service'],
@@ -33,7 +33,9 @@ export function profileLookupText(profile: RecommendationProfile): string {
 }
 
 function recommendationReason(program: ProgramContent, profile: RecommendationProfile, locale: Locale): string {
-  const tag = program.interestTags?.[locale][0] ?? program.careerTags?.[locale][0];
+  const terms = expandedInterestTerms(profile.interests);
+  const tag = [...(program.interestTags?.[locale] ?? []), ...(program.careerTags?.[locale] ?? [])]
+    .find((value) => fieldInterestScore(terms, value, 1) > 0);
   if (locale === 'th') {
     return tag
       ? `เนื้อหาหลักสูตรเกี่ยวข้องกับ “${tag}” ซึ่งสอดคล้องกับความสนใจ “${profile.interests}”`
@@ -44,7 +46,7 @@ function recommendationReason(program: ProgramContent, profile: RecommendationPr
     : `The program name, summary, and details align with “${profile.interests}” and the selected study level.`;
 }
 
-function programLevelCompatibility(program: ProgramContent, profile: RecommendationProfile): { readonly compatible: boolean; readonly score: number } {
+function programLevelCompatibility(program: ProgramContent, profile: RecommendationProfile): { readonly compatible: boolean; readonly score: number; readonly needsVerification?: boolean } {
   const level = `${program.level.th} ${program.level.en} ${program.name.th} ${program.name.en}`.toLocaleLowerCase();
   const admission = `${program.admission.th} ${program.admission.en}`.toLocaleLowerCase();
   const signals = {
@@ -58,7 +60,7 @@ function programLevelCompatibility(program: ProgramContent, profile: Recommendat
     const levelMatches = program.studyLevel
       ? program.studyLevel === profile.desiredLevel
       : profile.desiredLevel === 'bachelor'
-        ? signals.bachelor && !signals.transfer
+        ? signals.bachelor && !signals.transfer && !signals.master
         : signals[profile.desiredLevel];
     if (!levelMatches) return { compatible: false, score: 0 };
     score += 240;
@@ -67,13 +69,36 @@ function programLevelCompatibility(program: ProgramContent, profile: Recommendat
     ? program.eligibleQualifications.includes(profile.currentQualification)
     : ({
       m3: signals.vocational || /(ม\.\s*3|lower secondary)/u.test(admission),
-      'm6-pvoc': signals.bachelor && !signals.transfer && /(ม\.\s*6|ปวช|upper secondary|vocational certificate)/u.test(admission),
+      'm6-pvoc': signals.bachelor && !signals.transfer && !signals.master && /(ม\.\s*6|ปวช|upper secondary|vocational certificate)/u.test(admission),
       'high-vocational': signals.transfer || /(ปวส|higher vocational)/u.test(admission),
       bachelor: signals.master || /(ปริญญาตรี|bachelor)/u.test(admission),
       other: true
     }[profile.currentQualification]);
-  if (!qualificationMatch && profile.currentQualification !== 'other') return { compatible: false, score: 0 };
-  return { compatible: true, score: score + (qualificationMatch ? 120 : 0) };
+  const hasQualificationData = Boolean(program.eligibleQualifications?.length)
+    || /(ม\.\s*[36]|ปวช|ปวส|มัธยม|ปริญญาตรี|secondary|vocational|bachelor)/u.test(admission);
+  if (!qualificationMatch && profile.currentQualification !== 'other') {
+    // Missing admission metadata is not proof of ineligibility. Offer only a plausible
+    // study level and explicitly mark that admission requirements are unconfirmed.
+    const plausibleLevel = ({
+      m3: signals.vocational,
+      'm6-pvoc': signals.bachelor && !signals.transfer && !signals.master,
+      'high-vocational': (signals.bachelor || signals.transfer) && !signals.master,
+      bachelor: signals.bachelor || signals.master,
+      other: true
+    })[profile.currentQualification];
+    if (hasQualificationData || !plausibleLevel) return { compatible: false, score: 0 };
+    return { compatible: true, score, needsVerification: true };
+  }
+  return { compatible: true, score: score + (qualificationMatch ? 120 : 0), needsVerification: profile.currentQualification === 'other' || !hasQualificationData };
+}
+
+/** Latin abbreviations must be whole words: IT must not match hospitality or university. */
+export function matchesInterestTerm(value: string, term: string): boolean {
+  if (/^[a-z0-9 ]+$/iu.test(term)) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'iu').test(value);
+  }
+  return compactChatLookup(value).includes(compactChatLookup(term));
 }
 
 function expandedInterestTerms(value: string): Set<string> {
@@ -81,15 +106,14 @@ function expandedInterestTerms(value: string): Set<string> {
   const result = new Set(chatTokens(value).map(compactChatLookup));
   if (normalized) result.add(normalized);
   for (const group of INTEREST_ALIASES) {
-    if (group.some((term) => normalized.includes(compactChatLookup(term)))) group.forEach((term) => result.add(compactChatLookup(term)));
+    if (group.some((term) => matchesInterestTerm(value, term))) group.forEach((term) => result.add(term.toLocaleLowerCase()));
   }
   return result;
 }
 
 function fieldInterestScore(queryTerms: ReadonlySet<string>, value: string, weight: number): number {
-  const compactValue = compactChatLookup(value);
   let matches = 0;
-  for (const term of queryTerms) if (term.length >= 2 && compactValue.includes(term)) matches += 1;
+  for (const term of queryTerms) if (term.length >= 2 && matchesInterestTerm(value, term)) matches += 1;
   return matches * weight;
 }
 
@@ -101,8 +125,7 @@ export function rankProgramsForProfile(profile: RecommendationProfile, content: 
       { value: [...(program.interestTags?.th ?? []), ...(program.interestTags?.en ?? [])].join(' '), weight: 14 },
       { value: [...(program.careerTags?.th ?? []), ...(program.careerTags?.en ?? [])].join(' '), weight: 12 },
       { value: `${program.name.th} ${program.name.en} ${program.department?.th ?? ''} ${program.department?.en ?? ''}`, weight: 7 },
-      { value: `${program.summary.th} ${program.summary.en} ${program.description.th} ${program.description.en}`, weight: 3 },
-      { value: `${program.level.th} ${program.level.en} ${program.admission.th} ${program.admission.en}`, weight: 5 }
+      { value: `${program.summary.th} ${program.summary.en} ${program.description.th} ${program.description.en}`, weight: 3 }
     ];
     const interestScore = weighted.reduce((total, entry) => total + fieldInterestScore(queryTerms, entry.value, entry.weight), 0);
     return { program, compatibility, interestScore, score: compatibility.score + interestScore, index };
@@ -110,9 +133,11 @@ export function rankProgramsForProfile(profile: RecommendationProfile, content: 
     .filter((entry) => entry.compatibility.compatible && entry.interestScore > 0)
     .sort((a, b) => b.score - a.score || a.index - b.index);
 
-  return scored.slice(0, Math.max(1, limit)).map(({ program }) => ({
+  return scored.slice(0, Math.max(1, limit)).map(({ program, compatibility }) => ({
     programId: program.id,
     facultyId: program.facultyId,
-    reason: recommendationReason(program, profile, locale)
+    reason: recommendationReason(program, profile, locale) + (compatibility.needsVerification
+      ? locale === 'th' ? ' ยังยืนยันคุณสมบัติรับสมัครไม่ได้ ต้องตรวจวุฒิและประกาศรับสมัครของหลักสูตรเพิ่มเติม' : ' Admission eligibility is not confirmed; check the program’s qualifications and current admission notice.'
+      : '')
   }));
 }

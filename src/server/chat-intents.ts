@@ -2,15 +2,23 @@ import type { ChatRequest } from '../chat';
 import type { PublicContentSnapshot } from '../content';
 
 export function chatTokens(value: string): string[] {
-  return value.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter((token) => token.length > 1) ?? [];
+  return value.toLocaleLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu)?.filter((token) => token.length > 1) ?? [];
 }
 
 export function compactChatLookup(value: string): string {
-  return value.normalize('NFKC').toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+  return value.normalize('NFKC').toLocaleLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '');
 }
 
 export function isRecommendationIntent(message: string): boolean {
-  return /(แนะนำ.*(หลักสูตร|สาขา)|ควรเรียน|เหมาะกับ.*สาขา|สนใจ.*เรียน|recommend.*(program|course)|what should i study)/iu.test(message);
+  return /(แนะนำ.*(หลักสูตร|สาขา)|ควรเรียน|เรียน(?:อะไร|ไหนดี|คณะไหน|สาขาไหน)|เหมาะกับ.*(?:สาขา|คณะ)|สนใจ.*เรียน|recommend.*(program|course)|what should i study)/iu.test(message);
+}
+
+export function isCareerIntent(message: string): boolean {
+  return /(อาชีพ|จบ.*(?:ทำงาน|ทำอะไร|เป็นอะไร)|อยากเป็น|งานในอนาคต|career|job prospects|work after|become (?:a|an)\b)/iu.test(message);
+}
+
+export function isProgramListIntent(message: string): boolean {
+  return /(?:หลักสูตร|สาขา|programs?|courses?).*(?:อะไร|บ้าง|เปิดสอน|มี|offer|available)|(?:เปิดสอน|มี).*(?:หลักสูตร|สาขา)|(?:list|what|which).*(?:programs?|courses?)/iu.test(message);
 }
 
 export function isActivityListIntent(message: string): boolean {
@@ -26,7 +34,8 @@ export function isTourIntent(message: string): boolean {
 }
 
 export function isGenericTourIntent(message: string): boolean {
-  return /^(?:ช่วย)?\s*(?:พาทัวร์|เริ่มทัวร์|ชมรอบมหาวิทยาลัย|ทัวร์)(?:(?:ให้)?หน่อย)?(?:ครับ|ค่ะ)?\s*$|^(?:please\s+)?(?:tour me|give me a tour|start a tour)(?:\s+please)?$/iu.test(message.trim());
+  const value = message.trim().replace(/[!?。]+$/u, '').replace(/\s+/gu, ' ');
+  return /^(?:ช่วย|ขอ|อยาก)?\s*(?:พา(?:ชม|เที่ยว|ทัว(?:ร์)?)|เริ่มทัว(?:ร์)?|ชมรอบมหาวิทยาลัย|ทัว(?:ร์)?)(?:มหาวิทยาลัย)?(?:\s*(?:ให้|ดู|หน่อย|ได้ไหม|ครับ|ค่ะ|คะ|ที))*$|^(?:please\s+)?(?:tour me|give me a (?:campus )?tour|start (?:a |the )?tour|take me (?:on a tour|around)|guide me)(?:\s+please)?$/iu.test(value);
 }
 
 export function isContextReferenceIntent(message: string): boolean {

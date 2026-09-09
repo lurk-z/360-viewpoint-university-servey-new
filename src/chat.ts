@@ -22,7 +22,8 @@ export type ChatIntent =
   | 'program-recommendation'
   | 'program-comparison'
   | 'activity-list'
-  | 'faculty-overview';
+  | 'faculty-overview'
+  | 'career-guidance';
 export type ChatFallbackReason =
   | 'not-configured'
   | 'invalid-key'
@@ -59,6 +60,21 @@ export interface ChatConversationContext {
   readonly lastFacultyIds: readonly string[];
   readonly lastSceneIds: readonly SceneId[];
   readonly awaitingTourPreference: boolean;
+  readonly awaitingRecommendationProfile?: boolean;
+  readonly guidanceGoal?: 'program' | 'career';
+}
+
+export interface ChatSuggestedReply {
+  readonly label: string;
+  readonly message: string;
+  /** An explicit destination chosen by the visitor; the server still validates the route. */
+  readonly sceneId?: SceneId;
+}
+
+export interface CareerGuidance {
+  readonly programId: string;
+  readonly facultyId: string;
+  readonly careers: readonly string[];
 }
 
 export interface ChatRequest {
@@ -69,6 +85,7 @@ export interface ChatRequest {
   readonly viewYaw?: number;
   readonly conversationContext?: ChatConversationContext;
   readonly recommendationProfile?: RecommendationProfile;
+  readonly selectedTourSceneId?: SceneId;
 }
 
 export interface ChatResponse {
@@ -86,6 +103,9 @@ export interface ChatResponse {
   readonly needsTourPreference: boolean;
   readonly fallback: boolean;
   readonly fallbackReason?: ChatFallbackReason;
+  readonly suggestedReplies?: readonly ChatSuggestedReply[];
+  readonly careerGuidance?: readonly CareerGuidance[];
+  readonly suggestedInterests?: string;
 }
 
 const recommendationProfileSchema = z.object({
@@ -103,11 +123,14 @@ export const chatRequestSchema = z.object({
     text: z.string().trim().min(1).max(1_000)
   })).max(6).default([]),
   viewYaw: z.number().finite().min(-180).max(180).optional(),
+  selectedTourSceneId: z.string().refine(isSceneId, 'Unknown destination').optional(),
   conversationContext: z.object({
     lastProgramIds: z.array(z.string().uuid()).max(3).default([]),
     lastFacultyIds: z.array(z.string().uuid()).max(5).default([]),
     lastSceneIds: z.array(z.string().refine(isSceneId, 'Unknown scene')).max(5).default([]),
-    awaitingTourPreference: z.boolean().default(false)
+    awaitingTourPreference: z.boolean().default(false),
+    awaitingRecommendationProfile: z.boolean().optional(),
+    guidanceGoal: z.enum(['program', 'career']).optional()
   }).optional(),
   recommendationProfile: recommendationProfileSchema.optional()
 });
