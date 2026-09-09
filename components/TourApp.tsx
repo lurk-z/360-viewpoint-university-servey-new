@@ -47,6 +47,11 @@ import { useGuidedTour } from './tour/useGuidedTour';
 import useOfflineTourCache from './tour/useOfflineTourCache';
 import useDevelopmentArrowPreview from './tour/useDevelopmentArrowPreview';
 import useTourOverlayController from './tour/useTourOverlayController';
+import {
+  createTourInfoSelection,
+  resolveTourInfoSelection,
+  type TourInfoSelection
+} from './tour/info-selection';
 
 type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | null;
 type CompactOverlay = CompactTourOverlay;
@@ -60,11 +65,6 @@ const TourInfoDialog = dynamic(() => import('./tour/TourContentDialogs').then((m
 const TourImageDialog = dynamic(() => import('./tour/TourContentDialogs').then((module) => module.TourImageDialog), { ssr: false });
 const TourAboutDialog = dynamic(() => import('./tour/TourContentDialogs').then((module) => module.TourAboutDialog), { ssr: false });
 const TourTextDialog = dynamic(() => import('./tour/TourContentDialogs').then((module) => module.TourTextDialog), { ssr: false });
-
-interface InfoSelection {
-  readonly sceneId: SceneId;
-  readonly hotspotId: string;
-}
 
 interface ImageViewerState {
   readonly images: readonly InfoImage[];
@@ -140,7 +140,7 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
   const viewerRef = useRef<TourViewerHandle>(null);
   const viewYawRef = useRef<number | undefined>(undefined);
   const [dialog, setDialog] = useState<DialogName>(null);
-  const [selectedInfoSelection, setSelectedInfoSelection] = useState<InfoSelection | null>(null);
+  const [selectedInfoSelection, setSelectedInfoSelection] = useState<TourInfoSelection | null>(null);
   const [imageViewer, setImageViewer] = useState<ImageViewerState | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
@@ -210,11 +210,11 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
   const selectedInfoScene = selectedInfoSelection
     ? tourScenes.find((item) => item.id === selectedInfoSelection.sceneId)
     : undefined;
-  const selectedInfo = selectedInfoSelection && selectedInfoScene
+  const selectedInfoDefinition = selectedInfoSelection && selectedInfoScene
     ? getInfoHotspots(selectedInfoScene)
       .find((hotspot) => hotspot.id === selectedInfoSelection.hotspotId)
     : undefined;
-  const resolvedSelectedInfo = selectedInfo ? resolveInfoHotspot(selectedInfo, content) : undefined;
+  const resolvedSelectedInfo = resolveTourInfoSelection(selectedInfoSelection, selectedInfoDefinition, content);
   const guidedDestinationScene = guidedTour
     ? resolveTourScene(getScene(guidedTour.destinationSceneId), content)
     : undefined;
@@ -327,7 +327,7 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
 
   const openInfo = (hotspot: InfoHotspot): void => {
     setImageViewer(null);
-    setSelectedInfoSelection({ sceneId: activeSceneId, hotspotId: hotspot.id });
+    setSelectedInfoSelection(createTourInfoSelection(activeSceneId, hotspot));
     setDialog('info');
   };
 

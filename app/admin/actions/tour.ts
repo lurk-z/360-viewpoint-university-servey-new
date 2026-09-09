@@ -32,7 +32,7 @@ export async function bootstrapTourStructureAction(_previousState: AdminActionSt
     revalidatePath('/admin/tour');
     await writeAdminAuditLog({ actorId: session.userId, action: 'bootstrap-tour-structure', entityKind: 'tour', entityId: 'main' });
     return actionSuccess(result.created
-      ? 'นำ 130 ฉากเข้า Visual Tour Editor แล้ว โดยไม่เปลี่ยนหน้า Tour สาธารณะ'
+      ? 'นำ 134 ฉากเข้า Visual Tour Editor แล้ว โดยไม่เปลี่ยนหน้า Tour สาธารณะ'
       : 'โครงสร้างทัวร์ถูกนำเข้าไว้แล้ว ไม่มีข้อมูลถูกเขียนทับ');
   } catch (error) {
     return actionFailure(error, 'ยังนำเข้าโครงสร้างทัวร์ไม่ได้ กรุณารัน Migration 202608290001 ก่อน');

@@ -2,11 +2,11 @@
 
 ## สถานะระบบปัจจุบัน
 
-- ทัวร์เริ่มต้น 130 ฉาก ใช้แผนที่ `/mainimages/map/mainmap1.png` ขนาด 1096×583
+- ทัวร์เริ่มต้น 134 ฉาก ใช้แผนที่ `/mainimages/map/mainmap1.png` ขนาด 1096×583
 - ข้อมูลเริ่มต้น 4 คณะและ 35 หลักสูตร จัดการฉบับร่าง/เผยแพร่ผ่าน Admin
 - `src/tour-data.ts` เป็นแหล่งหลักของลูกศรนำทางและเป็น Emergency fallback; ฉาก รูป Info และพิกัดส่วนอื่นจัดการจาก `/admin/tour`
-- Panorama เดินชม 130 ฉากที่มากับโปรเจกต์ยังอยู่ใน `public/mainimages`; ภาพใหม่หลังจากนี้อัปโหลดไป Supabase bucket `tour-panoramas`
-- เมนูสื่อภายในอาคารมี Panorama ตัวอย่าง 6 รูปและผังหอพัก 13 รูป ซึ่งโหลดเมื่อเปิดดูและไม่ถูกนับเป็นฉากเดิน
+- Panorama เดินชม 134 ฉากที่มากับโปรเจกต์ยังอยู่ใน `public/mainimages`; ภาพใหม่หลังจากนี้อัปโหลดไป Supabase bucket `tour-panoramas`
+- เมนูสื่อภายในอาคารมี Panorama ตัวอย่าง 17 รูปและผังหอพัก 13 รูป ซึ่งโหลดเมื่อเปิดดูและไม่ถูกนับเป็นฉากเดิน
 - หน้า Public โหลดโครงสร้าง Published จาก `/api/tour-structure` และกลับไปใช้ข้อมูลในโค้ดอัตโนมัติเมื่อฐานข้อมูลไม่พร้อม
 - Admin มีประวัติ/กู้คืน สำรอง JSON รายงาน CSV นำเข้าเป็น Draft สถานะระบบ และ Visual Tour Editor
 
@@ -147,7 +147,7 @@ Migration ต้องรันตามลำดับใน Supabase SQL Edito
 3. `202608240001_ai_rate_limits_and_metrics.sql`
 4. `202608290001_admin_workflow_and_tour_structure.sql`
 
-หลัง Migration ลำดับที่ 4 ให้เปิด `/admin/system` แล้วกด “นำ 130 ฉากเข้า Visual Tour Editor” หนึ่งครั้ง ระบบเป็น idempotent และไม่เขียนทับโครงการที่มีอยู่แล้ว
+หลัง Migration ลำดับที่ 4 ให้เปิด `/admin/system` แล้วกด “นำ 134 ฉากเข้า Visual Tour Editor” หนึ่งครั้ง ระบบเป็น idempotent และไม่เขียนทับโครงการที่มีอยู่แล้ว
 
 `Editor` แก้ draft และอัปโหลดรูปได้ ส่วน `Admin` จึงจะเผยแพร่ ยกเลิกเผยแพร่ เก็บเข้าคลัง ลบ และจัดการบัญชีได้
 

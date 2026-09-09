@@ -49,10 +49,19 @@ export const LAB_AND_CONNECTOR_SCENE_IDS = [
   'mechanicalLab3'
 ] as const;
 
+/** Scenes added by the Co-working Space and male dormitory ground-floor expansion. */
+export const CO_WORKING_AND_DORMITORY_SCENE_IDS = [
+  'fitmCoworkingSpace1',
+  'fitmCoworkingSpace2',
+  'fitmCoworkingSpace3',
+  'maleDormitoryGroundFloorMinimart'
+] as const;
+
 export const RETIRED_TOUR_INFO_IDS = [
   'Sirindhorn Building-info',
   'fitm-stairs-1-to-second-floor-info',
-  'fitm-stairs-2-to-second-floor-info'
+  'fitm-stairs-2-to-second-floor-info',
+  'fitm-coworking-space-info'
 ] as const;
 
 type TourHotspot = TourStructureScene['hotspots'][number];
@@ -84,6 +93,11 @@ const hotspotReplacements: readonly HotspotReplacement[] = [
     sceneId: 'fitmInterior13',
     retired: { id: 'fitm-stairs-2-to-second-floor-info', type: 'info', yaw: -95, pitch: 8 },
     replacementId: 'fitm-interior-13-to-floor-2-point-4'
+  },
+  {
+    sceneId: 'fitmInterior7',
+    retired: { id: 'fitm-coworking-space-info', type: 'info', yaw: -5, pitch: -2 },
+    replacementId: 'fitm-interior-7-to-coworking-space-1'
   }
 ];
 
@@ -100,7 +114,8 @@ const navigationPatches: readonly NavigationPatch[] = [
   },
   { sceneId: 'fitmFloor3Point4', desiredId: 'fitm-floor-3-point-4-to-floor-2-point-2a' },
   { sceneId: 'fitmInterior15', desiredId: 'fitm-interior-15-to-iti-electrical-lab-1' },
-  { sceneId: 'fitmInterior17', desiredId: 'fitm-interior-17-to-mechanical-lab-1' }
+  { sceneId: 'fitmInterior17', desiredId: 'fitm-interior-17-to-mechanical-lab-1' },
+  { sceneId: 'maleDormitory', desiredId: 'male-dormitory-to-ground-floor-minimart' }
 ];
 
 /**
@@ -110,7 +125,10 @@ const navigationPatches: readonly NavigationPatch[] = [
  */
 export function getTourExpansionNavigationIds(targetInput: TourStructureData): readonly string[] {
   const target = tourStructureDataSchema.parse(targetInput);
-  const expansionSceneIds = new Set<string>(LAB_AND_CONNECTOR_SCENE_IDS);
+  const expansionSceneIds = new Set<string>([
+    ...LAB_AND_CONNECTOR_SCENE_IDS,
+    ...CO_WORKING_AND_DORMITORY_SCENE_IDS
+  ]);
   return [...new Set([
     ...target.scenes.flatMap((scene) => expansionSceneIds.has(scene.id)
       ? scene.hotspots.filter((hotspot) => hotspot.type === 'scene').map((hotspot) => hotspot.id)
@@ -118,7 +136,8 @@ export function getTourExpansionNavigationIds(targetInput: TourStructureData): r
     ...navigationPatches.flatMap((patch) => [
       patch.desiredId,
       ...(patch.retired ? [patch.retired.id] : [])
-    ])
+    ]),
+    ...hotspotReplacements.map((replacement) => replacement.replacementId)
   ])].sort();
 }
 
@@ -245,14 +264,22 @@ export function mergeTourExpansion(
   const resultScenes = new Map(result.scenes.map((scene) => [scene.id, scene]));
   const targetScenes = new Map(target.scenes.map((scene) => [scene.id, scene]));
 
-  for (const sceneId of [...NEW_TOUR_SCENE_IDS, ...LAB_AND_CONNECTOR_SCENE_IDS]) {
+  const collisionProtectedSceneIds = new Set<string>([
+    ...LAB_AND_CONNECTOR_SCENE_IDS,
+    ...CO_WORKING_AND_DORMITORY_SCENE_IDS
+  ]);
+  for (const sceneId of [
+    ...NEW_TOUR_SCENE_IDS,
+    ...LAB_AND_CONNECTOR_SCENE_IDS,
+    ...CO_WORKING_AND_DORMITORY_SCENE_IDS
+  ]) {
     const targetScene = targetScenes.get(sceneId);
     if (!targetScene) {
       throw new TourExpansionCollisionError(`Missing approved scene in code: ${sceneId}`);
     }
     const existingScene = resultScenes.get(sceneId);
     if (existingScene) {
-      if (LAB_AND_CONNECTOR_SCENE_IDS.includes(sceneId as (typeof LAB_AND_CONNECTOR_SCENE_IDS)[number])
+      if (collisionProtectedSceneIds.has(sceneId)
         && (existingScene.panorama !== targetScene.panorama
           || !equalJson(navigationOnly(existingScene), navigationOnly(targetScene)))) {
         throw new TourExpansionCollisionError(

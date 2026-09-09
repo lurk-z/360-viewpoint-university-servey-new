@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createBootstrapTourStructureData, tourStructureDataSchema } from './tour-structure';
 import {
+  CO_WORKING_AND_DORMITORY_SCENE_IDS,
   LAB_AND_CONNECTOR_SCENE_IDS,
   NEW_TOUR_SCENE_IDS,
   TourExpansionCollisionError,
@@ -12,12 +13,14 @@ function createLegacyStructure() {
   const legacy = structuredClone(target);
   const expansionSceneIds = new Set<string>([
     ...NEW_TOUR_SCENE_IDS,
-    ...LAB_AND_CONNECTOR_SCENE_IDS
+    ...LAB_AND_CONNECTOR_SCENE_IDS,
+    ...CO_WORKING_AND_DORMITORY_SCENE_IDS
   ]);
   legacy.scenes = legacy.scenes.filter((scene) => !expansionSceneIds.has(scene.id));
   for (const [sceneId, hotspotId] of [
     ['fitmInterior15', 'fitm-interior-15-to-iti-electrical-lab-1'],
-    ['fitmInterior17', 'fitm-interior-17-to-mechanical-lab-1']
+    ['fitmInterior17', 'fitm-interior-17-to-mechanical-lab-1'],
+    ['maleDormitory', 'male-dormitory-to-ground-floor-minimart']
   ] as const) {
     const scene = legacy.scenes.find((item) => item.id === sceneId)!;
     scene.hotspots = scene.hotspots.filter((hotspot) => hotspot.id !== hotspotId);
@@ -37,6 +40,11 @@ function createLegacyStructure() {
       sceneId: 'fitmInterior13',
       replacementId: 'fitm-interior-13-to-floor-2-point-4',
       retired: { id: 'fitm-stairs-2-to-second-floor-info', type: 'info' as const, yaw: -95, pitch: 8 }
+    },
+    {
+      sceneId: 'fitmInterior7',
+      replacementId: 'fitm-interior-7-to-coworking-space-1',
+      retired: { id: 'fitm-coworking-space-info', type: 'info' as const, yaw: -5, pitch: -2 }
     }
   ];
   for (const replacement of replacements) {
@@ -85,7 +93,7 @@ describe('tour expansion sync merge', () => {
 
     const first = mergeTourExpansion(legacy, target);
     expect(first.changed).toBe(true);
-    expect(first.data.scenes).toHaveLength(130);
+    expect(first.data.scenes).toHaveLength(134);
     expect(first.data.scenes[0]!.description.th).toBe('ข้อความที่ผู้ดูแลแก้ไว้');
 
     const second = mergeTourExpansion(first.data, target);
@@ -100,7 +108,7 @@ describe('tour expansion sync merge', () => {
 
     const first = mergeTourExpansion(current, target);
     expect(first.changed).toBe(true);
-    expect(first.data.scenes).toHaveLength(130);
+    expect(first.data.scenes).toHaveLength(134);
     expect(first.data.scenes.find((scene) => scene.id === 'fitmInterior15')!.description.en)
       .toBe('Admin-edited description');
     expect(first.data.scenes.find((scene) => scene.id === 'fitmFloor2Point2')!.hotspots)
@@ -114,7 +122,7 @@ describe('tour expansion sync merge', () => {
   it('stops when a new scene already exists with conflicting Admin data', () => {
     const target = createBootstrapTourStructureData();
     const current = structuredClone(target);
-    current.scenes.find((scene) => scene.id === 'fitmFloor2Point2A')!.panorama = '/mainimages/conflict.jpg';
+    current.scenes.find((scene) => scene.id === 'fitmCoworkingSpace1')!.panorama = '/mainimages/conflict.jpg';
 
     expect(() => mergeTourExpansion(current, target)).toThrow(TourExpansionCollisionError);
   });

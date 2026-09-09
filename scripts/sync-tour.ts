@@ -13,6 +13,11 @@ import {
   navigationSnapshotsEqual
 } from '../src/tour-navigation-sync.ts';
 import { retiredPlaceContentBaselines } from './place-seed-data.ts';
+import {
+  coworkingRetiredContentBaseline,
+  dormitoryContentUpdates,
+  mergeDormitoryContent
+} from './dormitory-content-update.ts';
 
 try {
   process.loadEnvFile('.env.local');
@@ -123,7 +128,8 @@ const retiredStairBaselines: Readonly<Record<string, HotspotData>> = {
 
 const retiredContentBaselines: Readonly<Record<string, unknown>> = {
   ...retiredStairBaselines,
-  'Sirindhorn Building-info': retiredPlaceContentBaselines['Sirindhorn Building-info']
+  'Sirindhorn Building-info': retiredPlaceContentBaselines['Sirindhorn Building-info'],
+  'fitm-coworking-space-info': coworkingRetiredContentBaseline
 };
 
 function normalizedJson(value: unknown): unknown {
@@ -266,6 +272,42 @@ for (const row of retiredResult.data ?? []) {
   archived.push(String(row.id));
 }
 
+const dormitoryResult = await supabase.from('hotspot_contents')
+  .select('id,draft_data,published_data,updated_at')
+  .in('id', dormitoryContentUpdates.map((item) => item.id));
+if (dormitoryResult.error) throw dormitoryResult.error;
+const dormitoryContentResults: Array<{
+  readonly id: string;
+  readonly draftFields: readonly string[];
+  readonly publishedFields: readonly string[];
+}> = [];
+for (const row of dormitoryResult.data ?? []) {
+  const draftContent = mergeDormitoryContent(String(row.id), row.draft_data);
+  const publishedContent = row.published_data === null
+    ? undefined
+    : mergeDormitoryContent(String(row.id), row.published_data);
+  if (!draftContent.changed && !publishedContent?.changed) continue;
+
+  const updatePayload: Record<string, unknown> = {};
+  if (draftContent.changed) updatePayload.draft_data = draftContent.data;
+  if (publishedContent?.changed) updatePayload.published_data = publishedContent.data;
+  const updateResult = await supabase.from('hotspot_contents')
+    .update(updatePayload)
+    .eq('id', row.id)
+    .eq('updated_at', row.updated_at)
+    .select('id')
+    .maybeSingle();
+  if (updateResult.error) throw updateResult.error;
+  if (!updateResult.data) {
+    throw new Error(`Hotspot ${row.id} was edited while syncing. No newer Admin content was overwritten.`);
+  }
+  dormitoryContentResults.push({
+    id: String(row.id),
+    draftFields: draftContent.changedFields,
+    publishedFields: publishedContent?.changedFields ?? []
+  });
+}
+
 const codeNavigation = extractNavigationSnapshot(target);
 const mergedDraftNavigation = extractNavigationSnapshot(draftMerge.data);
 const mergedPublishedNavigation = extractNavigationSnapshot(publishedMerge.data);
@@ -331,7 +373,8 @@ if (nextNavigationBaseline) {
   }
 }
 
-if (draftMerge.changed || publishedMerge.changed || newInfoStatus !== 'preserved' || archived.length > 0) {
+if (draftMerge.changed || publishedMerge.changed || newInfoStatus !== 'preserved'
+  || archived.length > 0 || dormitoryContentResults.length > 0) {
   const expansionAuditWrite = await supabase.from('admin_audit_logs').insert({
     actor_id: null,
     action: 'sync-tour-expansion',
@@ -344,7 +387,8 @@ if (draftMerge.changed || publishedMerge.changed || newInfoStatus !== 'preserved
       publishedVersion: nextPublishedVersion,
       newInfoStatus,
       archivedInfoIds: archived,
-      preservedEditedInfoIds: preserved
+      preservedEditedInfoIds: preserved,
+      dormitoryContentUpdates: dormitoryContentResults
     }
   });
   if (expansionAuditWrite.error) throw expansionAuditWrite.error;
@@ -368,5 +412,6 @@ console.log(JSON.stringify({
   navigationBaselineAdvanced,
   newInfoStatus,
   archivedInfoIds: archived,
-  preservedEditedInfoIds: preserved
+  preservedEditedInfoIds: preserved,
+  dormitoryContentUpdates: dormitoryContentResults
 }, null, 2));

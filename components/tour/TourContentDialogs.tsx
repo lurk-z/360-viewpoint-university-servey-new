@@ -63,7 +63,11 @@ export function TourInfoDialog({
             ))}
           </div>
         ) : null}
-      </> : null}
+      </> : <>
+        <p className="eyebrow">{message(locale, 'infoPoint')}</p>
+        <h2 id="info-dialog-title">{message(locale, 'infoUnavailableTitle')}</h2>
+        <p className="dialog-description">{message(locale, 'infoUnavailableDescription')}</p>
+      </>}
     </ModalDialog>
   );
 }

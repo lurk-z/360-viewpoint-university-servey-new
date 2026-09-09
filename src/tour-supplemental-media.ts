@@ -62,6 +62,109 @@ const fitmClassrooms: TourSupplementalMediaGroup = {
   ]
 };
 
+const fitmCoworkingSampleRooms: TourSupplementalMediaGroup = {
+  id: 'fitm-coworking-sample-rooms',
+  title: { th: 'ห้องตัวอย่าง Co-working Space', en: 'Co-working Space sample rooms' },
+  description: {
+    th: 'ชมตัวอย่างห้อง SPARK ซึ่งมีทั้งหมด 6 ห้อง และห้อง SPARK Lab ซึ่งมีทั้งหมด 2 ห้อง ภายใน Co-working Space แบบ 360 องศา',
+    en: 'Explore a sample of the six SPARK rooms and both SPARK Lab rooms inside the co-working space in 360 degrees.'
+  },
+  items: [
+    {
+      id: 'fitm-coworking-spark-sample',
+      kind: 'panorama',
+      src: mediaUrl('temp-faculty-co-working-space-ex-spark.jpg'),
+      floor: 1,
+      title: { th: 'ห้อง SPARK ตัวอย่าง (มีทั้งหมด 6 ห้อง)', en: 'Sample SPARK room (6 rooms total)' }
+    },
+    {
+      id: 'fitm-coworking-spark-lab-1',
+      kind: 'panorama',
+      src: mediaUrl('temp-faculty-co-working-space-ex-spark-lab-1.jpg'),
+      floor: 1,
+      title: { th: 'ห้อง SPARK Lab ห้องที่ 1', en: 'SPARK Lab room 1' }
+    },
+    {
+      id: 'fitm-coworking-spark-lab-2',
+      kind: 'panorama',
+      src: mediaUrl('temp-faculty-co-working-space-ex-spark-lab-2.jpg'),
+      floor: 1,
+      title: { th: 'ห้อง SPARK Lab ห้องที่ 2', en: 'SPARK Lab room 2' }
+    }
+  ]
+};
+
+const maleDormitoryRoomsAndFacilities: TourSupplementalMediaGroup = {
+  id: 'male-dormitory-rooms-and-facilities',
+  title: { th: 'ห้องพักและพื้นที่บริการตัวอย่าง', en: 'Sample room and shared facilities' },
+  description: {
+    th: 'ชมห้องพักตัวอย่าง ห้องน้ำ และพื้นที่ซักผ้าภายในหอพักนักศึกษาชายแบบ 360 องศา',
+    en: 'Explore a sample room, restroom and laundry facilities inside the male student dormitory in 360 degrees.'
+  },
+  items: [
+    {
+      id: 'male-dormitory-sample-room-balcony',
+      kind: 'panorama',
+      src: mediaUrl('temp-male-dormitory-1-ex-room-balcony.jpg'),
+      floor: 1,
+      title: { th: 'ระเบียงห้องพักตัวอย่าง', en: 'Sample room balcony' }
+    },
+    {
+      id: 'male-dormitory-sample-room-inside',
+      kind: 'panorama',
+      src: mediaUrl('temp-male-dormitory-1-ex-room-inside.jpg'),
+      floor: 1,
+      title: { th: 'ภายในห้องพักตัวอย่าง', en: 'Inside a sample room' }
+    },
+    {
+      id: 'male-dormitory-restroom-and-laundry',
+      kind: 'panorama',
+      src: mediaUrl('temp-male-dormitory-laundry-area-bathroom-1.jpg'),
+      floor: 1,
+      title: { th: 'ห้องน้ำและพื้นที่ซักผ้า', en: 'Restroom and laundry area' }
+    },
+    {
+      id: 'male-dormitory-laundry-machines',
+      kind: 'panorama',
+      src: mediaUrl('temp-male-dormitory-laundry-area-bathroom-2.jpg'),
+      floor: 1,
+      title: { th: 'พื้นที่เครื่องซักผ้า', en: 'Laundry machine area' }
+    }
+  ]
+};
+
+const femaleDormitory1RoomsAndFacilities: TourSupplementalMediaGroup = {
+  id: 'female-dormitory-1-rooms-and-facilities',
+  title: { th: 'ห้องพักและห้องน้ำตัวอย่าง', en: 'Sample room and restroom' },
+  description: {
+    th: 'ชมห้องพักแบบพัดลมและห้องน้ำภายในหอพักนักศึกษาหญิงหลังที่ 1 แบบ 360 องศา',
+    en: 'Explore a sample fan room and restroom inside Female Dormitory 1 in 360 degrees.'
+  },
+  items: [
+    {
+      id: 'female-dormitory-1-sample-room-balcony',
+      kind: 'panorama',
+      src: mediaUrl('temp-female-dormitory-1-ex-room-balcony.jpg'),
+      floor: 1,
+      title: { th: 'ระเบียงห้องพักตัวอย่าง', en: 'Sample room balcony' }
+    },
+    {
+      id: 'female-dormitory-1-sample-room-inside',
+      kind: 'panorama',
+      src: mediaUrl('temp-female-dormitory-1-ex-room-inside.jpg'),
+      floor: 1,
+      title: { th: 'ภายในห้องพักตัวอย่าง', en: 'Inside a sample room' }
+    },
+    {
+      id: 'female-dormitory-1-restroom',
+      kind: 'panorama',
+      src: mediaUrl('temp-female-dormitory-1-women-restroom.jpg'),
+      floor: 1,
+      title: { th: 'ห้องน้ำหอพักหญิงหลังที่ 1', en: 'Female Dormitory 1 restroom' }
+    }
+  ]
+};
+
 const femaleDormitory2Rooms: TourSupplementalMediaGroup = {
   id: 'female-dormitory-2-sample-rooms',
   title: { th: 'ห้องพักตัวอย่าง', en: 'Sample dormitory rooms' },
@@ -83,6 +186,13 @@ const femaleDormitory2Rooms: TourSupplementalMediaGroup = {
       src: mediaUrl('temp-female-dormitory-2-ex-room2.jpg'),
       floor: 1,
       title: { th: 'ห้องพักตัวอย่าง ภายนอกห้อง', en: 'Sample room, exterior view.' }
+    },
+    {
+      id: 'female-dormitory-2-restroom',
+      kind: 'panorama',
+      src: mediaUrl('temp-female-dormitory-2-women-restroom.jpg'),
+      floor: 1,
+      title: { th: 'ห้องน้ำหอพักหญิงหลังที่ 2', en: 'Female Dormitory 2 restroom' }
     }
   ]
 };
@@ -165,9 +275,13 @@ function isFitmInteriorScene(sceneId: SceneId): boolean {
 }
 
 export function getTourSupplementalMediaGroups(sceneId: SceneId): readonly TourSupplementalMediaGroup[] {
+  if (sceneId === 'fitmInterior7') return [fitmClassrooms, fitmCoworkingSampleRooms];
+  if (sceneId.startsWith('fitmCoworkingSpace')) return [fitmCoworkingSampleRooms];
   if (isFitmInteriorScene(sceneId)) return [fitmClassrooms];
-  if (sceneId === 'maleDormitory') return [maleDormitoryFloorPlans];
-  if (sceneId === 'femaleDormitory1') return [femaleDormitory1FloorPlans];
+  if (sceneId === 'maleDormitory' || sceneId === 'maleDormitoryGroundFloorMinimart') {
+    return [maleDormitoryRoomsAndFacilities, maleDormitoryFloorPlans];
+  }
+  if (sceneId === 'femaleDormitory1') return [femaleDormitory1RoomsAndFacilities, femaleDormitory1FloorPlans];
   if (sceneId === 'femaleDormitory2') return [femaleDormitory2Rooms, femaleDormitory2FloorPlans];
   return [];
 }
@@ -183,6 +297,9 @@ export function getDefaultSupplementalMediaItemId(
 
 export const tourSupplementalMediaGroups = [
   fitmClassrooms,
+  fitmCoworkingSampleRooms,
+  maleDormitoryRoomsAndFacilities,
+  femaleDormitory1RoomsAndFacilities,
   femaleDormitory2Rooms,
   maleDormitoryFloorPlans,
   femaleDormitory1FloorPlans,

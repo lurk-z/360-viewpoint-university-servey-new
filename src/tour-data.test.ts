@@ -76,7 +76,7 @@ describe('tour configuration', () => {
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(130);
+    expect(tourScenes).toHaveLength(134);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
@@ -626,6 +626,7 @@ describe('tour configuration', () => {
       ['campusRoad56', 'campusRoad57'],
       ['campusRoad57', 'campusRoad58'],
       ['campusRoad58', 'maleDormitory'],
+      ['maleDormitory', 'maleDormitoryGroundFloorMinimart'],
       ['maleDormitory', 'dormitoryJunction'],
       ['maleDormitory', 'dormitoryRoad'],
       ['dormitoryJunction', 'femaleDormitory1'],
@@ -691,6 +692,9 @@ describe('tour configuration', () => {
       ['fitmInterior15', 'fitmInterior16'],
       ['fitmInterior16', 'fitmInterior17'],
       ['fitmInterior7', 'fitmInterior8'],
+      ['fitmInterior7', 'fitmCoworkingSpace1'],
+      ['fitmCoworkingSpace1', 'fitmCoworkingSpace2'],
+      ['fitmCoworkingSpace2', 'fitmCoworkingSpace3'],
       ['fitmInterior8', 'fitmInterior9'],
       ['fitmInterior9', 'fitmInterior10'],
       ['fitmInterior10', 'campusRoad36'],
@@ -714,11 +718,11 @@ describe('tour configuration', () => {
       'female-dormitory-2-mixed-parking-info',
       'fitm-copy-room-info',
       'fitm-student-club-info',
-      'fitm-coworking-space-info',
       'fitm-nurse-room-info',
     ]);
     const infoIds = tourScenes.flatMap((scene) => getInfoHotspots(scene).map((info) => info.id));
-    expect(infoIds.filter((id) => newInfoIds.has(id))).toHaveLength(12);
+    expect(infoIds.filter((id) => newInfoIds.has(id))).toHaveLength(11);
+    expect(infoIds).not.toContain('fitm-coworking-space-info');
     expect(infoIds).not.toContain('orange-blossom-room-info');
     expect(infoIds).not.toContain('fitm-stairs-1-to-second-floor-info');
     expect(infoIds).not.toContain('fitm-stairs-2-to-second-floor-info');
@@ -845,12 +849,50 @@ describe('tour configuration', () => {
     }
   });
 
+  it('adds reciprocal Co-working Space and male dormitory ground-floor routes', () => {
+    const ids = [
+      'fitmCoworkingSpace1',
+      'fitmCoworkingSpace2',
+      'fitmCoworkingSpace3',
+      'maleDormitoryGroundFloorMinimart'
+    ] as const;
+    const files = [
+      'temp-faculty-co-working-space-1.jpg',
+      'temp-faculty-co-working-space-2.jpg',
+      'temp-faculty-co-working-space-3.jpg',
+      'temp8-8-1.jpg'
+    ];
+    const pairs = [
+      ['fitmInterior7', 'fitmCoworkingSpace1'],
+      ['fitmCoworkingSpace1', 'fitmCoworkingSpace2'],
+      ['fitmCoworkingSpace2', 'fitmCoworkingSpace3'],
+      ['maleDormitory', 'maleDormitoryGroundFloorMinimart']
+    ] as const;
+
+    expect(ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
+      .toEqual(files.map((file) => `/mainimages/${file}`));
+    for (const [from, to] of pairs) {
+      expect(getNavigationHotspots(getScene(from)).map((hotspot) => hotspot.target)).toContain(to);
+      expect(getNavigationHotspots(getScene(to)).map((hotspot) => hotspot.target)).toContain(from);
+    }
+    expect(getInfoHotspots(getScene('fitmInterior7')).map((hotspot) => hotspot.id))
+      .not.toContain('fitm-coworking-space-info');
+    expect(ids.slice(0, 3).every((id) => (
+      getScene(id).mapPosition.x === 311 && getScene(id).mapPosition.y === 358
+    ))).toBe(true);
+    expect(getScene('maleDormitoryGroundFloorMinimart').mapPosition).toEqual({ x: 296, y: 164 });
+    for (const file of files) {
+      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
+        .toEqual({ width: 7680, height: 3840 });
+    }
+  });
+
   it('keeps sample panoramas and available dormitory plans in contextual media menus only', () => {
     const items = tourSupplementalMediaGroups.flatMap((group) => group.items);
     const panoramas = items.filter((item) => item.kind === 'panorama');
     const floorPlans = items.filter((item) => item.kind === 'floor-plan');
 
-    expect(panoramas).toHaveLength(6);
+    expect(panoramas).toHaveLength(17);
     expect(floorPlans).toHaveLength(13);
     expect(getTourSupplementalMediaGroups('fitmFloor3Point2').map((group) => group.id))
       .toEqual(['fitm-sample-classrooms']);
@@ -860,10 +902,16 @@ describe('tour configuration', () => {
     )).toBe('fitm-floor-3-sample-classroom-1');
     expect(getTourSupplementalMediaGroups('femaleDormitory2').map((group) => group.id))
       .toEqual(['female-dormitory-2-sample-rooms', 'female-dormitory-2-floor-plans']);
-    expect(getTourSupplementalMediaGroups('maleDormitory')[0]!.items.map((item) => item.floor))
+    expect(getTourSupplementalMediaGroups('fitmInterior7').map((group) => group.id))
+      .toEqual(['fitm-sample-classrooms', 'fitm-coworking-sample-rooms']);
+    expect(getTourSupplementalMediaGroups('fitmCoworkingSpace2').map((group) => group.id))
+      .toEqual(['fitm-coworking-sample-rooms']);
+    expect(getTourSupplementalMediaGroups('maleDormitory').find((group) => group.id === 'male-dormitory-floor-plans')!.items.map((item) => item.floor))
       .toEqual([2, 3, 5]);
-    expect(getTourSupplementalMediaGroups('femaleDormitory1')[0]!.items.map((item) => item.floor))
+    expect(getTourSupplementalMediaGroups('femaleDormitory1').find((group) => group.id === 'female-dormitory-1-floor-plans')!.items.map((item) => item.floor))
       .toEqual([1, 2, 3, 4, 5]);
+    expect(getTourSupplementalMediaGroups('femaleDormitory2')[0]!.items.map((item) => item.id))
+      .toContain('female-dormitory-2-restroom');
     expect(getTourSupplementalMediaGroups('campusRoad1')).toEqual([]);
 
     const walkableAssets = new Set(tourScenes.flatMap((scene) => getSceneAssetUrls(scene)));
@@ -976,8 +1024,8 @@ describe('tour configuration', () => {
 
   it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {
     const infoHotspots = tourScenes.flatMap((scene) => getInfoHotspots(scene));
-    expect(infoHotspots).toHaveLength(37);
-    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(37);
+    expect(infoHotspots).toHaveLength(36);
+    expect(new Set(infoHotspots.map((hotspot) => hotspot.id)).size).toBe(36);
 
     for (const hotspot of infoHotspots) {
       expect(Object.keys(hotspot).sort()).toEqual(['id', 'pitch', 'type', 'yaw']);
@@ -1006,11 +1054,11 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 130 versioned walkable panoramas from the tour assets API', async () => {
+  it('returns only the 134 versioned walkable panoramas from the tour assets API', async () => {
     const response = await getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(130);
+    expect(new Set(body.assets).size).toBe(134);
     expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });

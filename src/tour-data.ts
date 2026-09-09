@@ -102,6 +102,7 @@ export const tourMedia = {
   campusRoad57: mainPanorama('temp8-6.jpg'),
   campusRoad58: mainPanorama('temp8-7.jpg'),
   maleDormitory: mainPanorama('temp8-8.jpg'),
+  maleDormitoryGroundFloorMinimart: mainPanorama('temp8-8-1.jpg'),
   dormitoryJunction: mainPanorama('temp8-9.jpg'),
   femaleDormitory1: mainPanorama('temp8-10.jpg'),
   femaleDormitoryMinimart: mainPanorama('temp8-11.jpg'),
@@ -114,6 +115,9 @@ export const tourMedia = {
   fitmInterior5: mainPanorama('temp-faculty-5.jpg'),
   fitmInterior6: mainPanorama('temp-faculty-6.jpg'),
   fitmInterior7: mainPanorama('temp-faculty-7.jpg'),
+  fitmCoworkingSpace1: mainPanorama('temp-faculty-co-working-space-1.jpg'),
+  fitmCoworkingSpace2: mainPanorama('temp-faculty-co-working-space-2.jpg'),
+  fitmCoworkingSpace3: mainPanorama('temp-faculty-co-working-space-3.jpg'),
   fitmInterior8: mainPanorama('temp-faculty-8.jpg'),
   fitmInterior9: mainPanorama('temp-faculty-9.jpg'),
   fitmInterior10: mainPanorama('temp-faculty-10.jpg'),
@@ -1497,8 +1501,24 @@ export const fallbackTourScenes = [
       { id: 'male-dormitory-to-road-58', type: 'scene', target: 'campusRoad58', yaw: -90, pitch: -3 },
       { id: 'male-dormitory-to-junction', type: 'scene', target: 'dormitoryJunction', yaw: 90, pitch: -3 },
       { id: 'male-dormitory-to-dormitory-road', type: 'scene', target: 'dormitoryRoad', yaw: 180, pitch: -3 },
+      { id: 'male-dormitory-to-ground-floor-minimart', type: 'scene', target: 'maleDormitoryGroundFloorMinimart', yaw: 0, pitch: 1 },
       { id: 'male-dormitory-info', type: 'info', yaw: 0, pitch: 8 },
       { id: 'male-dormitory-motorcycle-parking-info', type: 'info', yaw: 70, pitch: 0 }
+    ]
+  },
+  {
+    id: 'maleDormitoryGroundFloorMinimart',
+    ...tourMedia.maleDormitoryGroundFloorMinimart,
+    title: { th: 'พื้นที่ใต้หอพักชายและมินิมาร์ท', en: 'Male Dormitory Ground Floor and Minimart' },
+    description: {
+      th: 'พื้นที่บริการและพื้นที่นั่งพักบริเวณชั้นล่างของหอพักนักศึกษาชาย ซึ่งมีมินิมาร์ทให้บริการภายในอาคาร',
+      en: 'The service and seating area on the ground floor of the male student dormitory, including its minimart.'
+    },
+    tags: { th: ['หอพัก', 'นักศึกษาชาย', 'มินิมาร์ท'], en: ['Dormitory', 'Male students', 'Minimart'] },
+    initialView: { yaw: 90, pitch: -1, zoom: 24 },
+    mapPosition: { x: 296, y: 164 },
+    hotspots: [
+      { id: 'male-dormitory-ground-floor-minimart-to-dormitory', type: 'scene', target: 'maleDormitory', yaw: 90, pitch: -3 }
     ]
   },
   {
@@ -1707,7 +1727,54 @@ export const fallbackTourScenes = [
       { id: 'fitm-interior-7-to-interior-6', type: 'scene', target: 'fitmInterior6', yaw: -90, pitch: -3 },
       { id: 'fitm-interior-7-to-interior-12', type: 'scene', target: 'fitmInterior12', yaw: 10, pitch: -3 },
       { id: 'fitm-interior-7-to-interior-8', type: 'scene', target: 'fitmInterior8', yaw: 90, pitch: -3 },
-      { id: 'fitm-coworking-space-info', type: 'info', yaw: -5, pitch: -2 }
+      { id: 'fitm-interior-7-to-coworking-space-1', type: 'scene', target: 'fitmCoworkingSpace1', yaw: -5, pitch: -2 }
+    ]
+  },
+  {
+    id: 'fitmCoworkingSpace1',
+    ...tourMedia.fitmCoworkingSpace1,
+    title: { th: 'ห้อง Co-working Space จุดที่ 1', en: 'Co-working Space Point 1' },
+    description: {
+      th: 'พื้นที่ Co-working Space ชั้น 1 อาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม ให้บริการพื้นที่ทำงาน การเรียนรู้ การประชุม และเครื่องคอมพิวเตอร์สำหรับนักศึกษาและบุคลากร',
+      en: 'The first-floor FITM co-working space provides work, learning and meeting areas, along with computers for students and staff.'
+    },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'Co-working Space'], en: ['Indoor', 'FITM', 'Co-working Space'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-coworking-space-1-to-interior-7', type: 'scene', target: 'fitmInterior7', yaw: 92, pitch: -3 },
+      { id: 'fitm-coworking-space-1-to-point-2', type: 'scene', target: 'fitmCoworkingSpace2', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmCoworkingSpace2',
+    ...tourMedia.fitmCoworkingSpace2,
+    title: { th: 'ห้อง Co-working Space จุดที่ 2', en: 'Co-working Space Point 2' },
+    description: {
+      th: 'จุดที่ 2 ภายใน Co-working Space สำหรับทำกิจกรรมการเรียนรู้ ทำงานร่วมกัน และประชุมงาน',
+      en: 'Point 2 inside the co-working space for learning activities, collaboration and meetings.'
+    },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'Co-working Space'], en: ['Indoor', 'FITM', 'Co-working Space'] },
+    initialView: { yaw: 0, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-coworking-space-2-to-point-1', type: 'scene', target: 'fitmCoworkingSpace1', yaw: 180, pitch: -3 },
+      { id: 'fitm-coworking-space-2-to-point-3', type: 'scene', target: 'fitmCoworkingSpace3', yaw: 0, pitch: -3 }
+    ]
+  },
+  {
+    id: 'fitmCoworkingSpace3',
+    ...tourMedia.fitmCoworkingSpace3,
+    title: { th: 'ห้อง Co-working Space จุดที่ 3', en: 'Co-working Space Point 3' },
+    description: {
+      th: 'จุดที่ 3 ภายใน Co-working Space บริเวณพื้นที่กิจกรรมและพื้นที่ทำงานร่วมกันของนักศึกษาและบุคลากร',
+      en: 'Point 3 inside the co-working space, featuring activity and collaborative work areas for students and staff.'
+    },
+    tags: { th: ['ภายในอาคาร', 'FITM', 'Co-working Space'], en: ['Indoor', 'FITM', 'Co-working Space'] },
+    initialView: { yaw: 180, pitch: -1, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'fitm-coworking-space-3-to-point-2', type: 'scene', target: 'fitmCoworkingSpace2', yaw: 175, pitch: -3 }
     ]
   },
   {
