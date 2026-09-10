@@ -39,7 +39,24 @@ const emptyResponse = {
   needsTourPreference: false, fallback: false
 } as const;
 
+export function academicContentUnavailable(request: ChatRequest, content: PublicContentSnapshot, intent: ChatResponse['intent'], kind: 'programs' | 'faculties' = 'programs'): ChatResponse | undefined {
+  if (content[kind].length) return undefined;
+  const unavailable = content.source === 'fallback';
+  const name = kind === 'programs' ? 'หลักสูตร' : 'คณะ';
+  return {
+    ...emptyResponse, intent, answered: false,
+    answer: unavailable
+      ? request.locale === 'th' ? `ขณะนี้โหลดข้อมูล${name}ไม่ได้ กรุณากดลองใหม่ ข้อมูลที่คุณกรอกไว้ยังอยู่ ไม่ต้องกรอกซ้ำ`
+        : `Could not load ${kind} right now. Please try again; your entered information has been kept.`
+      : request.locale === 'th' ? `ยังไม่มีข้อมูล${name}ที่เผยแพร่ในระบบ จึงยังแนะนำจากข้อมูลจริงไม่ได้`
+        : `No ${kind} have been published yet, so guidance is not available.`,
+    fallback: unavailable, ...(unavailable ? { fallbackReason: 'no-content' as const } : {})
+  };
+}
+
 export function createProgramListResponse(request: ChatRequest, content: PublicContentSnapshot): ChatResponse {
+  const unavailable = academicContentUnavailable(request, content, 'answer');
+  if (unavailable) return unavailable;
   const facultyIds = academicFacultyIds(request, content);
   const programs = content.programs.filter((p) => !facultyIds.length || facultyIds.includes(p.facultyId));
   const th = request.locale === 'th';
@@ -99,14 +116,19 @@ export function createAcademicGuidanceResponse(request: ChatRequest, content: Pu
   const career = isCareerIntent(request.message) || request.conversationContext?.guidanceGoal === 'career';
   const profile = typedRecommendationProfile(request);
   const intent = career ? 'career-guidance' : 'program-recommendation';
+  const unavailable = academicContentUnavailable(request, content, intent);
+  if (unavailable) return unavailable;
   const named = contextualProgramIds(request, content);
   const referenced = named.length ? named : isContextReferenceIntent(request.message)
     ? request.conversationContext?.lastProgramIds ?? [] : [];
   const scopedFacultyIds = academicFacultyIds(request, content);
-  const scopedContent = scopedFacultyIds.length
-    ? { ...content, programs: content.programs.filter((p) => scopedFacultyIds.includes(p.facultyId)) } : content;
+  const scopedContent = { ...content, programs: content.programs.filter((p) =>
+    (!scopedFacultyIds.length || scopedFacultyIds.includes(p.facultyId))
+    && (!career || !referenced.length || referenced.includes(p.id))) };
   const recommendations = profile ? rankProgramsForProfile(profile, scopedContent, request.locale, 3) : [];
-  const ids = new Set(career && referenced.length ? referenced : recommendations.map((r) => r.programId));
+  // A named/ordinal program can provide career information without a profile, but
+  // must pass the same qualification checks when the visitor supplies a profile.
+  const ids = new Set(!profile && career && referenced.length ? referenced : recommendations.map((r) => r.programId));
   const programs = [...ids].flatMap((id) => {
     const p = content.programs.find((program) => program.id === id);
     return p && content.faculties.some((f) => f.id === p.facultyId) ? [p] : [];
@@ -115,15 +137,18 @@ export function createAcademicGuidanceResponse(request: ChatRequest, content: Pu
     programId: p.id, facultyId: p.facultyId, careers: p.careerTags?.[request.locale].filter((tag) => tag.trim()).slice(0, 5) ?? []
   }));
   const needsProfile = !profile && programs.length === 0;
+  const hasCareerData = careerGuidance.some((entry) => entry.careers.length > 0);
   const answer = programs.length
     ? career
-      ? (th ? 'แนวทางอาชีพของหลักสูตรที่เลือกอยู่ด้านล่าง คุณสามารถดูรายละเอียดหรือเปรียบเทียบหลักสูตรต่อได้ อาชีพเป็นแนวทางประกอบการตัดสินใจ ขึ้นอยู่กับทักษะ ประสบการณ์ และข้อกำหนดของงานด้วย' : 'Career directions for the selected programs are below. You can view details or compare programs. Career opportunities depend on skills, experience and job requirements.')
+      ? hasCareerData
+        ? (th ? 'แนวทางอาชีพของหลักสูตรที่เลือกอยู่ด้านล่าง คุณสามารถดูรายละเอียดหรือเปรียบเทียบหลักสูตรต่อได้ อาชีพเป็นแนวทางประกอบการตัดสินใจ ขึ้นอยู่กับทักษะ ประสบการณ์ และข้อกำหนดของงานด้วย' : 'Career directions for the selected programs are below. You can view details or compare programs. Career opportunities depend on skills, experience and job requirements.')
+        : (th ? 'พบข้อมูลหลักสูตร แต่ยังไม่มีข้อมูลแนวทางอาชีพที่เผยแพร่สำหรับรายการเหล่านี้ คุณสามารถเปิดรายละเอียดหลักสูตรเพื่อศึกษาต่อได้' : 'Program information is available, but career directions have not been published for these programs yet. You can still view their details.')
       : (th ? `พบ ${programs.length} หลักสูตรที่เกี่ยวข้องกับความสนใจและระดับที่ต้องการเรียน พร้อมคณะและแนวทางอาชีพด้านล่าง โปรดตรวจเงื่อนไขรับสมัครแต่ละหลักสูตรก่อนสมัคร` : `Found ${programs.length} programs related to your interests and desired study level, with their faculties and career directions below. Check each program's admission requirements before applying.`)
     : needsProfile
       ? (th ? 'คุณสนใจด้านไหน หรืออยากทำอาชีพอะไรในอนาคต? บอกวุฒิปัจจุบันและระดับที่ต้องการเรียนด้วย แล้วฉันจะช่วยเชื่อมความสนใจ → หลักสูตร → คณะ → แนวทางอาชีพให้ กรอกด้านล่างหรือพิมพ์ตอบได้เลย' : 'What interests you, or what career would you like to pursue? Tell me your current qualification and desired study level too. I will connect your interests with programs, faculties and career directions. Use the form or type your answer.')
       : (th ? 'ยังไม่พบหลักสูตรที่ตรงกับความสนใจ วุฒิ และระดับที่เลือก ลองบอกงานหรือวิชาที่ชอบเพิ่ม หรือปรับระดับการศึกษาในแบบฟอร์มได้' : 'No published program matches your interests, qualification and selected level yet. Tell me more about subjects or work you enjoy, or change the study level in the form.');
   return {
-    ...emptyResponse, intent, answer, answered: programs.length > 0,
+    ...emptyResponse, intent, answer, answered: programs.length > 0 && (!career || hasCareerData),
     programRecommendations: recommendations.filter((r) => ids.has(r.programId)),
     relatedProgramIds: programs.map((p) => p.id), careerGuidance,
     needsRecommendationProfile: programs.length === 0,

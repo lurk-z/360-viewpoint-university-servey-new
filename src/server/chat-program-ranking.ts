@@ -46,50 +46,47 @@ function recommendationReason(program: ProgramContent, profile: RecommendationPr
     : `The program name, summary, and details align with “${profile.interests}” and the selected study level.`;
 }
 
-function programLevelCompatibility(program: ProgramContent, profile: RecommendationProfile): { readonly compatible: boolean; readonly score: number; readonly needsVerification?: boolean } {
+type QualificationStatus = 'matched' | 'unknown' | 'incompatible';
+
+function programQualificationStatus(program: ProgramContent, profile: RecommendationProfile): QualificationStatus {
   const level = `${program.level.th} ${program.level.en} ${program.name.th} ${program.name.en}`.toLocaleLowerCase();
   const admission = `${program.admission.th} ${program.admission.en}`.toLocaleLowerCase();
-  const signals = {
-    vocational: /(ประกาศนียบัตร|ปวช|อาชีว|vocational|school.?factory|โรงเรียน.?โรงงาน)/u.test(level),
-    transfer: /(เทียบโอน|ต่อเนื่อง|transfer|continuing)/u.test(level),
-    master: /(ปริญญาโท|มหาบัณฑิต|master)/u.test(level),
-    bachelor: /(ปริญญาตรี|บัณฑิต|bachelor)/u.test(level)
+  // Structured level wins over prose; master/transfer must never be read as bachelor.
+  const studyLevel = program.studyLevel
+    ?? (/(ปริญญาโท|มหาบัณฑิต|master)/u.test(level) ? 'master'
+      : /(เทียบโอน|ต่อเนื่อง|transfer|continuing)/u.test(level) ? 'transfer'
+        : /(ประกาศนียบัตร|ปวช|อาชีว|vocational|school.?factory|โรงเรียน.?โรงงาน)/u.test(level) ? 'vocational'
+          : /(ปริญญาตรี|บัณฑิต|bachelor)/u.test(level) ? 'bachelor' : undefined);
+  if (!studyLevel || (profile.desiredLevel !== 'unsure' && studyLevel !== profile.desiredLevel)) return 'incompatible';
+  const plausibleLevels = {
+    m3: ['vocational'],
+    'm6-pvoc': ['bachelor'],
+    'high-vocational': ['bachelor', 'transfer'],
+    bachelor: ['bachelor', 'transfer', 'master'],
+    other: ['vocational', 'bachelor', 'transfer', 'master']
   };
-  let score = 0;
-  if (profile.desiredLevel !== 'unsure') {
-    const levelMatches = program.studyLevel
-      ? program.studyLevel === profile.desiredLevel
-      : profile.desiredLevel === 'bachelor'
-        ? signals.bachelor && !signals.transfer && !signals.master
-        : signals[profile.desiredLevel];
-    if (!levelMatches) return { compatible: false, score: 0 };
-    score += 240;
+  if (!plausibleLevels[profile.currentQualification].includes(studyLevel)) return 'incompatible';
+  if (profile.currentQualification === 'other') return 'unknown';
+  if (program.eligibleQualifications?.length) {
+    return program.eligibleQualifications.includes(profile.currentQualification) ? 'matched' : 'incompatible';
   }
-  const qualificationMatch = program.eligibleQualifications?.length
-    ? program.eligibleQualifications.includes(profile.currentQualification)
-    : ({
-      m3: signals.vocational || /(ม\.\s*3|lower secondary)/u.test(admission),
-      'm6-pvoc': signals.bachelor && !signals.transfer && !signals.master && /(ม\.\s*6|ปวช|upper secondary|vocational certificate)/u.test(admission),
-      'high-vocational': signals.transfer || /(ปวส|higher vocational)/u.test(admission),
-      bachelor: signals.master || /(ปริญญาตรี|bachelor)/u.test(admission),
-      other: true
-    }[profile.currentQualification]);
-  const hasQualificationData = Boolean(program.eligibleQualifications?.length)
-    || /(ม\.\s*[36]|ปวช|ปวส|มัธยม|ปริญญาตรี|secondary|vocational|bachelor)/u.test(admission);
-  if (!qualificationMatch && profile.currentQualification !== 'other') {
-    // Missing admission metadata is not proof of ineligibility. Offer only a plausible
-    // study level and explicitly mark that admission requirements are unconfirmed.
-    const plausibleLevel = ({
-      m3: signals.vocational,
-      'm6-pvoc': signals.bachelor && !signals.transfer && !signals.master,
-      'high-vocational': (signals.bachelor || signals.transfer) && !signals.master,
-      bachelor: signals.bachelor || signals.master,
-      other: true
-    })[profile.currentQualification];
-    if (hasQualificationData || !plausibleLevel) return { compatible: false, score: 0 };
-    return { compatible: true, score, needsVerification: true };
-  }
-  return { compatible: true, score: score + (qualificationMatch ? 120 : 0), needsVerification: profile.currentQualification === 'other' || !hasQualificationData };
+  // Only admission text can confirm a qualification, not the program's degree name.
+  const qualifications = {
+    m3: /(ม\.?\s*3|มัธยม(?:ศึกษา)?(?:ปีที่\s*3|ตอนต้น)|lower secondary)/u,
+    'm6-pvoc': /(ม\.?\s*6|ปวช|มัธยม(?:ศึกษา)?(?:ปีที่\s*6|ตอนปลาย)|upper secondary|vocational certificate)/u,
+    'high-vocational': /(ปวส|higher vocational)/u,
+    bachelor: /(ปริญญาตรี|bachelor)/u
+  };
+  const known = Object.entries(qualifications).filter(([, pattern]) => pattern.test(admission)).map(([qualification]) => qualification);
+  if (!known.length) return 'unknown';
+  const excluded = Object.entries(qualifications).filter(([, pattern]) => new RegExp(
+    `(?:ไม่รับ|ยกเว้น|not accept|except|not eligible)\\s*(?:ผู้จบ|วุฒิ|ผู้สำเร็จการศึกษา|graduates (?:of|with)|those with)?\\s*${pattern.source}`, 'iu'
+  ).test(admission)).map(([qualification]) => qualification);
+  if (excluded.includes(profile.currentQualification)) return 'incompatible';
+  // An exclusion alone does not confirm that a different qualification is accepted.
+  if (excluded.length && known.every((qualification) => excluded.includes(qualification))) return 'unknown';
+  if (!excluded.length && /(ไม่รับ|ยกเว้น|not accept|except|not eligible)/u.test(admission)) return 'unknown';
+  return known.includes(profile.currentQualification) ? 'matched' : 'incompatible';
 }
 
 /** Latin abbreviations must be whole words: IT must not match hospitality or university. */
@@ -120,7 +117,7 @@ function fieldInterestScore(queryTerms: ReadonlySet<string>, value: string, weig
 export function rankProgramsForProfile(profile: RecommendationProfile, content: PublicContentSnapshot, locale: Locale, limit = 3): ProgramRecommendation[] {
   const queryTerms = expandedInterestTerms(profile.interests);
   const scored = content.programs.map((program, index) => {
-    const compatibility = programLevelCompatibility(program, profile);
+    const qualificationStatus = programQualificationStatus(program, profile);
     const weighted = [
       { value: [...(program.interestTags?.th ?? []), ...(program.interestTags?.en ?? [])].join(' '), weight: 14 },
       { value: [...(program.careerTags?.th ?? []), ...(program.careerTags?.en ?? [])].join(' '), weight: 12 },
@@ -128,15 +125,16 @@ export function rankProgramsForProfile(profile: RecommendationProfile, content: 
       { value: `${program.summary.th} ${program.summary.en} ${program.description.th} ${program.description.en}`, weight: 3 }
     ];
     const interestScore = weighted.reduce((total, entry) => total + fieldInterestScore(queryTerms, entry.value, entry.weight), 0);
-    return { program, compatibility, interestScore, score: compatibility.score + interestScore, index };
+    return { program, qualificationStatus, interestScore, index };
   })
-    .filter((entry) => entry.compatibility.compatible && entry.interestScore > 0)
-    .sort((a, b) => b.score - a.score || a.index - b.index);
+    .filter((entry) => entry.qualificationStatus !== 'incompatible' && entry.interestScore > 0)
+    .sort((a, b) => Number(a.qualificationStatus === 'unknown') - Number(b.qualificationStatus === 'unknown')
+      || b.interestScore - a.interestScore || a.index - b.index);
 
-  return scored.slice(0, Math.max(1, limit)).map(({ program, compatibility }) => ({
+  return scored.slice(0, Math.max(1, limit)).map(({ program, qualificationStatus }) => ({
     programId: program.id,
     facultyId: program.facultyId,
-    reason: recommendationReason(program, profile, locale) + (compatibility.needsVerification
+    reason: recommendationReason(program, profile, locale) + (qualificationStatus === 'unknown'
       ? locale === 'th' ? ' ยังยืนยันคุณสมบัติรับสมัครไม่ได้ ต้องตรวจวุฒิและประกาศรับสมัครของหลักสูตรเพิ่มเติม' : ' Admission eligibility is not confirmed; check the program’s qualifications and current admission notice.'
       : '')
   }));

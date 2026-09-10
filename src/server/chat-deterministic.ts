@@ -22,7 +22,7 @@ import {
 } from './chat-intents';
 import { buildKnowledgeDocuments, findRelatedProgramIds, selectKnowledge } from './chat-knowledge';
 import { INTEREST_ALIASES, matchesInterestTerm, rankProgramsForProfile } from './chat-program-ranking';
-import { academicFacultyIds } from './chat-guidance';
+import { academicContentUnavailable, academicFacultyIds } from './chat-guidance';
 
 const EMPTY_RESPONSE_EXTENSIONS = {
   relatedActivityIds: [] as readonly string[],
@@ -92,6 +92,8 @@ export function createActivityListResponse(request: ChatRequest, content: Public
 }
 
 export function createFacultyOverviewResponse(request: ChatRequest, content: PublicContentSnapshot): ChatResponse {
+  const unavailable = academicContentUnavailable(request, content, 'faculty-overview', 'faculties');
+  if (unavailable) return unavailable;
   const faculties = content.faculties;
   const answer = faculties.length === 0
     ? (request.locale === 'th' ? 'ขณะนี้ยังไม่มีข้อมูลคณะที่เผยแพร่ในระบบ Admin' : 'There are currently no published faculties in Admin.')
@@ -232,6 +234,8 @@ export function deterministicTourPlan(request: ChatRequest, content: PublicConte
 
 export function deterministicComparisonResponse(request: ChatRequest, content: PublicContentSnapshot): ChatResponse | undefined {
   if (!isComparisonIntent(request.message)) return undefined;
+  const unavailable = academicContentUnavailable(request, content, 'program-comparison');
+  if (unavailable) return unavailable;
   const programIds = contextualProgramIds(request, content).slice(0, 3);
   if (programIds.length < 2) {
     return {

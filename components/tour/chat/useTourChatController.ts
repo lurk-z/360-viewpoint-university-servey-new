@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import type { ChatConversationContext, ChatResponse, ChatSuggestedReply, RecommendationProfile } from '../../../src/chat';
+import type { ChatConversationContext, ChatResponse, ChatSuggestedReply, ChatTurn, RecommendationProfile } from '../../../src/chat';
 import { detectPersonalData } from '../../../src/chat-privacy';
 import { resolveInfoHotspot, resolveTourScene, type PublicContentSnapshot } from '../../../src/content';
 import { message } from '../../../src/i18n';
@@ -13,6 +13,7 @@ interface LastRequest {
   readonly profile?: RecommendationProfile;
   readonly selectedSceneId?: SceneId;
   readonly context?: ChatConversationContext;
+  readonly history: readonly ChatTurn[];
 }
 
 export default function useTourChatController({ locale, sceneId, content, getViewYaw }: {
@@ -115,11 +116,12 @@ export default function useTourChatController({ locale, sceneId, content, getVie
     lastSentAtRef.current = Date.now();
     sendingRef.current = true;
     const userMessage: DisplayMessage = { id: nextMessageId.current++, role: 'user', text: value };
-    const history = messages.slice(-6).map(({ role, text }) => ({ role, text: text.slice(0, 1000) }));
+    const history = retry && lastRequest ? lastRequest.history
+      : messages.slice(-6).map(({ role, text }) => ({ role, text: text.slice(0, 1000) }));
     const context = retry ? lastRequest?.context : buildConversationContext();
     if (!retry) setMessages((current) => [...current, userMessage]);
     setInput('');
-    setLastRequest({ question: value, profile, selectedSceneId, context });
+    setLastRequest({ question: value, profile, selectedSceneId, context, history });
     setLoading(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
