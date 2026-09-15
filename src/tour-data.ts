@@ -134,6 +134,7 @@ export const tourMedia = {
   mechanicalLab1: mainPanorama('temp-shop-1.jpg'),
   mechanicalLab2: mainPanorama('temp-shop-2.jpg'),
   mechanicalLab3: mainPanorama('temp-shop-3.jpg'),
+  puangSaedRoom: mainPanorama('temp-puang-saed.jpg'),
   puangKhramRoom1: mainPanorama('temp-puang-khram1.jpg'),
   puangKhrangRoom2: mainPanorama('temp-puang-khram2.jpg'),
   fitmFloor2Point1: mainPanorama('temp-faculty-floor2-1.jpg'),
@@ -1623,7 +1624,8 @@ export const fallbackTourScenes = [
     mapPosition: { x: 311, y: 358 },
     hotspots: [
       { id: 'fitm-interior-1-to-campus-road-34', type: 'scene', target: 'campusRoad34', yaw: 180, pitch: -3 },
-      { id: 'fitm-interior-1-to-interior-2', type: 'scene', target: 'fitmInterior2', yaw: 90, pitch: -3 }
+      { id: 'fitm-interior-1-to-interior-2', type: 'scene', target: 'fitmInterior2', yaw: 90, pitch: -3 },
+      { id: 'fitm-interior-1-to-puang-saed-room', type: 'scene', target: 'puangSaedRoom', yaw: 6, pitch: -10 }
     ]
   },
   {
@@ -2019,6 +2021,21 @@ export const fallbackTourScenes = [
     mapPosition: { x: 311, y: 358 },
     hotspots: [
       { id: 'mechanical-lab-3-to-lab-2', type: 'scene', target: 'mechanicalLab2', yaw: 180, pitch: -3 }
+    ]
+  },
+  {
+    id: 'puangSaedRoom',
+    ...tourMedia.puangSaedRoom,
+    title: { th: 'ห้องพวงแสด', en: 'Phuang Saed Room' },
+    description: {
+      th: 'จุดชมภายในห้องพวงแสด เชื่อมกับทางเดินภายในอาคารคณะเทคโนโลยีและการจัดการอุตสาหกรรม จุดที่ 1',
+      en: 'An interior viewpoint of Phuang Saed Room, connected to Point 1 of the indoor FITM corridor.'
+    },
+    tags: { th: ['ห้องพวงแสด', 'ภายในอาคาร', 'FITM'], en: ['Phuang Saed Room', 'Indoor', 'FITM'] },
+    initialView: { yaw: 0, pitch: 0, zoom: 24 },
+    mapPosition: { x: 311, y: 358 },
+    hotspots: [
+      { id: 'puang-saed-room-to-interior-1', type: 'scene', target: 'fitmInterior1', yaw: 4.2, pitch: -5 }
     ]
   },
   {

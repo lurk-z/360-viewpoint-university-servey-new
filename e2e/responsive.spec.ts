@@ -294,7 +294,7 @@ test('contextual building media opens sample panoramas and dormitory floor plans
   await classroomButton.click();
   const classroomDialog = page.locator('dialog.app-dialog[open]');
   await expect(classroomDialog).toContainText(/ห้องเรียนตัวอย่าง|Sample classrooms/);
-  await expect(classroomDialog.locator('.supplemental-media__items button')).toHaveCount(4);
+  await expect(classroomDialog.locator('.supplemental-media__items button')).toHaveCount(6);
   await expect(classroomDialog.locator('.supplemental-panorama__viewer')).toBeVisible();
   await page.keyboard.press('Escape');
 

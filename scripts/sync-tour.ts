@@ -19,6 +19,13 @@ import {
   mergeDormitoryContent
 } from './dormitory-content-update.ts';
 
+// A scoped expansion must not replay legacy Info archival or dormitory content updates.
+if (process.argv.includes('--puang-saed-only')) {
+  const { syncPuangSaed } = await import('./sync-puang-saed.ts');
+  await syncPuangSaed();
+  process.exit(0);
+}
+
 try {
   process.loadEnvFile('.env.local');
 } catch (error) {

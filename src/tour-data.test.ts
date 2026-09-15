@@ -76,7 +76,7 @@ describe('tour configuration', () => {
   });
 
   it('keeps scene ids unique and in the intended order', () => {
-    expect(tourScenes).toHaveLength(134);
+    expect(tourScenes).toHaveLength(135);
     expect(tourScenes.map((scene) => scene.id)).toEqual(sceneIds);
     expect(new Set(sceneIds).size).toBe(sceneIds.length);
   });
@@ -357,6 +357,7 @@ describe('tour configuration', () => {
       'dormitoryRoad:maleDormitory',
       'femaleDormitory1:femaleDormitoryMinimart',
       'fitmInterior1:fitmInterior2',
+      'fitmInterior1:puangSaedRoom',
       'fitmInterior2:fitmInterior3',
       'fitmInterior2:puangKhrangRoom2',
       'fitmInterior3:fitmInterior4',
@@ -887,12 +888,42 @@ describe('tour configuration', () => {
     }
   });
 
+  it('connects the Phuang Saed doorway both ways and uses the original panorama', () => {
+    const room = getScene('puangSaedRoom');
+    expect(room.panorama).toContain('/mainimages/temp-puang-saed.jpg?');
+    expect(room.title).toEqual({ th: 'ห้องพวงแสด', en: 'Phuang Saed Room' });
+    expect(room.mapPosition).toEqual({ x: 311, y: 358 });
+    expect(room.mapLandmark).toBeUndefined();
+    expect(getNavigationHotspots(room)).toEqual([
+      expect.objectContaining({ target: 'fitmInterior1', yaw: 4.2, pitch: -5 })
+    ]);
+    expect(getNavigationHotspots(getScene('fitmInterior1'))).toContainEqual(
+      expect.objectContaining({ target: 'puangSaedRoom', yaw: 6, pitch: -10 })
+    );
+    expect(readJpegDimensions(publicAssetPath(room.panorama))).toEqual({ width: 7680, height: 3840 });
+  });
+
+  it('offers floor 4 classroom 4-20 and a single shared panorama for labs 4-01A and 4-01B', () => {
+    const group = getTourSupplementalMediaGroups('fitmFloor4Point4')[0]!;
+    const samples = group.items.filter((item) => item.floor === 4);
+    expect(samples).toHaveLength(2);
+    expect(samples[0]!.src).toContain('temp-faculty-floor4-4-20.jpg');
+    expect(samples[0]!.title).toEqual({ th: 'ห้องเรียน 4-20 (120 ที่นั่ง)', en: 'Classroom 4-20 (120 seats)' });
+    expect(samples[1]!.src).toContain('temp-faculty-floor4-4-01A.jpg');
+    for (const label of Object.values(samples[1]!.title)) {
+      expect(label).toContain('4-01A');
+      expect(label).toContain('4-01B');
+    }
+    expect(getDefaultSupplementalMediaItemId('fitmFloor4Point4', group)).toBe(samples[0]!.id);
+    expect(getTourSupplementalMediaGroups('puangSaedRoom').map((item) => item.id)).toContain(group.id);
+  });
+
   it('keeps sample panoramas and available dormitory plans in contextual media menus only', () => {
     const items = tourSupplementalMediaGroups.flatMap((group) => group.items);
     const panoramas = items.filter((item) => item.kind === 'panorama');
     const floorPlans = items.filter((item) => item.kind === 'floor-plan');
 
-    expect(panoramas).toHaveLength(17);
+    expect(panoramas).toHaveLength(19);
     expect(floorPlans).toHaveLength(13);
     expect(getTourSupplementalMediaGroups('fitmFloor3Point2').map((group) => group.id))
       .toEqual(['fitm-sample-classrooms']);
@@ -1054,11 +1085,11 @@ describe('tour configuration', () => {
     }
   });
 
-  it('returns only the 134 versioned walkable panoramas from the tour assets API', async () => {
+  it('returns only the 135 versioned walkable panoramas from the tour assets API', async () => {
     const response = await getTourAssets();
     const body = await response.json() as { assets: string[] };
     expect(body.assets).toEqual(tourScenes.map((scene) => scene.panorama));
-    expect(new Set(body.assets).size).toBe(134);
+    expect(new Set(body.assets).size).toBe(135);
     expect(body.assets.every((asset) => asset.endsWith('?v=20260805-redacted'))).toBe(true);
     expect(body.assets.every((asset) => !asset.includes('/tiles/'))).toBe(true);
   });

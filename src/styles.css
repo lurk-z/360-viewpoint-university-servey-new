@@ -993,6 +993,13 @@ svg {
   filter: none;
 }
 
+/* Arrow/Info tooltips are labels, not controls. Their animated arrow must not
+   steal mouseup from the panorama hotspot that received mousedown. */
+.psv-tooltip,
+.psv-tooltip * {
+  pointer-events: none;
+}
+
 .psv-tooltip {
   border-radius: 10px;
   background: var(--orange-950);

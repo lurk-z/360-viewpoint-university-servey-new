@@ -58,6 +58,20 @@ const fitmClassrooms: TourSupplementalMediaGroup = {
       src: mediaUrl('temp-faculty-floor3-ex_room2.jpg'),
       floor: 3,
       title: { th: 'ห้องเรียนตัวอย่าง ชั้น 3 ห้องที่ 2', en: 'Floor 3 sample classroom 2' }
+    },
+    {
+      id: 'fitm-floor-4-classroom-4-20',
+      kind: 'panorama',
+      src: mediaUrl('temp-faculty-floor4-4-20.jpg'),
+      floor: 4,
+      title: { th: 'ห้องเรียน 4-20 (120 ที่นั่ง)', en: 'Classroom 4-20 (120 seats)' }
+    },
+    {
+      id: 'fitm-floor-4-laboratories-4-01a-4-01b',
+      kind: 'panorama',
+      src: mediaUrl('temp-faculty-floor4-4-01A.jpg'),
+      floor: 4,
+      title: { th: 'ห้องปฏิบัติการ 4-01A และ 4-01B (ภาพตัวอย่างร่วม)', en: 'Laboratories 4-01A and 4-01B (shared sample panorama)' }
     }
   ]
 };
@@ -270,6 +284,7 @@ function isFitmInteriorScene(sceneId: SceneId): boolean {
     || sceneId.startsWith('fitmFloor')
     || sceneId.startsWith('itiElectricalLab')
     || sceneId.startsWith('mechanicalLab')
+    || sceneId === 'puangSaedRoom'
     || sceneId === 'puangKhramRoom1'
     || sceneId === 'puangKhrangRoom2';
 }

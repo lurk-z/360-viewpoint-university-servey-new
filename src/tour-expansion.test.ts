@@ -93,7 +93,7 @@ describe('tour expansion sync merge', () => {
 
     const first = mergeTourExpansion(legacy, target);
     expect(first.changed).toBe(true);
-    expect(first.data.scenes).toHaveLength(134);
+    expect(first.data.scenes).toHaveLength(target.scenes.length);
     expect(first.data.scenes[0]!.description.th).toBe('ข้อความที่ผู้ดูแลแก้ไว้');
 
     const second = mergeTourExpansion(first.data, target);
@@ -108,7 +108,7 @@ describe('tour expansion sync merge', () => {
 
     const first = mergeTourExpansion(current, target);
     expect(first.changed).toBe(true);
-    expect(first.data.scenes).toHaveLength(134);
+    expect(first.data.scenes).toHaveLength(target.scenes.length);
     expect(first.data.scenes.find((scene) => scene.id === 'fitmInterior15')!.description.en)
       .toBe('Admin-edited description');
     expect(first.data.scenes.find((scene) => scene.id === 'fitmFloor2Point2')!.hotspots)

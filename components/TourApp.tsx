@@ -160,6 +160,7 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
   const [academicSelection, setAcademicSelection] = useState<AcademicSelection>({});
   const [selectedActivityId, setSelectedActivityId] = useState<string>();
   const [supplementalMediaSelection, setSupplementalMediaSelection] = useState<SupplementalMediaSelection | null>(null);
+  const supplementalMediaTriggerRef = useRef<HTMLElement | null>(null);
   const headerMenuRef = useRef<HTMLDivElement>(null);
   const headerMenuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -373,9 +374,19 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
   };
 
   const openSupplementalMedia = (group: TourSupplementalMediaGroup): void => {
+    // Capture before lazy loading: the sample viewer may take focus while mounting.
+    supplementalMediaTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setSupplementalMediaSelection({
       group,
       initialItemId: getDefaultSupplementalMediaItemId(activeSceneId, group)
+    });
+  };
+
+  const closeSupplementalMedia = (): void => {
+    const trigger = supplementalMediaTriggerRef.current;
+    setSupplementalMediaSelection(null);
+    window.requestAnimationFrame(() => {
+      if (trigger?.isConnected && !trigger.closest('[inert]')) trigger.focus({ preventScroll: true });
     });
   };
 
@@ -698,7 +709,7 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
           locale={locale}
           group={supplementalMediaSelection.group}
           initialItemId={supplementalMediaSelection.initialItemId}
-          onClose={() => setSupplementalMediaSelection(null)}
+          onClose={closeSupplementalMedia}
         />
       ) : null}
 

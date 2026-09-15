@@ -37,6 +37,7 @@ describe('ground navigation arrows', () => {
     expect(chevronRule).toContain('fill: currentcolor');
     expect(styles).toContain('transform: perspective(110px) rotateX(22deg) translateY(3px)');
     expect(styles).toContain('.tour-arrow:focus-visible');
+    expect(styles).toMatch(/\.psv-tooltip,\s*\.psv-tooltip \*\s*\{\s*pointer-events: none;/);
     expect(styles).toContain('@media (max-width: 700px)');
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
   });
@@ -46,8 +47,8 @@ describe('ground navigation arrows', () => {
       (total, scene) => total + getNavigationHotspots(scene).length,
       0
     );
-    expect(tourScenes).toHaveLength(134);
-    expect(linkCount).toBe(303);
+    expect(tourScenes).toHaveLength(135);
+    expect(linkCount).toBe(305);
     expect(getNavigationHotspots(getScene('campusRoad4'))).toHaveLength(4);
     expect(getNavigationHotspots(getScene('campusRoad31'))).toHaveLength(3);
     expect(getNavigationHotspots(getScene('campusRoad36'))).toHaveLength(3);
