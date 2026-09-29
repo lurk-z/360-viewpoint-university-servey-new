@@ -36,7 +36,7 @@ export default function AdminSystemOnboarding({
     ['Media', status.contentMediaReady, 'คลังรูปเนื้อหา'],
     ['Panorama', status.panoramaStorageReady, 'คลังภาพ 360 ใหม่'],
     ['โครงสร้างทัวร์', status.dynamicTourReady, status.dynamicTourReady ? 'พร้อมแก้ใน Admin' : 'ยังไม่ได้นำเข้า']
-    ,['เทียบโครงสร้างเริ่มต้น', status.dynamicTourReady, status.tourStructureMatchesBootstrap ? 'ข้อมูลเริ่มต้นตรงกับ 93 ฉากในโค้ด' : status.dynamicTourReady ? 'มีการแก้และเผยแพร่จาก Admin แล้ว' : 'รอนำเข้าโครงสร้าง']
+    ,['เทียบโครงสร้างเริ่มต้น', status.dynamicTourReady, status.tourStructureMatchesBootstrap ? 'ข้อมูลตรงกับโครงสร้างเริ่มต้นในโค้ด' : status.dynamicTourReady ? 'มีการแก้และเผยแพร่จาก Admin แล้ว' : 'รอนำเข้าโครงสร้าง']
   ] as const;
 
   const copyMigration = async (version: string): Promise<void> => {
@@ -78,7 +78,7 @@ export default function AdminSystemOnboarding({
       {!compact && role === 'admin' && status.missingMigrations.length === 0 && !status.dynamicTourReady ? (
         <form action={action}>
           <button className="admin-button" type="submit" disabled={pending}>
-            {pending ? 'กำลังนำเข้า 93 ฉาก…' : 'นำ 93 ฉากเข้า Visual Tour Editor'}
+            {pending ? 'กำลังนำเข้าโครงสร้าง…' : 'นำโครงสร้างเริ่มต้นเข้า Visual Tour Editor'}
           </button>
           {actionState.message ? <p className={`admin-action-message is-${actionState.status}`}>{actionState.message}</p> : null}
         </form>

@@ -2,15 +2,17 @@
 
 ## สถานะระบบปัจจุบัน
 
-- ทัวร์เริ่มต้น 134 ฉาก ใช้แผนที่ `/mainimages/map/mainmap1.png` ขนาด 1096×583
+- ทัวร์เริ่มต้น 135 ฉาก, 305 ลูกศรนำทาง และ 36 ปุ่ม Info ใช้แผนที่ `/mainimages/map/mainmap1.png` ขนาด 1096×583
 - ข้อมูลเริ่มต้น 4 คณะและ 35 หลักสูตร จัดการฉบับร่าง/เผยแพร่ผ่าน Admin
 - `src/tour-data.ts` เป็นแหล่งหลักของลูกศรนำทางและเป็น Emergency fallback; ฉาก รูป Info และพิกัดส่วนอื่นจัดการจาก `/admin/tour`
-- Panorama เดินชม 134 ฉากที่มากับโปรเจกต์ยังอยู่ใน `public/mainimages`; ภาพใหม่หลังจากนี้อัปโหลดไป Supabase bucket `tour-panoramas`
-- เมนูสื่อภายในอาคารมี Panorama ตัวอย่าง 17 รูปและผังหอพัก 13 รูป ซึ่งโหลดเมื่อเปิดดูและไม่ถูกนับเป็นฉากเดิน
+- Panorama เดินชม 135 ฉากที่มากับโปรเจกต์ยังอยู่ใน `public/mainimages`; ภาพใหม่หลังจากนี้อัปโหลดไป Supabase bucket `tour-panoramas`
+- เมนูสื่อภายในอาคารมี Panorama ตัวอย่าง 19 รูปและผังหอพัก 13 รูป ซึ่งโหลดเมื่อเปิดดูและไม่ถูกนับเป็นฉากเดิน
 - หน้า Public โหลดโครงสร้าง Published จาก `/api/tour-structure` และกลับไปใช้ข้อมูลในโค้ดอัตโนมัติเมื่อฐานข้อมูลไม่พร้อม
 - Admin มีประวัติ/กู้คืน สำรอง JSON รายงาน CSV นำเข้าเป็น Draft สถานะระบบ และ Visual Tour Editor
 
 เปิดโปรเจกต์บน Windows โดยดับเบิลคลิก `start-tour.bat` และปิดด้วย `stop-tour.bat` หรือใช้ `npm run dev` / `Ctrl+C` ตามปกติ ตรวจความพร้อมทั้งเครื่องด้วย `npm run doctor`
+
+คู่มือสำหรับผู้ดูแลที่ไม่เขียนโค้ด รวมขั้นตอนเพิ่มปุ่ม Info อยู่ที่หน้า `/admin/help` และ [docs/admin-user-guide.md](docs/admin-user-guide.md)
 
 เว็บไซต์ Virtual Open House แบบ 360° สำหรับมหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ วิทยาเขตปราจีนบุรี
 
@@ -91,27 +93,27 @@ components/TourApp.tsx      React UI, dialogs, persistent map และ controls
 components/TourViewer.tsx   Client Component ที่สร้าง Photo Sphere Viewer
 components/TourMap.tsx      Client Component ที่สร้างแผนที่ Leaflet
 components/ModalDialog.tsx  accessible native dialog wrapper
-src/tour-data.ts            source of truth ของ scene, hotspot และ route graph
+src/tour-data.ts            source of truth ของลูกศรนำทางและ fallback ของโครงสร้างทัวร์
+src/tour-supplemental-media.ts manifest ของ Panorama ตัวอย่างและผังอาคาร
 src/i18n.ts                 ข้อความ UI ภาษาไทย/อังกฤษ
 src/stores/tour-store.ts    Zustand store สำหรับ shared client state
 src/styles.css              Photo Sphere Viewer styles และ design system
-public/mainimages/          panorama ต้นฉบับทั้ง 34 ฉาก และโฟลเดอร์ map
+public/mainimages/          panorama ต้นฉบับของฉากเดิน สื่อประกอบ และโฟลเดอร์ map
 public/sw.js                offline cache strategy
 360-tour-offline.html       legacy single-file compatibility artifact
 ```
 
-## เพิ่มฉาก
+## เพิ่มฉากและปุ่ม Info
 
-1. วางภาพ panorama ใหม่ใน `public/mainimages/` เช่น `campus-02.jpg`
-2. เพิ่ม object ใน `tourMedia` ที่ `src/tour-data.ts` โดยระบุเพียงชื่อไฟล์:
+งานทั่วไปทำจากหน้า Admin:
 
-```ts
-campus02: mainPanorama('campus-02.jpg')
-```
+1. เพิ่มฉากที่ `/admin/tour` อัปโหลด JPEG/WebP อัตราส่วน 2:1 ตั้งชื่อ มุมเริ่มต้น และพิกัดบนแผนที่ แล้วบันทึกเป็น Draft
+2. ฉากใหม่ยังไม่มีเส้นทาง ผู้พัฒนาต้องเพิ่มบล็อกฉากและลูกศรไป–กลับที่เกี่ยวข้องใน `src/tour-data.ts` แล้วรัน `npm run sync:arrows`
+3. เพิ่มปุ่ม Info โดยเลือกฉาก หมุน Panorama กดเพิ่ม Info แล้วคลิกตำแหน่งบนภาพ
+4. กดบันทึกโครงสร้างฉบับร่าง ระบบจะสร้างรายการรอกรอกใน `/admin/places`
+5. กรอกข้อมูลไทย–อังกฤษ รูป และแหล่งข้อมูล จากนั้นเผยแพร่เนื้อหา Info และเผยแพร่โครงสร้างทัวร์
 
-3. เพิ่ม scene ที่มี `id: 'campus02'` ใน `tourScenes` แล้วเชื่อม scene hotspot ไป-กลับกับฉากอื่น
-
-ไฟล์ในโฟลเดอร์ `public` ต้องอ้างผ่าน URL ที่ตัดคำว่า `public` ออกเสมอ เช่น `public/mainimages/campus-02.jpg` จะใช้ URL `/mainimages/campus-02.jpg` ระบบ test จะตรวจ path, ไฟล์ที่หาย และเส้นทางฉากให้โดยอัตโนมัติ ค่า `yaw` และ `pitch` ในข้อมูลใช้หน่วยองศา ส่วน `mapPosition` ใช้พิกัดพิกเซลของ `mainmap.png` จากมุมซ้ายบน
+ตำแหน่ง Info มาจาก Visual Tour Editor ส่วนข้อความและรูปในหน้าต่าง Info มาจาก “สถานที่สำคัญ” จึงต้องเผยแพร่ทั้งสองส่วน ดูขั้นตอนละเอียดและวิธีตรวจเมื่อ Info ไม่แสดงได้ที่ [คู่มือผู้ดูแล](docs/admin-user-guide.md#เพิ่มปุ่ม-info-ใหม่)
 
 ## Offline และ privacy
 
@@ -125,7 +127,7 @@ Service worker ทำงานเฉพาะ production โดย precache ห�
 2. เปิด Supabase SQL Editor แล้วรัน `supabase/migrations/202608070001_cms.sql`
 3. สร้างผู้ใช้คนแรกใน Supabase Auth แล้วเพิ่ม UUID ของผู้ใช้นั้นเป็น role `admin` ตามคำสั่งตัวอย่างท้าย migration
 4. รัน migration `supabase/migrations/202608070002_linked_faculty_content.sql` สำหรับโปรเจกต์ที่เคยติดตั้ง CMS รุ่นแรกแล้ว
-5. รัน `npm run seed:cms` เพื่อสร้างคณะเริ่มต้น 2 รายการ ย้ายสถานที่สำคัญเดิม 12 จุด และเพิ่มหลักสูตรคณะบริหารธุรกิจและอุตสาหกรรมบริการ 6 รายการ โดยไม่เขียนทับข้อมูลที่ Admin เคยแก้
+5. สำหรับการติดตั้งฐานข้อมูลว่างครั้งแรกเท่านั้น ให้รัน `npm run seed:cms` เพื่อเติมข้อมูลเริ่มต้นแบบไม่เขียนทับข้อมูลที่มีอยู่แล้ว ไม่ต้องรันคำสั่งนี้เมื่อเพิ่ม Info หรือแก้ข้อมูลประจำวัน
 6. เข้า `/admin/login` เพื่อจัดการคณะ หลักสูตร กิจกรรม สถานที่สำคัญ รูปภาพ บัญชี และสถิติ
 
 ตัวแปรสภาพแวดล้อมที่ต้องใช้:
@@ -147,7 +149,7 @@ Migration ต้องรันตามลำดับใน Supabase SQL Edito
 3. `202608240001_ai_rate_limits_and_metrics.sql`
 4. `202608290001_admin_workflow_and_tour_structure.sql`
 
-หลัง Migration ลำดับที่ 4 ให้เปิด `/admin/system` แล้วกด “นำ 134 ฉากเข้า Visual Tour Editor” หนึ่งครั้ง ระบบเป็น idempotent และไม่เขียนทับโครงการที่มีอยู่แล้ว
+หลัง Migration ลำดับที่ 4 ให้เปิด `/admin/system` แล้วกด “นำโครงสร้างเริ่มต้นเข้า Visual Tour Editor” หนึ่งครั้ง ระบบเป็น idempotent และไม่เขียนทับโครงการที่มีอยู่แล้ว
 
 `Editor` แก้ draft และอัปโหลดรูปได้ ส่วน `Admin` จึงจะเผยแพร่ ยกเลิกเผยแพร่ เก็บเข้าคลัง ลบ และจัดการบัญชีได้
 

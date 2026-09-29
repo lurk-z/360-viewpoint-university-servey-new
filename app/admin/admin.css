@@ -640,9 +640,24 @@
 .admin-help-grid article { position: relative; min-width: 0; padding: 22px; border: 1px solid #d7e5ec; border-radius: 18px; background: #fff; }
 .admin-help-grid article > span { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 50%; color: #fff; background: #0369a1; font-weight: 800; }
 .admin-help-grid h2 { margin: 12px 0 6px; }
+.admin-help-grid p { margin: 0; color: var(--admin-muted); line-height: 1.65; }
+.admin-help-shortcuts { display: flex; max-width: 100%; gap: 9px; margin-bottom: 18px; overflow-x: auto; scrollbar-width: thin; }
+.admin-help-shortcuts a { flex: 0 0 auto; padding: 10px 14px; border: 1px solid #b8d8e7; border-radius: 999px; color: #075985; background: #fff; font-weight: 750; text-decoration: none; }
+.admin-help-shortcuts a:hover, .admin-help-shortcuts a:focus-visible { border-color: #0284c7; background: #eff9ff; outline: none; }
+.admin-help-callout { margin-top: 20px; padding: 18px 20px; border: 1px solid #7dd3fc; border-radius: 16px; background: #f0f9ff; }
+.admin-help-callout strong { color: #075985; font-size: 1.02rem; }
+.admin-help-callout p { margin: 7px 0 0; color: #334155; line-height: 1.7; }
 .admin-guide-sections { display: grid; gap: 10px; margin-top: 22px; }
 .admin-guide-sections details { padding: 15px 18px; border: 1px solid #d7e5ec; border-radius: 14px; background: #fff; }
 .admin-guide-sections summary { cursor: pointer; font-weight: 800; }
+.admin-guide-sections p, .admin-guide-sections li { color: #334155; line-height: 1.75; overflow-wrap: anywhere; }
+.admin-guide-sections ol, .admin-guide-sections ul { margin: 14px 0 2px; padding-inline-start: 24px; }
+.admin-guide-sections li + li { margin-top: 7px; }
+.admin-guide-sections a { color: #0369a1; font-weight: 750; }
+.admin-guide-sections code, .admin-help-footer code { padding: 2px 6px; border-radius: 6px; background: #e2e8f0; overflow-wrap: anywhere; }
+.admin-guide-note { padding: 10px 12px; border-left: 4px solid #0ea5e9; border-radius: 6px; background: #f0f9ff; }
+.admin-help-footer { margin-top: 18px; padding: 16px 18px; border-radius: 14px; color: #475569; background: #eaf2f7; }
+.admin-help-footer p { margin: 0; line-height: 1.65; }
 .admin-audit-list { display: grid; gap: 10px; }
 .admin-audit-list article { display: grid; grid-template-columns: 170px 180px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px; border: 1px solid #d7e5ec; border-radius: 14px; background: #fff; }
 .admin-audit-list details { grid-column: 1 / -1; }
