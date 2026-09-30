@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   getTourPlaceDraft,
   getTourPlaceSyncStatus,
+  type TourPlaceScene,
   type TourPlaceSyncStatus
 } from '../tour-places.ts';
 
@@ -28,12 +29,13 @@ export class DuplicateTourPlaceIdError extends Error {
 export async function syncTourPlaces(
   supabase: SupabaseClient,
   userId?: string,
-  initialContentById?: ReadonlyMap<string, InitialTourPlaceContent>
+  initialContentById?: ReadonlyMap<string, InitialTourPlaceContent>,
+  scenes?: readonly TourPlaceScene[]
 ): Promise<TourPlaceSyncResult> {
   const { data, error: readError } = await supabase.from('hotspot_contents').select('id,scene_id');
   if (readError) throw readError;
   const rows = (data ?? []).map((row) => ({ id: String(row.id), sceneId: String(row.scene_id) }));
-  const before = getTourPlaceSyncStatus(rows);
+  const before = getTourPlaceSyncStatus(rows, scenes);
   if (before.duplicates.length > 0) {
     throw new DuplicateTourPlaceIdError(before.duplicates.map((duplicate) => duplicate.id));
   }
@@ -42,7 +44,7 @@ export async function syncTourPlaces(
     const { error } = await supabase.from('hotspot_contents').upsert(
       before.missing.map((definition) => {
         const initial = initialContentById?.get(definition.id);
-        const draftData = initial?.draftData ?? getTourPlaceDraft(definition);
+        const draftData = initial?.draftData ?? getTourPlaceDraft(definition, scenes);
         return {
           id: definition.id,
           scene_id: definition.sceneId,
@@ -71,7 +73,7 @@ export async function syncTourPlaces(
   const after = getTourPlaceSyncStatus((updatedData ?? []).map((row) => ({
     id: String(row.id),
     sceneId: String(row.scene_id)
-  })));
+  })), scenes);
 
   return {
     ...after,

@@ -1,5 +1,14 @@
 import { createFallbackHotspotContent, type HotspotData } from './content.ts';
-import { getInfoHotspots, tourScenes, type SceneId } from './tour-data.ts';
+import {
+  tourScenes,
+  type InfoHotspotDefinition,
+  type SceneId,
+  type TourScene
+} from './tour-data.ts';
+
+export interface TourPlaceScene extends TourScene {
+  readonly archived?: boolean;
+}
 
 export interface TourPlaceDefinition {
   readonly id: string;
@@ -25,9 +34,13 @@ export interface DuplicateTourPlaceDefinition {
   readonly sceneIds: readonly SceneId[];
 }
 
-export function getTourPlaceDefinitions(): readonly TourPlaceDefinition[] {
-  return tourScenes.flatMap((scene) => (
-    getInfoHotspots(scene).map((hotspot) => ({ id: hotspot.id, sceneId: scene.id }))
+export function getTourPlaceDefinitions(
+  scenes: readonly TourPlaceScene[] = tourScenes
+): readonly TourPlaceDefinition[] {
+  return scenes.filter((scene) => !scene.archived).flatMap((scene) => (
+    scene.hotspots
+      .filter((hotspot) => hotspot.type === 'info')
+      .map((hotspot) => ({ id: hotspot.id, sceneId: scene.id }))
   ));
 }
 
@@ -48,13 +61,22 @@ export function getDuplicateTourPlaceDefinitions(
     .map(([id, sceneIds]) => ({ id, sceneIds }));
 }
 
-export function isTourPlaceLink(id: string, sceneId: string): boolean {
-  return getTourPlaceDefinitions().find((definition) => definition.id === id)?.sceneId === sceneId;
+export function isTourPlaceLink(
+  id: string,
+  sceneId: string,
+  scenes: readonly TourPlaceScene[] = tourScenes
+): boolean {
+  return getTourPlaceDefinitions(scenes).find((definition) => definition.id === id)?.sceneId === sceneId;
 }
 
-export function getTourPlaceDraft(definition: TourPlaceDefinition): HotspotData {
-  const scene = tourScenes.find((item) => item.id === definition.sceneId);
-  const hotspot = scene && getInfoHotspots(scene).find((item) => item.id === definition.id);
+export function getTourPlaceDraft(
+  definition: TourPlaceDefinition,
+  scenes: readonly TourPlaceScene[] = tourScenes
+): HotspotData {
+  const scene = scenes.find((item) => item.id === definition.sceneId);
+  const hotspot = scene?.hotspots.find((item): item is InfoHotspotDefinition => (
+    item.type === 'info' && item.id === definition.id
+  ));
   if (!scene || !hotspot) throw new Error(`Unknown tour place definition: ${definition.id}`);
   const fallback = createFallbackHotspotContent(scene, hotspot);
   return {
@@ -68,8 +90,11 @@ export function getTourPlaceDraft(definition: TourPlaceDefinition): HotspotData 
   };
 }
 
-export function getTourPlaceSyncStatus(rows: readonly StoredTourPlaceLink[]): TourPlaceSyncStatus {
-  const definitions = getTourPlaceDefinitions();
+export function getTourPlaceSyncStatus(
+  rows: readonly StoredTourPlaceLink[],
+  scenes: readonly TourPlaceScene[] = tourScenes
+): TourPlaceSyncStatus {
+  const definitions = getTourPlaceDefinitions(scenes);
   const definitionById = new Map(definitions.map((definition) => [definition.id, definition]));
   const duplicates = getDuplicateTourPlaceDefinitions(definitions);
   const rowById = new Map(rows.map((row) => [row.id, row]));

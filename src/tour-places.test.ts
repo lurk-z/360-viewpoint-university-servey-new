@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
 import { hotspotDataSchema } from './content';
 import { syncTourPlaces } from './server/tour-place-sync';
+import { tourScenes } from './tour-data';
 import {
   getTourPlaceDraft,
   getTourPlaceSyncStatus,
@@ -42,6 +43,40 @@ function fakeSupabase(initialRows: readonly FakeRow[]): { client: SupabaseClient
 }
 
 describe('tour place content synchronization', () => {
+  it('recognizes an Info hotspot created only in the Admin draft structure', async () => {
+    const baseScene = tourScenes[0]!;
+    const adminScenes = [{
+      ...baseScene,
+      id: 'adminOnlyScene',
+      hotspots: [{ id: 'admin-only-info', type: 'info' as const, yaw: 12, pitch: -4 }]
+    }];
+
+    expect(isTourPlaceLink('admin-only-info', 'adminOnlyScene')).toBe(false);
+    expect(isTourPlaceLink('admin-only-info', 'adminOnlyScene', adminScenes)).toBe(true);
+    expect(getTourPlaceSyncStatus([
+      { id: 'admin-only-info', sceneId: 'adminOnlyScene' }
+    ], adminScenes).orphaned).toEqual([]);
+
+    const database = fakeSupabase([]);
+    const result = await syncTourPlaces(database.client, 'admin-user', undefined, adminScenes);
+    expect(result.inserted).toBe(1);
+    expect(database.rows.get('admin-only-info')).toMatchObject({
+      scene_id: 'adminOnlyScene',
+      updated_by: 'admin-user'
+    });
+  });
+
+  it('does not publish content links from archived Admin scenes', () => {
+    const baseScene = tourScenes[0]!;
+    const archivedScenes = [{
+      ...baseScene,
+      id: 'archivedScene',
+      archived: true,
+      hotspots: [{ id: 'archived-info', type: 'info' as const, yaw: 0, pitch: 0 }]
+    }];
+    expect(isTourPlaceLink('archived-info', 'archivedScene', archivedScenes)).toBe(false);
+  });
+
   it('detects missing, moved and orphaned records using stable hotspot IDs', () => {
     const [first, second] = tourPlaceDefinitions;
     expect(first).toBeDefined();

@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from '../../lib/supabase/server';
 import { hotspotDataSchema, programDataSchema, type ContentKind } from '../../src/content';
 import { listAdminContent } from '../../src/server/admin-repository';
 import { requireStaff } from '../../src/server/auth';
+import { getAdminTourProject } from '../../src/server/tour-structure-repository';
 import { isTourPlaceLink } from '../../src/tour-places';
 import { hasMissingProgramRecommendationData } from '../../src/program-recommendation-data';
 
@@ -61,7 +62,7 @@ export default async function AdminSectionPage({
 }: AdminSectionPageProps) {
   const config = sections[section];
   const session = await requireStaff();
-  const [allRows, relatedFacultyRows, relatedProgramRows, media] = await Promise.all([
+  const [allRows, relatedFacultyRows, relatedProgramRows, media, tourProject] = await Promise.all([
     listAdminContent(config.kind),
     config.kind === 'programs' || config.kind === 'hotspot_contents'
       ? listAdminContent('faculties')
@@ -69,7 +70,8 @@ export default async function AdminSectionPage({
     config.kind === 'faculties'
       ? listAdminContent('programs')
       : Promise.resolve([]),
-    listMediaOptions()
+    listMediaOptions(),
+    config.kind === 'hotspot_contents' ? getAdminTourProject() : Promise.resolve(null)
   ]);
   const facultyRows = config.kind === 'faculties' ? allRows : relatedFacultyRows;
   const managedHotspotIds = new Set(facultyRows.flatMap((row) => row.hotspotId ? [row.hotspotId] : []));
@@ -100,7 +102,9 @@ export default async function AdminSectionPage({
     : undefined;
   const placeStatuses = config.kind === 'hotspot_contents'
     ? Object.fromEntries(allRows.map((row) => [row.id, {
-        orphaned: !row.sceneId || !isTourPlaceLink(row.id, row.sceneId),
+        orphaned: !row.sceneId
+          || !tourProject?.installed
+          || !isTourPlaceLink(row.id, row.sceneId, tourProject.draft.scenes),
         draftReady: hotspotDataSchema.safeParse(row.draftData).success
       }]))
     : undefined;

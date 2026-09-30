@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '../../../lib/supabase/server';
 import { isTourPlaceLink } from '../../../src/tour-places';
 import { requireAdmin, requireStaff } from '../../../src/server/auth';
 import { syncTourPlaces } from '../../../src/server/tour-place-sync';
-import { writeAdminAuditLog } from '../../../src/server/tour-structure-repository';
+import { getAdminTourProject, writeAdminAuditLog } from '../../../src/server/tour-structure-repository';
 import {
   AdminActionError,
   actionFailure,
@@ -72,9 +72,14 @@ export async function publishContentAction(_previousState: AdminActionState, for
       await assertPublishedFaculty(supabase, data.faculty_id);
       draftData = data.draft_data;
     } else if (kind === 'hotspot_contents') {
-      const { data, error } = await supabase.from('hotspot_contents').select('draft_data,scene_id').eq('id', id).single();
+      const [{ data, error }, project] = await Promise.all([
+        supabase.from('hotspot_contents').select('draft_data,scene_id').eq('id', id).single(),
+        getAdminTourProject()
+      ]);
       if (error) throw error;
-      if (!isTourPlaceLink(id, data.scene_id)) throw new AdminActionError('เผยแพร่ไม่ได้ เพราะไม่พบ Scene ID และ Hotspot ID คู่นี้ในโครงสร้างทัวร์');
+      if (!project.installed || !isTourPlaceLink(id, data.scene_id, project.draft.scenes)) {
+        throw new AdminActionError('เผยแพร่ไม่ได้ เพราะไม่พบ Scene ID และ Hotspot ID คู่นี้ในโครงสร้างทัวร์ฉบับร่างล่าสุด');
+      }
       draftData = data.draft_data;
     } else {
       const { data, error } = await supabase.from(kind).select('draft_data').eq('id', id).single();
@@ -96,7 +101,14 @@ export async function publishContentAction(_previousState: AdminActionState, for
 export async function syncTourPlacesAction(_previousState: AdminActionState, _formData: FormData): Promise<AdminActionState> {
   const session = await requireAdmin();
   try {
-    const result = await syncTourPlaces(await createServerSupabaseClient(), session.userId);
+    const project = await getAdminTourProject();
+    if (!project.installed) throw new AdminActionError('กรุณานำโครงสร้างทัวร์เข้าระบบก่อนซิงก์สถานที่');
+    const result = await syncTourPlaces(
+      await createServerSupabaseClient(),
+      session.userId,
+      undefined,
+      project.draft.scenes
+    );
     await writeAdminAuditLog({ actorId: session.userId, action: 'sync-tour-places', entityKind: 'tour', summary: { inserted: result.inserted, relinked: result.relinked } });
     revalidateAdmin('hotspot_contents');
     return actionSuccess(result.inserted || result.relinked

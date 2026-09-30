@@ -10,19 +10,21 @@ import {
   getVisitStatistics
 } from '../../../src/server/admin-repository';
 import { requireStaff } from '../../../src/server/auth';
+import { getAdminTourProject } from '../../../src/server/tour-structure-repository';
 import { getTourPlaceSyncStatus } from '../../../src/tour-places';
 
 export default async function AdminDashboardPage() {
   const session = await requireStaff();
-  const [stats, summary, aiStatus, systemStatus, tasks] = await Promise.all([
+  const [stats, summary, aiStatus, systemStatus, tasks, tourProject] = await Promise.all([
     getVisitStatistics(),
     getAdminDashboardSummary(),
     getAiConfigurationStatus(),
     getAdminSystemStatus(),
-    getAdminTaskSummary()
+    getAdminTaskSummary(),
+    getAdminTourProject()
   ]);
   const maximum = Math.max(1, ...stats.last7Days.map((day) => day.count));
-  const tourPlaceSyncStatus = getTourPlaceSyncStatus(summary.hotspotLinks);
+  const tourPlaceSyncStatus = getTourPlaceSyncStatus(summary.hotspotLinks, tourProject.draft.scenes);
 
   return (
     <section className="admin-page">

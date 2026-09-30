@@ -89,7 +89,9 @@ describe('CMS security and aggregate visits', () => {
     expect(adminActions).toContain('syncTourPlacesAction');
     expect(adminActions).toContain('const session = await requireAdmin()');
     expect(adminActions).toContain('validatePublishData(kind, draftData)');
-    expect(adminActions).toContain('isTourPlaceLink(id, data.scene_id)');
+    expect(adminActions).toContain('isTourPlaceLink(id, data.scene_id, project.draft.scenes)');
+    expect(adminActions).toContain('getAdminTourProject()');
+    expect(adminSectionPage).toContain('isTourPlaceLink(row.id, row.sceneId, tourProject.draft.scenes)');
     expect(publicContentRepository).toContain('isTourPlaceLink(row.id, row.scene_id)');
     expect(mediaGallery).toContain('เลือกจาก Media Library');
   });
