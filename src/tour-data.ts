@@ -1,3 +1,5 @@
+import { resolveBootstrapSceneTitle } from './tour-scene-titles.ts';
+
 export interface SceneMedia {
   /** Original 7680×3840 equirectangular image loaded directly by the viewer. */
   readonly panorama: string;
@@ -266,7 +268,7 @@ export function getSceneAssetUrls(scene: TourScene): readonly string[] {
   return [scene.panorama];
 }
 
-export const fallbackTourScenes = [
+const legacyTourSceneDefinitions = [
   {
     id: 'entrance',
     ...tourMedia.entrance,
@@ -2485,6 +2487,11 @@ export const fallbackTourScenes = [
     ]
   }
 ] as const satisfies readonly TourScene[];
+
+export const fallbackTourScenes: readonly TourScene[] = legacyTourSceneDefinitions.map((scene) => ({
+  ...scene,
+  title: resolveBootstrapSceneTitle(scene.id, scene.title)
+}));
 
 /** Active structure. It starts with the versioned bootstrap and can be replaced by a validated CMS snapshot. */
 export let tourScenes: readonly TourScene[] = fallbackTourScenes;

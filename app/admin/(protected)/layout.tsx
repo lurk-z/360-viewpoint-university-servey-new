@@ -16,7 +16,6 @@ const links = [
   ['โครงสร้างทัวร์', '/admin/tour'],
   ['Media', '/admin/media'],
   ['สถานะระบบ', '/admin/system'],
-  ['ความสัมพันธ์', '/admin/relationships'],
   ['คู่มือ', '/admin/help']
 ] as const;
 

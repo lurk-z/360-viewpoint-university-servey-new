@@ -56,6 +56,27 @@ const academicsSnapshot = {
   hotspots: []
 } satisfies PublicContentSnapshot;
 
+const executiveOfficeSnapshot = {
+  version: 9_002,
+  generatedAt: '2026-10-06T00:00:00.000Z',
+  source: 'database',
+  faculties: [],
+  programs: [],
+  activities: [],
+  hotspots: [{
+    id: 'fitmFloor3Point2-info',
+    hotspotId: 'fitmFloor3Point2-info',
+    sceneId: 'fitmFloor3Point2',
+    title: { th: 'ห้องผู้บริหาร', en: 'Executive Office' },
+    description: {
+      th: 'ข้อมูลห้องผู้บริหารสำหรับการทดสอบการเปิดปุ่ม Info',
+      en: 'Executive office content used to verify the Info interaction.'
+    },
+    reference: { label: { th: 'ข้อมูลทดสอบ', en: 'Test data' } },
+    images: []
+  }]
+} satisfies PublicContentSnapshot;
+
 async function openHeaderAction(page: Page, name: RegExp): Promise<void> {
   const action = page.locator('.header-nav').getByRole('button', { name });
   if (!await action.isVisible()) {
@@ -247,12 +268,15 @@ test('Info hotspots open from a real mobile tap without opening after a drag', a
 });
 
 test('executive office Info and downstairs arrow work from their exact FITM scene', async ({ page }) => {
+  await page.route('**/api/content', async (route) => {
+    await route.fulfill({ json: executiveOfficeSnapshot });
+  });
   await page.goto('/?scene=fitmFloor3Point2', { waitUntil: 'domcontentloaded' });
   const startButton = page.locator('.intro .primary-button');
   await expect(startButton).toBeEnabled({ timeout: 60_000 });
   await startButton.click();
-  await expect(page.locator('#scene-title')).toContainText(/ภายในอาคาร FITM ชั้น 3 จุดที่ 2|Inside FITM, Floor 3, Point 2/);
-  await expect(page.locator('#scene-title')).not.toContainText(/ห้องผู้บริหาร|Executive Office/);
+  await expect(page.locator('#scene-title')).toContainText(/หน้าห้องผู้บริหาร FITM ชั้น 3|FITM Executive Office Area, Floor 3/);
+  await expect(page.locator('#scene-title')).not.toHaveText(/^(ห้องผู้บริหาร|Executive Office)$/);
 
   const marker = page.locator('.info-hotspot[aria-label*="ห้องผู้บริหาร"], .info-hotspot[aria-label*="Executive Office"]').first();
   await expect(marker).toBeVisible({ timeout: 15_000 });

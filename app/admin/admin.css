@@ -662,12 +662,8 @@
 .admin-audit-list article { display: grid; grid-template-columns: 170px 180px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px; border: 1px solid #d7e5ec; border-radius: 14px; background: #fff; }
 .admin-audit-list details { grid-column: 1 / -1; }
 .admin-audit-list pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
-.admin-relationship-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.admin-relationship-grid > section { min-width: 0; padding: 20px; border: 1px solid #d7e5ec; border-radius: 18px; background: #fff; }
-.admin-relationship-grid article { display: grid; min-width: 0; gap: 5px; padding: 12px 0; border-top: 1px solid #e5eef2; }
-.admin-relationship-grid code { overflow-wrap: anywhere; }
 @media (max-width: 760px) {
-  .admin-backup-manager, .admin-help-grid, .admin-relationship-grid { grid-template-columns: 1fr; }
+  .admin-backup-manager, .admin-help-grid { grid-template-columns: 1fr; }
   .admin-audit-list article { grid-template-columns: 1fr; }
   .admin-audit-list details { grid-column: 1; }
   .admin-import-preview article { grid-template-columns: 1fr 1fr; }
