@@ -655,6 +655,24 @@
 .admin-guide-sections li + li { margin-top: 7px; }
 .admin-guide-sections a { color: #0369a1; font-weight: 750; }
 .admin-guide-sections code, .admin-help-footer code { padding: 2px 6px; border-radius: 6px; background: #e2e8f0; overflow-wrap: anywhere; }
+.admin-guide-group { display: grid; gap: 16px; margin-top: 22px; padding: 20px; scroll-margin-top: 24px; border: 1px solid #d7e5ec; border-radius: 18px; background: #f8fbfd; }
+.admin-guide-group > header p { margin: 0 0 4px; color: #0369a1; font-size: .78rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.admin-guide-group > header h2 { margin: 0; }
+.admin-guide-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid #d7e5ec; border-radius: 12px; background: #fff; scrollbar-width: thin; }
+.admin-guide-table { width: 100%; min-width: 680px; border-collapse: collapse; }
+.admin-guide-table th, .admin-guide-table td { padding: 12px 14px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; line-height: 1.55; }
+.admin-guide-table th:last-child, .admin-guide-table td:last-child { border-right: 0; }
+.admin-guide-table tr:last-child td { border-bottom: 0; }
+.admin-guide-table th { color: #075985; background: #f0f9ff; }
+.admin-guide-table a { color: #0369a1; font-weight: 750; }
+.admin-guide-table code { padding: 2px 6px; border-radius: 6px; background: #e2e8f0; overflow-wrap: anywhere; }
+.admin-guide-status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.admin-guide-status-grid article { min-width: 0; padding: 14px; border: 1px solid #d7e5ec; border-radius: 12px; background: #fff; }
+.admin-guide-status-grid strong { display: block; margin-bottom: 5px; color: #075985; }
+.admin-guide-status-grid p { margin: 0; color: #475569; line-height: 1.6; }
+.admin-guide-code { max-width: 100%; margin: 14px 0; padding: 14px; overflow-x: auto; border-radius: 10px; color: #e2e8f0; background: #0f172a; font: .88rem/1.65 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; white-space: pre; }
+.admin-guide-code code { padding: 0; color: inherit; background: transparent; overflow-wrap: normal; }
+.admin-guide-warning { padding: 11px 13px; border-left: 4px solid #f59e0b; border-radius: 6px; color: #713f12 !important; background: #fffbeb; }
 .admin-guide-note { padding: 10px 12px; border-left: 4px solid #0ea5e9; border-radius: 6px; background: #f0f9ff; }
 .admin-help-footer { margin-top: 18px; padding: 16px 18px; border-radius: 14px; color: #475569; background: #eaf2f7; }
 .admin-help-footer p { margin: 0; line-height: 1.65; }
@@ -664,6 +682,8 @@
 .admin-audit-list pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 760px) {
   .admin-backup-manager, .admin-help-grid { grid-template-columns: 1fr; }
+  .admin-guide-group { padding: 15px; }
+  .admin-guide-status-grid { grid-template-columns: 1fr; }
   .admin-audit-list article { grid-template-columns: 1fr; }
   .admin-audit-list details { grid-column: 1; }
   .admin-import-preview article { grid-template-columns: 1fr 1fr; }
