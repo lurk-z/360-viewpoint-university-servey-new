@@ -1,4 +1,5 @@
 import type { LocalizedText, SceneId } from './tour-data';
+import { localMainImageUrl, supplementalPanoramaUrl } from './tour-panorama-storage';
 
 export type TourSupplementalMediaKind = 'panorama' | 'floor-plan';
 
@@ -17,10 +18,8 @@ export interface TourSupplementalMediaGroup {
   readonly items: readonly TourSupplementalMediaItem[];
 }
 
-const ASSET_VERSION = '20260805-redacted';
-
 function mediaUrl(fileName: string): string {
-  return `/mainimages/${fileName}?v=${ASSET_VERSION}`;
+  return supplementalPanoramaUrl(fileName);
 }
 
 const fitmClassrooms: TourSupplementalMediaGroup = {
@@ -221,7 +220,7 @@ function floorPlan(
   return {
     id,
     kind: 'floor-plan',
-    src: mediaUrl(fileName),
+    src: localMainImageUrl(fileName),
     floor,
     title: { th: titleTh, en: titleEn }
   };

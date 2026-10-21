@@ -1,4 +1,5 @@
 import { resolveBootstrapSceneTitle } from './tour-scene-titles.ts';
+import { tourPanoramaUrl } from './tour-panorama-storage.ts';
 
 export interface SceneMedia {
   /** Original 7680×3840 equirectangular image loaded directly by the viewer. */
@@ -13,10 +14,8 @@ function mainImage(fileName: string): string {
   return `/mainimages/${fileName}`;
 }
 
-const PANORAMA_ASSET_VERSION = '20260805-redacted';
-
 function mainPanorama(fileName: string): SceneMedia {
-  return { panorama: `${mainImage(fileName)}?v=${PANORAMA_ASSET_VERSION}` };
+  return { panorama: tourPanoramaUrl(fileName) };
 }
 
 export interface TourMapDefinition {

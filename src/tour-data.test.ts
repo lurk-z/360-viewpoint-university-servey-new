@@ -26,6 +26,11 @@ import {
   tourSupplementalMediaGroups
 } from './tour-supplemental-media';
 import {
+  MIGRATED_SUPPLEMENTAL_PANORAMA_FILES,
+  isStoredTourPanoramaUrl,
+  tourAssetFileName
+} from './tour-panorama-storage';
+import {
   ARROW_SETTLE_DURATION,
   ARROW_TRANSITION_ZOOM,
   SCENE_TRANSITION_DURATION,
@@ -68,6 +73,12 @@ function readPngDimensions(filePath: string): { width: number; height: number } 
 function publicAssetPath(assetUrl: string): string {
   const pathname = new URL(assetUrl, 'https://tour.local').pathname;
   return resolve(process.cwd(), 'public', pathname.slice(1));
+}
+
+function expectStoredPanorama(assetUrl: string, expectedFileName: string): void {
+  expect(isStoredTourPanoramaUrl(assetUrl), assetUrl).toBe(true);
+  expect(tourAssetFileName(assetUrl)).toBe(expectedFileName);
+  expect(new URL(assetUrl).searchParams.get('v')).toBeTruthy();
 }
 
 describe('tour configuration', () => {
@@ -435,17 +446,14 @@ describe('tour configuration', () => {
     }
   });
 
-  it('references one existing source panorama per scene from mainimages', () => {
+  it('references one versioned Supabase panorama per scene', () => {
     for (const scene of tourScenes) {
-      expect(scene.panorama, `${scene.id} must use mainimages`).toMatch(/^\/mainimages\//);
+      expect(isStoredTourPanoramaUrl(scene.panorama), `${scene.id} must use Panorama Storage`).toBe(true);
       expect(scene.panorama).not.toMatch(/\/(?:tiles|tour\/pano|tour\/thumbs)\//);
       expect('thumbnail' in scene).toBe(false);
       expect('sourcePanorama' in scene).toBe(false);
       expect('tiledPanorama' in scene).toBe(false);
-      expect(
-        existsSync(publicAssetPath(scene.panorama)),
-        `${scene.id} references a missing source file: ${scene.panorama}`
-      ).toBe(true);
+      expect(tourAssetFileName(scene.panorama)).toMatch(/\.(?:jpe?g)$/i);
       expect(getSceneAssetUrls(scene)).toEqual([scene.panorama]);
     }
     const mapPath = resolve(process.cwd(), 'public', tourMap.image.slice(1));
@@ -459,12 +467,8 @@ describe('tour configuration', () => {
     const expectedFiles = Array.from({ length: 10 }, (_, index) => `temp3-${index + 1}.jpg`);
     const temp3Scenes = Array.from({ length: 10 }, (_, index) => getScene(`campusRoad${index + 8}` as Parameters<typeof getScene>[0]));
 
-    expect(temp3Scenes.map((scene) => new URL(scene.panorama, 'https://tour.local').pathname))
-      .toEqual(expectedFiles.map((file) => `/mainimages/${file}`));
-    for (const file of expectedFiles) {
-      const filePath = resolve(process.cwd(), 'public/mainimages', file);
-      expect(readJpegDimensions(filePath), file).toEqual({ width: 7680, height: 3840 });
-    }
+    expect(temp3Scenes.map((scene) => tourAssetFileName(scene.panorama))).toEqual(expectedFiles);
+    temp3Scenes.forEach((scene, index) => expectStoredPanorama(scene.panorama, expectedFiles[index]!));
   });
 
   it('uses all six full-resolution temp4 panoramas and the configured map positions', () => {
@@ -480,25 +484,21 @@ describe('tour configuration', () => {
     ];
 
     const scenes = sceneIds.map((sceneId) => getScene(sceneId));
-    expect(scenes.map((scene) => new URL(scene.panorama, 'https://tour.local').pathname))
-      .toEqual(expectedFiles.map((file) => `/mainimages/${file}`));
+    expect(scenes.map((scene) => tourAssetFileName(scene.panorama))).toEqual(expectedFiles);
     expect(scenes.map((scene) => scene.mapPosition)).toEqual(expectedPositions);
 
-    for (const file of expectedFiles) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    scenes.forEach((scene, index) => expectStoredPanorama(scene.panorama, expectedFiles[index]!));
   });
 
   it('uses all temp6/temp7 panoramas and keeps the faculty junction reciprocal', () => {
     const temp6Ids = ['campusRoad28', 'campusRoad29', 'campusRoad30', 'campusRoad31', 'campusRoad32', 'campusRoad33', 'campusRoad34', 'campusRoad35', 'campusRoad36', 'campusRoad37'] as const;
     const temp7Ids = ['campusRoad38', 'campusRoad39', 'campusRoad40', 'campusRoad41', 'campusRoad42', 'campusRoad43'] as const;
-    expect(temp6Ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(Array.from({ length: 10 }, (_, index) => `/mainimages/temp6-${index + 1}.jpg`));
-    expect(temp7Ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(Array.from({ length: 6 }, (_, index) => `/mainimages/temp7-${index + 1}.jpg`));
-    expect(new URL(getScene('universityCafeteria').panorama, 'https://tour.local').pathname)
-      .toBe('/mainimages/temp6-University_cafeteria.jpg');
+    expect(temp6Ids.map((id) => tourAssetFileName(getScene(id).panorama)))
+      .toEqual(Array.from({ length: 10 }, (_, index) => `temp6-${index + 1}.jpg`));
+    expect(temp7Ids.map((id) => tourAssetFileName(getScene(id).panorama)))
+      .toEqual(Array.from({ length: 6 }, (_, index) => `temp7-${index + 1}.jpg`));
+    expect(tourAssetFileName(getScene('universityCafeteria').panorama))
+      .toBe('temp6-University_cafeteria.jpg');
 
     const checkRoute = (route: readonly Parameters<typeof getScene>[0][]): void => {
       for (let index = 0; index < route.length - 1; index += 1) {
@@ -526,8 +526,8 @@ describe('tour configuration', () => {
       'temp6-University_cafeteria.jpg',
       ...Array.from({ length: 6 }, (_, index) => `temp7-${index + 1}.jpg`)
     ]) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
+      const scene = tourScenes.find((item) => tourAssetFileName(item.panorama) === file)!;
+      expectStoredPanorama(scene.panorama, file);
     }
   });
 
@@ -552,8 +552,7 @@ describe('tour configuration', () => {
       'temp9-6.jpg',
       'temp9-7.jpg'
     ];
-    expect(ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(ids.map((id) => tourAssetFileName(getScene(id).panorama))).toEqual(files);
 
     const checkPair = (from: Parameters<typeof getScene>[0], to: Parameters<typeof getScene>[0]): void => {
       expect(getNavigationHotspots(getScene(from)).map((item) => item.target)).toContain(to);
@@ -587,10 +586,7 @@ describe('tour configuration', () => {
       expect.objectContaining({ id: 'outdoor-football-field-info', yaw: 145, pitch: 0 })
     ]);
 
-    for (const file of files) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    ids.forEach((id, index) => expectStoredPanorama(getScene(id).panorama, files[index]!));
   });
 
   it('adds the reciprocal dormitory loop, Red Dome connection and three landmarks', () => {
@@ -615,8 +611,7 @@ describe('tour configuration', () => {
       ...Array.from({ length: 13 }, (_, index) => `temp8-${index + 1}.jpg`)
     ];
 
-    expect(dormitoryIds.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(dormitoryIds.map((id) => tourAssetFileName(getScene(id).panorama))).toEqual(files);
 
     const pairs = [
       ['campusRoad12', 'campusRoad52'],
@@ -650,10 +645,7 @@ describe('tour configuration', () => {
       'femaleDormitory2'
     ]));
 
-    for (const file of files) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    dormitoryIds.forEach((id, index) => expectStoredPanorama(getScene(id).panorama, files[index]!));
   });
 
   it('adds the complete reciprocal FITM indoor graph at the faculty map position', () => {
@@ -668,8 +660,8 @@ describe('tour configuration', () => {
       'temp-puang-khram2.jpg'
     ];
 
-    expect([...fitmIds, ...roomIds].map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect([...fitmIds, ...roomIds].map((id) => tourAssetFileName(getScene(id).panorama)))
+      .toEqual(files);
     expect([...fitmIds, ...roomIds].every((id) => (
       getScene(id).mapPosition.x === 311 && getScene(id).mapPosition.y === 358
     ))).toBe(true);
@@ -728,10 +720,9 @@ describe('tour configuration', () => {
     expect(infoIds).not.toContain('fitm-stairs-1-to-second-floor-info');
     expect(infoIds).not.toContain('fitm-stairs-2-to-second-floor-info');
 
-    for (const file of files) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    [...fitmIds, ...roomIds].forEach((id, index) => (
+      expectStoredPanorama(getScene(id).panorama, files[index]!)
+    ));
   });
 
   it('adds the reciprocal FITM floor 2–4 routes and replaces both staircase Info points', () => {
@@ -772,8 +763,7 @@ describe('tour configuration', () => {
       ['fitmFloor4Point4', 'fitmFloor4Point3']
     ] as const;
 
-    expect(floorIds.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(floorIds.map((id) => tourAssetFileName(getScene(id).panorama))).toEqual(files);
     expect(floorIds.every((id) => {
       const position = getScene(id).mapPosition;
       return position.x === 311 && position.y === 358;
@@ -782,10 +772,7 @@ describe('tour configuration', () => {
       expect(getNavigationHotspots(getScene(from)).map((hotspot) => hotspot.target)).toContain(to);
       expect(getNavigationHotspots(getScene(to)).map((hotspot) => hotspot.target)).toContain(from);
     }
-    for (const file of files) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    floorIds.forEach((id, index) => expectStoredPanorama(getScene(id).panorama, files[index]!));
 
     const infoIds = tourScenes.flatMap((scene) => getInfoHotspots(scene).map((hotspot) => hotspot.id));
     expect(infoIds).not.toContain('fitm-stairs-1-to-second-floor-info');
@@ -823,8 +810,7 @@ describe('tour configuration', () => {
       ['mechanicalLab2', 'mechanicalLab3']
     ] as const;
 
-    expect(ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(ids.map((id) => tourAssetFileName(getScene(id).panorama))).toEqual(files);
     expect(ids.every((id) => getScene(id).mapPosition.x === 311 && getScene(id).mapPosition.y === 358))
       .toBe(true);
     expect(getNavigationHotspots(getScene('fitmFloor2Point2')).map((hotspot) => hotspot.target))
@@ -844,10 +830,7 @@ describe('tour configuration', () => {
     expect(getNavigationHotspots(getScene('mechanicalLab3')).map((hotspot) => hotspot.target))
       .toEqual(['mechanicalLab2']);
 
-    for (const file of files) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    ids.forEach((id, index) => expectStoredPanorama(getScene(id).panorama, files[index]!));
   });
 
   it('adds reciprocal Co-working Space and male dormitory ground-floor routes', () => {
@@ -870,8 +853,7 @@ describe('tour configuration', () => {
       ['maleDormitory', 'maleDormitoryGroundFloorMinimart']
     ] as const;
 
-    expect(ids.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(ids.map((id) => tourAssetFileName(getScene(id).panorama))).toEqual(files);
     for (const [from, to] of pairs) {
       expect(getNavigationHotspots(getScene(from)).map((hotspot) => hotspot.target)).toContain(to);
       expect(getNavigationHotspots(getScene(to)).map((hotspot) => hotspot.target)).toContain(from);
@@ -882,15 +864,12 @@ describe('tour configuration', () => {
       getScene(id).mapPosition.x === 311 && getScene(id).mapPosition.y === 358
     ))).toBe(true);
     expect(getScene('maleDormitoryGroundFloorMinimart').mapPosition).toEqual({ x: 296, y: 164 });
-    for (const file of files) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    ids.forEach((id, index) => expectStoredPanorama(getScene(id).panorama, files[index]!));
   });
 
   it('connects the Phuang Saed doorway both ways and uses the original panorama', () => {
     const room = getScene('puangSaedRoom');
-    expect(room.panorama).toContain('/mainimages/temp-puang-saed.jpg?');
+    expectStoredPanorama(room.panorama, 'temp-puang-saed.jpg');
     expect(room.title).toEqual({ th: 'ห้องพวงแสด', en: 'Phuang Saed Room' });
     expect(room.mapPosition).toEqual({ x: 311, y: 358 });
     expect(room.mapLandmark).toBeUndefined();
@@ -900,7 +879,6 @@ describe('tour configuration', () => {
     expect(getNavigationHotspots(getScene('fitmInterior1'))).toContainEqual(
       expect.objectContaining({ target: 'puangSaedRoom', yaw: 6, pitch: -10 })
     );
-    expect(readJpegDimensions(publicAssetPath(room.panorama))).toEqual({ width: 7680, height: 3840 });
   });
 
   it('offers floor 4 classroom 4-20 and a single shared panorama for labs 4-01A and 4-01B', () => {
@@ -947,12 +925,19 @@ describe('tour configuration', () => {
 
     const walkableAssets = new Set(tourScenes.flatMap((scene) => getSceneAssetUrls(scene)));
     for (const item of items) {
-      expect(existsSync(publicAssetPath(item.src)), item.src).toBe(true);
       expect(walkableAssets.has(item.src)).toBe(false);
+      if (item.kind === 'floor-plan' || !isStoredTourPanoramaUrl(item.src)) {
+        expect(existsSync(publicAssetPath(item.src)), item.src).toBe(true);
+      }
     }
     for (const panorama of panoramas) {
-      expect(readJpegDimensions(publicAssetPath(panorama.src)), panorama.src)
-        .toEqual({ width: 7680, height: 3840 });
+      const fileName = tourAssetFileName(panorama.src);
+      if (MIGRATED_SUPPLEMENTAL_PANORAMA_FILES.has(fileName)) {
+        expectStoredPanorama(panorama.src, fileName);
+      } else {
+        expect(readJpegDimensions(publicAssetPath(panorama.src)), panorama.src)
+          .toEqual({ width: 7680, height: 3840 });
+      }
     }
     for (const plan of floorPlans) {
       const filePath = publicAssetPath(plan.src);
@@ -991,8 +976,7 @@ describe('tour configuration', () => {
       ['sirindhornLibraryFloor4Point2', 'sirindhornLibraryFloor4Point4']
     ] as const;
 
-    expect(libraryIds.map((id) => new URL(getScene(id).panorama, 'https://tour.local').pathname))
-      .toEqual(files.map((file) => `/mainimages/${file}`));
+    expect(libraryIds.map((id) => tourAssetFileName(getScene(id).panorama))).toEqual(files);
     expect(libraryIds.every((id) => {
       const position = getScene(id).mapPosition;
       return position.x === 328 && position.y === 416;
@@ -1010,10 +994,7 @@ describe('tour configuration', () => {
       expect(getNavigationHotspots(getScene(sceneId)).some((hotspot) => hotspot.target.startsWith('fitmFloor')))
         .toBe(false);
     }
-    for (const file of files) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    libraryIds.forEach((id, index) => expectStoredPanorama(getScene(id).panorama, files[index]!));
   });
 
   it('uses all four full-resolution temp5 panoramas with their map positions and information points', () => {
@@ -1033,8 +1014,7 @@ describe('tour configuration', () => {
     ];
 
     const scenes = ids.map((sceneId) => getScene(sceneId));
-    expect(scenes.map((scene) => new URL(scene.panorama, 'https://tour.local').pathname))
-      .toEqual(expectedFiles.map((file) => `/mainimages/${file}`));
+    expect(scenes.map((scene) => tourAssetFileName(scene.panorama))).toEqual(expectedFiles);
     expect(scenes.map((scene) => scene.mapPosition)).toEqual(expectedPositions);
 
     scenes.forEach((scene, index) => {
@@ -1047,10 +1027,7 @@ describe('tour configuration', () => {
       }).toEqual(expectedInfo[index]);
     });
 
-    for (const file of expectedFiles) {
-      expect(readJpegDimensions(resolve(process.cwd(), 'public/mainimages', file)), file)
-        .toEqual({ width: 7680, height: 3840 });
-    }
+    scenes.forEach((scene, index) => expectStoredPanorama(scene.panorama, expectedFiles[index]!));
   });
 
   it('keeps every Info definition geometry-only while preserving valid legacy bootstrap content', () => {

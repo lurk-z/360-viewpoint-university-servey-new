@@ -4,6 +4,8 @@
  * Tour runtime code never imports this file. The seed process inserts only
  * missing Hotspot IDs, so rerunning it cannot overwrite Admin edits.
  */
+import { tourPanoramaUrl } from '../src/tour-panorama-storage.ts';
+
 const legacyPlaceContentBootstrap = {
   "entrance-landmark-info": {
     "title": {
@@ -857,13 +859,31 @@ const legacyPlaceContentBootstrap = {
   },
 } as const;
 
+function resolveBootstrapPanoramaUrls(value: unknown): unknown {
+  if (typeof value === 'string') {
+    const match = /^\/mainimages\/(temp[^?]+)(?:\?.*)?$/.exec(value);
+    return match ? tourPanoramaUrl(match[1]!) : value;
+  }
+  if (Array.isArray(value)) return value.map(resolveBootstrapPanoramaUrls);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, resolveBootstrapPanoramaUrls(entry)])
+    );
+  }
+  return value;
+}
+
+const storageBackedPlaceContentBootstrap = resolveBootstrapPanoramaUrls(
+  legacyPlaceContentBootstrap
+) as typeof legacyPlaceContentBootstrap;
+
 /** Retired geometry stays recoverable in Git history but must not be seeded again. */
 export const placeContentBootstrap = Object.fromEntries(
-  Object.entries(legacyPlaceContentBootstrap)
+  Object.entries(storageBackedPlaceContentBootstrap)
     .filter(([id]) => id !== 'Sirindhorn Building-info')
 ) as Omit<typeof legacyPlaceContentBootstrap, 'Sirindhorn Building-info'>;
 
 /** Exact retired value used only to decide whether a safe archive would overwrite Admin edits. */
 export const retiredPlaceContentBaselines = {
-  'Sirindhorn Building-info': legacyPlaceContentBootstrap['Sirindhorn Building-info']
+  'Sirindhorn Building-info': storageBackedPlaceContentBootstrap['Sirindhorn Building-info']
 } as const;
