@@ -24,6 +24,11 @@ export function createNavigationArrowElement(link: VirtualTourLink, callbacks: V
       : goToScene(callbacks.locale, targetTitle)
   );
 
+  const label = document.createElement('span');
+  label.className = 'tour-arrow__label';
+  label.textContent = targetTitle;
+  label.setAttribute('aria-hidden', 'true');
+
   const icon = document.createElement('span');
   icon.className = 'tour-arrow__icon';
   icon.setAttribute('aria-hidden', 'true');
@@ -40,7 +45,7 @@ export function createNavigationArrowElement(link: VirtualTourLink, callbacks: V
   );
   svg.append(path);
   icon.append(svg);
-  button.append(icon);
+  button.append(label, icon);
   return button;
 }
 

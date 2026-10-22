@@ -376,7 +376,7 @@ const legacyTourSceneDefinitions = [
     mapPosition: { x: 841, y: 285 },
     mapLandmark: true,
     hotspots: [
-      { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad1', yaw: 180, pitch: -2 },
+      { id: 'hotel-to-campus-road-1', type: 'scene', target: 'campusRoad2', yaw: 180, pitch: -2 },
       {
         id: 'hotel-info',
         type: 'info',
@@ -545,7 +545,7 @@ const legacyTourSceneDefinitions = [
     mapPosition: { x: 671, y: 315 },
     mapLandmark: true,
     hotspots: [
-      { id: 'building-3-to-campus-road-7', type: 'scene', target: 'campusRoad7', yaw: 180, pitch: -3 },
+      { id: 'building-3-to-campus-road-7', type: 'scene', target: 'campusRoad7', yaw: 130, pitch: -3 },
       {
         id: 'building-3-info',
         type: 'info',
@@ -632,7 +632,7 @@ const legacyTourSceneDefinitions = [
     hotspots: [
       { id: 'campus-road-12-to-road-11', type: 'scene', target: 'campusRoad11', yaw: 180, pitch: -3 },
       { id: 'campus-road-12-to-road-13', type: 'scene', target: 'campusRoad13', yaw: 0, pitch: -3 },
-      { id: 'campus-road-12-to-road-52', type: 'scene', target: 'campusRoad52', yaw: 90, pitch: -3 }
+      { id: 'campus-road-12-to-road-52', type: 'scene', target: 'campusRoad52', yaw: 50, pitch: -3 }
     ]
   },
   {

@@ -17,6 +17,8 @@ describe('ground navigation arrows', () => {
     expect(viewerSource).toContain("size: { width: 80, height: 60 }");
     expect(viewerSource).not.toContain('M12 20V5m0 0-6 6m6-6 6 6');
     expect(viewerSource).toContain('goToScene(callbacks.locale, targetTitle)');
+    expect(viewerSource).toContain("label.className = 'tour-arrow__label'");
+    expect(viewerSource).toContain('label.textContent = targetTitle');
     expect(viewerSource).toContain('getLinkTooltip:');
   });
 
@@ -37,8 +39,11 @@ describe('ground navigation arrows', () => {
     expect(chevronRule).toContain('fill: currentcolor');
     expect(styles).toContain('transform: perspective(110px) rotateX(22deg) translateY(3px)');
     expect(styles).toContain('.tour-arrow:focus-visible');
+    expect(styles).toContain('.tour-arrow__label');
     expect(styles).toMatch(/\.psv-tooltip,\s*\.psv-tooltip \*\s*\{\s*pointer-events: none;/);
     expect(styles).toContain('@media (max-width: 700px)');
+    expect(styles).toContain('width: 52px');
+    expect(styles).toContain('height: 31px');
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
   });
 

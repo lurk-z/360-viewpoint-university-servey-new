@@ -53,7 +53,7 @@ import {
   type TourInfoSelection
 } from './tour/info-selection';
 
-type DialogName = 'info' | 'academics' | 'activities' | 'about' | 'text-tour' | null;
+type DialogName = 'info' | 'destinations' | 'academics' | 'activities' | 'about' | 'text-tour' | null;
 type CompactOverlay = CompactTourOverlay;
 const DEVELOPMENT_ARROW_TOOL = process.env.NODE_ENV === 'development';
 const TourMap = dynamic(() => import('./TourMap'), { ssr: false });
@@ -65,6 +65,7 @@ const TourInfoDialog = dynamic(() => import('./tour/TourContentDialogs').then((m
 const TourImageDialog = dynamic(() => import('./tour/TourContentDialogs').then((module) => module.TourImageDialog), { ssr: false });
 const TourAboutDialog = dynamic(() => import('./tour/TourContentDialogs').then((module) => module.TourAboutDialog), { ssr: false });
 const TourTextDialog = dynamic(() => import('./tour/TourContentDialogs').then((module) => module.TourTextDialog), { ssr: false });
+const TourDestinationDialog = dynamic(() => import('./tour/TourDestinationDialog'), { ssr: false });
 
 interface ImageViewerState {
   readonly images: readonly InfoImage[];
@@ -443,6 +444,7 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
         menuButtonRef={headerMenuButtonRef}
         onMenuOpenChange={setHeaderMenuOpen}
         onLocaleChange={setLocale}
+        onOpenDestinations={() => openHeaderDialog('destinations')}
         onOpenAcademics={() => openAcademics()}
         onOpenActivities={() => openHeaderDialog('activities')}
         onOpenAbout={() => openHeaderDialog('about')}
@@ -721,6 +723,16 @@ export default function TourApp({ initialTourStructure, initialSceneId, lockTour
         onMove={moveImage}
       />
       <TourAboutDialog open={dialog === 'about'} locale={locale} onClose={closeDialog} />
+      {dialog === 'destinations' ? (
+        <TourDestinationDialog
+          open
+          locale={locale}
+          content={content}
+          currentSceneId={activeSceneId}
+          onClose={closeDialog}
+          onNavigate={(sceneId) => void navigate(sceneId)}
+        />
+      ) : null}
       <TourTextDialog
         open={dialog === 'text-tour'}
         locale={locale}

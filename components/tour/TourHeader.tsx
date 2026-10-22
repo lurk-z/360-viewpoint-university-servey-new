@@ -15,6 +15,7 @@ interface TourHeaderProps {
   readonly menuButtonRef: RefObject<HTMLButtonElement | null>;
   readonly onMenuOpenChange: (open: boolean) => void;
   readonly onLocaleChange: (locale: Locale) => void;
+  readonly onOpenDestinations: () => void;
   readonly onOpenAcademics: () => void;
   readonly onOpenActivities: () => void;
   readonly onOpenAbout: () => void;
@@ -28,6 +29,7 @@ export default function TourHeader({
   menuButtonRef,
   onMenuOpenChange,
   onLocaleChange,
+  onOpenDestinations,
   onOpenAcademics,
   onOpenActivities,
   onOpenAbout
@@ -57,6 +59,10 @@ export default function TourHeader({
             <TourIcon><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></TourIcon>
             <span>{message(locale, 'adminLogin')}</span>
           </a>
+          <button className="header-button" type="button" aria-label={message(locale, 'destinationsButton')} onClick={() => { closeMenu(); onOpenDestinations(); }}>
+            <TourIcon><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="9" r="2.5" /></TourIcon>
+            <span>{message(locale, 'destinationsButton')}</span>
+          </button>
           <button className="header-button" type="button" aria-label={message(locale, 'academicsButton')} onClick={() => { closeMenu(); onOpenAcademics(); }}>
             <TourIcon><path d="m3 9 9-5 9 5-9 5-9-5ZM7 12v4c3 2 7 2 10 0v-4M21 9v6" /></TourIcon>
             <span>{message(locale, 'academicsButton')}</span>

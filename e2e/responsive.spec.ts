@@ -333,6 +333,33 @@ test('contextual building media opens sample panoramas and dormitory floor plans
   await expect(floorPlanDialog.locator('output')).toHaveText('125%');
 });
 
+test('navigation arrows show destination names and the destination menu opens a scene directly', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'En' }).click();
+  const startButton = page.getByRole('button', { name: 'Start the tour' });
+  await expect(startButton).toBeEnabled({ timeout: 60_000 });
+  await startButton.click();
+
+  const arrow = page.locator('.tour-arrow').first();
+  await expect(arrow).toBeVisible({ timeout: 15_000 });
+  await expect(arrow.locator('.tour-arrow__label')).not.toHaveText('');
+  const viewportWidth = page.viewportSize()?.width ?? 1440;
+  const expectedArrowWidth = viewportWidth <= 700 ? '52px' : viewportWidth <= 1024 ? '58px' : '72px';
+  await expect(arrow.locator('.tour-arrow__icon')).toHaveCSS('width', expectedArrowWidth);
+
+  await openHeaderAction(page, /Go to a place/);
+  const dialog = page.locator('dialog.app-dialog[open]');
+  await expect(dialog).toContainText('Go to a place');
+  await expect(dialog.locator('.destination-card')).toHaveCount(getMapLandmarkScenes().length);
+  await dialog.locator('#destination-search-input').fill('University Cafeteria');
+  const cafeteria = dialog.locator('.destination-card[data-scene-id="universityCafeteria"]');
+  await expect(cafeteria).toBeVisible();
+  await cafeteria.click();
+
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator('#scene-title')).toContainText('University Cafeteria', { timeout: 60_000 });
+});
+
 test('AI route card starts a guided tour and highlights the real scene path', async ({ page }) => {
   await page.route('**/api/chat', async (route) => {
     await route.fulfill({

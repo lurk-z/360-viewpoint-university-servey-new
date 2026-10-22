@@ -433,6 +433,8 @@ const TourViewer = forwardRef<TourViewerHandle, TourViewerProps>(function TourVi
           ? goDownToScene(locale, targetTitle)
           : goToScene(locale, targetTitle)
       );
+      const label = button.querySelector<HTMLElement>('.tour-arrow__label');
+      if (label) label.textContent = targetTitle;
     });
     refreshMarkersRef.current?.();
   }, [locale, content]);
